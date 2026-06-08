@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Stats",
+      "description": "User solved, unsolved puzzle counts, theme and game stats",
+      "type": "object",
+      "properties": {
+        "solvedCount": { "type": "number", "description": "Number of tickets solved" },
+        "unsolvedCount": { "type": "number", "description": "Number of tickets unsolved/skipped" },
+        "totalSolveTime": { "type": "number", "description": "Total time spent solving in seconds" },
+        "totalOperatorsUsed": { "type": "number", "description": "Total number of mathematical operators used" },
+        "themePreference": { "type": "string", "description": "Theme: light, dark, or system" },
+        "language": { "type": "string", "description": "Selected language code" },
+        "gameMode": { "type": "string", "description": "Selected game mode: ticket, car, etc." },
+        "soundEnabled": { "type": "boolean", "description": "Whether sound is enabled" },
+        "vibrationEnabled": { "type": "boolean", "description": "Whether vibration is enabled" },
+        "hasSeenOnboarding": { "type": "boolean", "description": "Whether onboarding demo has been seen" }
+      },
+      "required": []
+    },
+    "PublicStats": {
+      "title": "Public Scorecard",
+      "description": "User puzzle progress, display name and Telegram ID for public leaderboard",
+      "type": "object",
+      "properties": {
+        "solvedCount": { "type": "number", "description": "Number of tickets solved" },
+        "unsolvedCount": { "type": "number", "description": "Number of tickets unsolved/skipped" },
+        "totalSolveTime": { "type": "number", "description": "Total time spent solving in seconds" },
+        "totalOperatorsUsed": { "type": "number", "description": "Total number of mathematical operators used" },
+        "displayName": { "type": "string", "description": "User's display name or username" },
+        "photoURL": { "type": "string", "description": "User's avatar image URL" },
+        "tgUserId": { "type": "number", "description": "Optional Telegram user ID" }
+      },
+      "required": []
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Private user game stats and configuration settings."
+    },
+    "/public_stats/{userId}": {
+      "schema": "PublicStats",
+      "description": "Public statistics synced for highscore leaderboard listing."
+    }
+  }
+}

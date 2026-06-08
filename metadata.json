@@ -1,0 +1,6 @@
+{
+  "name": "Game Make100",
+  "description": "Мини-приложение для Telegram",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net catch-all: Deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Baseline Authentication and Identity Utilities
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Path Variable Hardening (ID Poisoning Guard)
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Blueprint for User entity (Strict Key size checks)
+    function isValidUserStats(data) {
+      return (
+        data.keys().hasAll(['solvedCount', 'unsolvedCount', 'totalSolveTime', 'totalOperatorsUsed']) &&
+        data.keys().size() <= 10 &&
+        data.solvedCount is number &&
+        data.unsolvedCount is number &&
+        data.totalSolveTime is number &&
+        data.totalOperatorsUsed is number &&
+        (!('themePreference' in data) || (data.themePreference is string && data.themePreference.size() <= 20)) &&
+        (!('language' in data) || (data.language is string && data.language.size() <= 10)) &&
+        (!('gameMode' in data) || (data.gameMode is string && data.gameMode.size() <= 30)) &&
+        (!('soundEnabled' in data) || data.soundEnabled is bool) &&
+        (!('vibrationEnabled' in data) || data.vibrationEnabled is bool) &&
+        (!('hasSeenOnboarding' in data) || data.hasSeenOnboarding is bool)
+      );
+    }
+
+    // Validation Blueprint for PublicStats entity (Strict Key size checks)
+    function isValidPublicStats(data) {
+      return (
+        data.keys().hasAll(['solvedCount', 'unsolvedCount', 'totalSolveTime', 'totalOperatorsUsed', 'displayName', 'photoURL']) &&
+        data.keys().size() <= 7 &&
+        data.solvedCount is number &&
+        data.unsolvedCount is number &&
+        data.totalSolveTime is number &&
+        data.totalOperatorsUsed is number &&
+        data.displayName is string && data.displayName.size() <= 100 &&
+        data.photoURL is string && data.photoURL.size() <= 1000 &&
+        (!('tgUserId' in data) || data.tgUserId == null || data.tgUserId is number)
+      );
+    }
+
+    // Collection matches
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserStats(request.resource.data);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserStats(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /public_stats/{userId} {
+      allow get: if isAuthenticated() && isValidId(userId);
+      allow list: if isAuthenticated() && resource.data.solvedCount is number;
+      allow create: if isOwner(userId) && isValidId(userId) && isValidPublicStats(request.resource.data);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidPublicStats(request.resource.data);
+      allow delete: if false;
+    }
+  }
+}
