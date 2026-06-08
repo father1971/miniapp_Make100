@@ -1,7 +1,7 @@
 {
-  "name": "Lucky Ticket",
+  "name": "lucky-ticket",
   "private": true,
-  "version": "1.9.0",
+  "version": "1.91.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
