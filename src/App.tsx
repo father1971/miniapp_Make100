@@ -1994,10 +1994,35 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      root.style.setProperty('background-color', '#09090b', 'important');
+      body.style.setProperty('background-color', '#09090b', 'important');
+      
+      // Override Telegram theme variables with priority
+      root.style.setProperty('--tg-theme-bg-color', '#09090b', 'important');
+      root.style.setProperty('--tg-theme-secondary-bg-color', '#18181b', 'important');
+      root.style.setProperty('--tg-theme-text-color', '#fafafa', 'important');
+      root.style.setProperty('--tg-theme-hint-color', '#a1a1aa', 'important');
+      
+      root.style.setProperty('--app-bg', '#09090b', 'important');
+      root.style.setProperty('--app-text', '#fafafa', 'important');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      root.style.setProperty('background-color', '#fafafa', 'important');
+      body.style.setProperty('background-color', '#fafafa', 'important');
+      
+      // Override Telegram theme variables with priority
+      root.style.setProperty('--tg-theme-bg-color', '#fafafa', 'important');
+      root.style.setProperty('--tg-theme-secondary-bg-color', '#f4f4f5', 'important');
+      root.style.setProperty('--tg-theme-text-color', '#09090b', 'important');
+      root.style.setProperty('--tg-theme-hint-color', '#71717a', 'important');
+      
+      root.style.setProperty('--app-bg', '#fafafa', 'important');
+      root.style.setProperty('--app-text', '#09090b', 'important');
     }
   }, [theme]);
   
@@ -2589,20 +2614,21 @@ export default function App() {
 
   useEffect(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
-    if (tg && tg.initData) {
+    if (tg) {
       try {
-        tg.setHeaderColor('bg_color');
-        tg.setBackgroundColor('bg_color');
+        const targetColor = theme === 'dark' ? '#09090b' : '#fafafa';
+        tg.setHeaderColor(targetColor);
+        tg.setBackgroundColor(targetColor);
       } catch (e) {
         try {
-          tg.setHeaderColor(theme === 'dark' ? '#09090b' : '#fafafa');
-          tg.setBackgroundColor(theme === 'dark' ? '#09090b' : '#fafafa');
+          tg.setHeaderColor('bg_color');
+          tg.setBackgroundColor('bg_color');
         } catch (e2) {
           console.error("Failed to set Telegram colors", e2);
         }
       }
     }
-  }, [theme, tgUser]);
+  }, [theme]);
 
   useEffect(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
@@ -2843,7 +2869,7 @@ export default function App() {
 
   if (isTgValidating) {
     return (
-      <div className="h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center text-zinc-500">
+      <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center`}>
         <RefreshCw size={32} className="animate-spin text-amber-500 mb-4" />
         <p>Validating session...</p>
       </div>
@@ -2853,7 +2879,7 @@ export default function App() {
   if (tgValidationError && !tgUser) {
     if (tgValidationError === 'SESSION_EXPIRED') {
       return (
-        <div className="h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 p-4 text-center">
+        <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center p-4 text-center`}>
           <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-500 p-4 rounded-full mb-4">
             <Clock size={32} />
           </div>
@@ -2879,7 +2905,7 @@ export default function App() {
     }
 
     return (
-      <div className="h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center text-red-500 p-4 text-center">
+      <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-red-500' : 'bg-zinc-50 text-red-600'} flex flex-col items-center justify-center p-4 text-center`}>
         <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full mb-4">
           <X size={32} />
         </div>
@@ -2891,9 +2917,9 @@ export default function App() {
 
   if (!tgUser && window.location.hostname !== 'localhost' && !window.location.hostname.includes('.run.app')) {
     return (
-      <div className="h-[100dvh] bg-[var(--tg-theme-bg-color,#fafafa)] text-[var(--tg-theme-text-color,#09090b)] flex flex-col items-center justify-center p-4 text-center">
-        <div className="bg-[var(--tg-theme-secondary-bg-color,#f4f4f5)] p-4 rounded-full mb-4">
-          <Smartphone size={32} className="text-[var(--tg-theme-button-color,#3b82f6)]" />
+      <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center p-4 text-center`}>
+        <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-full mb-4">
+          <Smartphone size={32} className="text-blue-500" />
         </div>
         <h2 className="text-xl font-bold mb-2">Telegram Only</h2>
         <p className="text-sm opacity-70 mb-6 max-w-xs">
@@ -2904,7 +2930,7 @@ export default function App() {
             const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('.run.app');
             window.location.href = isProd ? "https://t.me/Game_Make100_bot" : "https://t.me/test_game_make100_bot";
           }}
-          className="px-6 py-3 bg-[var(--tg-theme-button-color,#3b82f6)] hover:opacity-90 text-[var(--tg-theme-button-text-color,#ffffff)] rounded-xl font-bold transition-colors"
+          className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors"
         >
           Open in Telegram
         </button>
@@ -2915,7 +2941,7 @@ export default function App() {
               first_name: "Guest",
             });
           }}
-          className="mt-6 text-sm opacity-60 hover:opacity-100 transition-opacity underline font-medium cursor-pointer text-[var(--tg-theme-button-color,#3b82f6)]"
+          className="mt-6 text-sm opacity-60 hover:opacity-100 transition-opacity underline font-medium cursor-pointer text-blue-500"
         >
           {t.playAsGuest || "Play as guest"}
         </button>
@@ -2925,7 +2951,7 @@ export default function App() {
 
   return (
     <div 
-      className={`h-[100dvh] ${theme} bg-[var(--tg-theme-bg-color,#fafafa)] dark:bg-[var(--tg-theme-bg-color,#09090b)] text-[var(--tg-theme-text-color,#09090b)] dark:text-[var(--tg-theme-text-color,#fafafa)] transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
+      className={`h-[100dvh] w-full ${theme} ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
