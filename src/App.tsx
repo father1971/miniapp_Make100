@@ -3,7 +3,7 @@ import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone,
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db, OperationType, handleFirestoreError } from './firebase';
 import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, getCountFromServer, where } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, getCountFromServer, where, deleteDoc } from 'firebase/firestore';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -1909,13 +1909,28 @@ export default function App() {
   const [ticketStyleId, setTicketStyleId] = useState('flight');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
-  const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
+  const [tgUser, setTgUser] = useState<TelegramUser | null>(() => {
+    try {
+      const cached = localStorage.getItem('make100_tgUser');
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {
+      console.error("Failed to parse cached tgUser:", e);
+    }
+    return null;
+  });
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
   const [tgValidationError, setTgValidationError] = useState<string | null>(null);
   
   const [gameMode, setGameMode] = useState<'ticket' | 'car'>('ticket');
   const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>('auto');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
+    if (tg?.colorScheme) return tg.colorScheme;
+    const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return systemPrefersDark ? 'dark' : 'light';
+  });
   const [language, setLanguage] = useState<Language>(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
     const tgLang = tg?.initDataUnsafe?.user?.language_code;
@@ -1937,6 +1952,16 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  
+  useEffect(() => {
+    if (tgUser && tgUser.id && tgUser.id !== 9999 && tgUser.id !== 1) {
+      try {
+        localStorage.setItem('make100_tgUser', JSON.stringify(tgUser));
+      } catch (e) {
+        console.error("Failed to save tgUser to localStorage:", e);
+      }
+    }
+  }, [tgUser]);
   
   const t: any = TRANSLATIONS[language];
 
@@ -2173,23 +2198,23 @@ export default function App() {
       const querySnapshot = await getDocs(q);
       const data: any[] = [];
       const seenTgUsers = new Set();
-      const seenDisplayNames = new Set();
       
       querySnapshot.forEach((doc) => {
         const docData = doc.data();
         const tgId = docData.tgUserId;
-        const name = docData.displayName;
         
         let isDuplicate = false;
-        if (tgId && seenTgUsers.has(tgId)) {
-          isDuplicate = true;
-        } else if (name && name !== 'Anonymous' && seenDisplayNames.has(name)) {
-          isDuplicate = true;
+        // Only filter duplicates if there is a real, valid Telegram ID.
+        if (tgId && tgId !== 9999 && tgId !== 1) {
+          if (seenTgUsers.has(tgId)) {
+            isDuplicate = true;
+          }
         }
         
         if (!isDuplicate) {
-          if (tgId) seenTgUsers.add(tgId);
-          if (name && name !== 'Anonymous') seenDisplayNames.add(name);
+          if (tgId && tgId !== 9999 && tgId !== 1) {
+            seenTgUsers.add(tgId);
+          }
           data.push({ id: doc.id, ...docData });
         }
       });
@@ -2236,6 +2261,40 @@ export default function App() {
 
       if (user) {
         try {
+          // Fetch from public_stats collection first to restore Telegram name/info
+          const publicDocRef = doc(db, 'public_stats', user.uid);
+          const publicDocSnap = await getDoc(publicDocRef);
+          
+          if (publicDocSnap.exists()) {
+            const publicData = publicDocSnap.data();
+            // If the user's saved public stats has a valid Telegram name/ID, restore tgUser
+            if (publicData.tgUserId && publicData.tgUserId !== 9999 && publicData.tgUserId !== 1) {
+              setTgUser(prev => {
+                if (prev && prev.id && prev.id !== 9999 && prev.id !== 1 && prev.first_name && prev.first_name !== 'Player' && prev.first_name !== 'Guest') {
+                  return prev;
+                }
+                const savedDisplayName = publicData.displayName || '';
+                const parts = savedDisplayName.split(' ');
+                const first_name = parts[0] || savedDisplayName;
+                const last_name = parts.slice(1).join(' ') || undefined;
+                
+                const restoredUser: TelegramUser = {
+                  id: publicData.tgUserId,
+                  first_name: first_name,
+                  last_name: last_name,
+                  photo_url: publicData.photoURL || undefined
+                };
+                try {
+                  localStorage.setItem('make100_tgUser', JSON.stringify(restoredUser));
+                } catch (e) {
+                  console.error("Failed to save restored tgUser to localStorage:", e);
+                }
+                return restoredUser;
+              });
+            }
+          }
+
+          // Fetch from users collection
           const docRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
@@ -2315,30 +2374,34 @@ export default function App() {
     localStorage.setItem('make100_stats', statsStr);
 
     if (user) {
-      const saveStats = async () => {
-        try {
-          await setDoc(doc(db, 'users', user.uid), stats, { merge: true });
-          
-          // Save to public_stats for leaderboard
-          const displayName = tgUser?.first_name || user.displayName || 'Anonymous';
-          const photoURL = tgUser?.photo_url || user.photoURL || '';
-          
-          const publicStats = {
-            solvedCount,
-            unsolvedCount,
-            totalSolveTime,
-            totalOperatorsUsed,
-            displayName: displayName.substring(0, 100),
-            photoURL: photoURL.substring(0, 1000),
-            tgUserId: tgUser?.id || null
-          };
-          await setDoc(doc(db, 'public_stats', user.uid), publicStats, { merge: true });
-        } catch (e) {
-          console.error("Firebase save error", e);
-          handleFirestoreError(e, OperationType.WRITE, `users/${user.uid} or public_stats/${user.uid}`);
-        }
-      };
-      saveStats();
+      const isRealTelegramUser = !!(tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && tgUser.first_name && tgUser.first_name !== 'Player' && tgUser.first_name !== 'Guest');
+      if (isRealTelegramUser && tgUser) {
+        const saveStats = async () => {
+          try {
+            const displayName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim() || 'Player';
+            const photoURL = tgUser.photo_url || '';
+            const tgUserId = tgUser.id;
+
+            const publicStats = {
+              solvedCount,
+              unsolvedCount,
+              totalSolveTime,
+              totalOperatorsUsed,
+              displayName: displayName.substring(0, 100),
+              photoURL: photoURL.substring(0, 1000),
+              tgUserId: tgUserId
+            };
+            await setDoc(doc(db, 'public_stats', user.uid), publicStats, { merge: true });
+
+            // Then save to users
+            await setDoc(doc(db, 'users', user.uid), stats, { merge: true });
+          } catch (e) {
+            console.error("Firebase save error", e);
+            handleFirestoreError(e, OperationType.WRITE, `users/${user.uid}`);
+          }
+        };
+        saveStats();
+      }
     }
 
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
@@ -2350,6 +2413,8 @@ export default function App() {
       }
     }
   }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, user, tgUser]);
+
+
 
   useEffect(() => {
     if (!isAuthReady || !user) return;
@@ -2441,43 +2506,7 @@ export default function App() {
       isInitializing = true;
 
       try {
-        // 1. Try Telegram Game Proxy (HTML5 Games via Bot API)
-        const gameProxy = (window as any).TelegramGameProxy;
-        if (gameProxy && gameProxy.initParams && (gameProxy.initParams.user_id || gameProxy.initParams.chat_id)) {
-          if (isMounted) {
-            setTgUser({
-              id: gameProxy.initParams.user_id || 1,
-              first_name: "Player",
-            });
-            setIsTgValidating(false);
-          }
-          return true;
-        }
-
-        // 2. Try URL query and hash parameters direct fallback (super robust detecting game/bot launch params)
-        const urlParams = new URLSearchParams(window.location.search);
-        const hashParams = new URLSearchParams(window.location.hash.slice(1));
-        const tgShareScoreUrl = urlParams.get('tgShareScoreUrl') || hashParams.get('tgShareScoreUrl');
-        const tgUserId = urlParams.get('userId') || hashParams.get('userId') || 
-                         urlParams.get('tg_user_id') || hashParams.get('tg_user_id') || 
-                         urlParams.get('user_id') || hashParams.get('user_id');
-        const tgInitData = urlParams.get('tgWebAppStartParam') || hashParams.get('tgWebAppStartParam') || urlParams.get('hash') || hashParams.get('hash');
-        const tgGameId = urlParams.get('id') || hashParams.get('id');
-        const tgChatId = urlParams.get('chatId') || hashParams.get('chatId') ||
-                         urlParams.get('chat_id') || hashParams.get('chat_id');
-        
-        if (tgShareScoreUrl || tgUserId || tgInitData || tgGameId || tgChatId) {
-          if (isMounted) {
-            setTgUser({
-              id: tgUserId ? Number(tgUserId) : 1,
-              first_name: "Player",
-            });
-            setIsTgValidating(false);
-          }
-          return true;
-        }
-
-        // 3. Try Telegram Web App (Mini Apps)
+        // 1. Try Telegram Web App (Mini Apps) - High priority to capture actual Telegram user profiles
         const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
         if (tg && (tg.initData || tg.initDataUnsafe?.user)) {
           tg.ready();
@@ -2525,8 +2554,13 @@ export default function App() {
               } else {
                 setTgValidationError(data.error || 'Validation failed');
               }
-              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-              setTgUser(fallbackUser);
+              const isPreviewEnv = window.location.hostname === 'localhost' || window.location.hostname.includes('ais-dev-') || (window.self !== window.top);
+              if (isPreviewEnv) {
+                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+                setTgUser(fallbackUser);
+              } else {
+                setTgUser(null);
+              }
               setIsTgValidating(false);
               return true;
             }
@@ -2550,12 +2584,53 @@ export default function App() {
           } catch (err) {
             if (isMounted) {
               setTgValidationError('Network error during validation');
-              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-              setTgUser(fallbackUser);
+              const isPreviewEnv = window.location.hostname === 'localhost' || window.location.hostname.includes('ais-dev-') || (window.self !== window.top);
+              if (isPreviewEnv) {
+                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+                setTgUser(fallbackUser);
+              } else {
+                setTgUser(null);
+              }
             }
           }
           
           if (isMounted) {
+            setIsTgValidating(false);
+          }
+          return true;
+        }
+
+        // 2. Try Telegram Game Proxy (HTML5 Games via Bot API)
+        const gameProxy = (window as any).TelegramGameProxy;
+        if (gameProxy && gameProxy.initParams && (gameProxy.initParams.user_id || gameProxy.initParams.chat_id)) {
+          if (isMounted) {
+            setTgUser({
+              id: gameProxy.initParams.user_id || 1,
+              first_name: "Player",
+            });
+            setIsTgValidating(false);
+          }
+          return true;
+        }
+
+        // 3. Try URL query and hash parameters direct fallback (super robust detecting game/bot launch params)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const tgShareScoreUrl = urlParams.get('tgShareScoreUrl') || hashParams.get('tgShareScoreUrl');
+        const tgUserId = urlParams.get('userId') || hashParams.get('userId') || 
+                         urlParams.get('tg_user_id') || hashParams.get('tg_user_id') || 
+                         urlParams.get('user_id') || hashParams.get('user_id');
+        const tgInitData = urlParams.get('tgWebAppStartParam') || hashParams.get('tgWebAppStartParam') || urlParams.get('hash') || hashParams.get('hash');
+        const tgGameId = urlParams.get('id') || hashParams.get('id');
+        const tgChatId = urlParams.get('chatId') || hashParams.get('chatId') ||
+                         urlParams.get('chat_id') || hashParams.get('chat_id');
+        
+        if (tgShareScoreUrl || tgUserId || tgInitData || tgGameId || tgChatId) {
+          if (isMounted) {
+            setTgUser({
+              id: tgUserId ? Number(tgUserId) : 1,
+              first_name: "Player",
+            });
             setIsTgValidating(false);
           }
           return true;
@@ -2576,10 +2651,31 @@ export default function App() {
         setTimeout(poll, 100);
       } else if (isMounted) {
         // Fallback for standard Web App environments outside of Telegram
-        setTgUser({
-          id: 9999,
-          first_name: "Guest",
-        });
+        const isPreviewEnv = window.location.hostname === 'localhost' || window.location.hostname.includes('ais-dev-') || (window.self !== window.top);
+        if (isPreviewEnv) {
+          setTgUser(prev => {
+            if (prev && prev.id && prev.id !== 9999 && prev.id !== 1) {
+              return prev;
+            }
+            try {
+              const cached = localStorage.getItem('make100_tgUser');
+              if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed && parsed.id && parsed.id !== 9999 && parsed.id !== 1) {
+                  return parsed;
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse cached tgUser in fallback:", e);
+            }
+            return {
+              id: 9999,
+              first_name: "Guest",
+            };
+          });
+        } else {
+          setTgUser(null);
+        }
         setIsTgValidating(false);
       }
     };
@@ -2596,7 +2692,8 @@ export default function App() {
     
     const updateTheme = () => {
       if (themePreference === 'auto') {
-        setTheme(tg?.colorScheme || 'dark');
+        const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(tg?.colorScheme || (systemPrefersDark ? 'dark' : 'light'));
       } else {
         setTheme(themePreference);
       }
@@ -2915,7 +3012,10 @@ export default function App() {
     );
   }
 
-  if (!tgUser && window.location.hostname !== 'localhost' && !window.location.hostname.includes('.run.app')) {
+  const isPreviewEnv = window.location.hostname === 'localhost' || window.location.hostname.includes('ais-dev-') || (window.self !== window.top);
+  const isRealTelegramUser = !!(tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && tgUser.first_name && tgUser.first_name !== 'Player' && tgUser.first_name !== 'Guest');
+
+  if (!isRealTelegramUser && !isPreviewEnv) {
     return (
       <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center p-4 text-center`}>
         <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-full mb-4">
@@ -2927,23 +3027,11 @@ export default function App() {
         </p>
         <button 
           onClick={() => {
-            const isProd = window.location.hostname !== 'localhost' && !window.location.hostname.includes('.run.app');
-            window.location.href = isProd ? "https://t.me/Game_Make100_bot" : "https://t.me/test_game_make100_bot";
+            window.location.href = "https://t.me/Game_Make100_bot";
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors"
         >
           Open in Telegram
-        </button>
-        <button 
-          onClick={() => {
-            setTgUser({
-              id: 9999,
-              first_name: "Guest",
-            });
-          }}
-          className="mt-6 text-sm opacity-60 hover:opacity-100 transition-opacity underline font-medium cursor-pointer text-blue-500"
-        >
-          {t.playAsGuest || "Play as guest"}
         </button>
       </div>
     );
@@ -2974,7 +3062,9 @@ export default function App() {
                   </div>
                 )}
                 <span className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[100px] sm:max-w-[150px]">
-                  {tgUser.first_name === 'Player' || tgUser.first_name === 'Test Player' ? t.player || tgUser.first_name : tgUser.first_name}
+                  {tgUser.first_name === 'Player' || tgUser.first_name === 'Guest' || tgUser.first_name === 'Test Player' 
+                    ? t.player || tgUser.first_name 
+                    : [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ')}
                 </span>
                 {playerRank !== null && (
                   <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-xs font-bold">

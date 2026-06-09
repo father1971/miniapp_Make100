@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import path from "path";
+import { Firestore } from "@google-cloud/firestore";
 
 const PORT = 3000;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
@@ -12,7 +13,52 @@ const TELEGRAM_TEST_BOT_TOKEN = process.env.TELEGRAM_TEST_BOT_TOKEN;
 // Combine tokens into an array, filtering out any undefined ones
 const BOT_TOKENS = [TELEGRAM_BOT_TOKEN, TELEGRAM_TEST_BOT_TOKEN].filter(Boolean) as string[];
 
+async function deleteCollection(db: Firestore, collectionName: string) {
+  const collectionRef = db.collection(collectionName);
+  const snapshot = await collectionRef.get();
+  console.log(`[PURGE] Found ${snapshot.size} docs in '${collectionName}'`);
+  
+  if (snapshot.size === 0) return;
+
+  const docs = snapshot.docs;
+  const chunkSize = 400;
+  for (let i = 0; i < docs.length; i += chunkSize) {
+    const chunk = docs.slice(i, i + chunkSize);
+    const batch = db.batch();
+    chunk.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    console.log(`[PURGE] Deleted chunk ${Math.floor(i / chunkSize) + 1} (${chunk.length} docs) from '${collectionName}'`);
+  }
+  console.log(`[PURGE] Collection '${collectionName}' successfully purged`);
+}
+
+async function purgeDatabase() {
+  console.log("-----------------------------------------");
+  console.log("STARTING HARD DATABASE PURGE SERVICE");
+  console.log("-----------------------------------------");
+  try {
+    const db = new Firestore({
+      projectId: "concise-cycle-jsjh2",
+      databaseId: "ai-studio-b2f69913-d998-4dd4-a9e8-c1ab7a26b399"
+    });
+
+    await deleteCollection(db, "users");
+    await deleteCollection(db, "public_stats");
+
+    console.log("-----------------------------------------");
+    console.log("DATABASE PURGE SERVICE COMPLETED SECURELY");
+    console.log("-----------------------------------------");
+  } catch (error) {
+    console.error("Database purge failed with error:", error);
+  }
+}
+
 async function startServer() {
+  // Purge the database on start to ensure clean slate
+  await purgeDatabase();
+
   const app = express();
   
   app.use(express.json());

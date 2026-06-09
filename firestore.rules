@@ -41,7 +41,7 @@ service cloud.firestore {
     // Validation Blueprint for PublicStats entity (Strict Key size checks)
     function isValidPublicStats(data) {
       return (
-        data.keys().hasAll(['solvedCount', 'unsolvedCount', 'totalSolveTime', 'totalOperatorsUsed', 'displayName', 'photoURL']) &&
+        data.keys().hasAll(['solvedCount', 'unsolvedCount', 'totalSolveTime', 'totalOperatorsUsed', 'displayName', 'photoURL', 'tgUserId']) &&
         data.keys().size() <= 7 &&
         data.solvedCount is number &&
         data.unsolvedCount is number &&
@@ -49,24 +49,27 @@ service cloud.firestore {
         data.totalOperatorsUsed is number &&
         data.displayName is string && data.displayName.size() <= 100 &&
         data.photoURL is string && data.photoURL.size() <= 1000 &&
-        (!('tgUserId' in data) || data.tgUserId == null || data.tgUserId is number)
+        data.tgUserId is number
       );
+    }
+
+    // Check if the user is verified with telegram in public_stats
+    function isTelegramUser(userId) {
+      return exists(/databases/$(database)/documents/public_stats/$(userId));
     }
 
     // Collection matches
     match /users/{userId} {
       allow get: if isOwner(userId) && isValidId(userId);
-      allow create: if isOwner(userId) && isValidId(userId) && isValidUserStats(request.resource.data);
-      allow update: if isOwner(userId) && isValidId(userId) && isValidUserStats(request.resource.data);
-      allow delete: if false;
+      allow create, update: if isOwner(userId) && isValidId(userId) && isValidUserStats(request.resource.data);
+      allow delete: if true;
     }
 
     match /public_stats/{userId} {
       allow get: if isAuthenticated() && isValidId(userId);
-      allow list: if isAuthenticated() && resource.data.solvedCount is number;
-      allow create: if isOwner(userId) && isValidId(userId) && isValidPublicStats(request.resource.data);
-      allow update: if isOwner(userId) && isValidId(userId) && isValidPublicStats(request.resource.data);
-      allow delete: if false;
+      allow list: if isAuthenticated();
+      allow create, update: if isOwner(userId) && isValidId(userId) && isValidPublicStats(request.resource.data);
+      allow delete: if true;
     }
   }
 }

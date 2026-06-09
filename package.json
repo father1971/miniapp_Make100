@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^8.6.0",
     "express": "^5.2.1",
     "firebase": "^12.11.0",
     "jsonwebtoken": "^9.0.3",
