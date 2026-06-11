@@ -1,10 +1,15 @@
 {
   "entities": {
-    "User": {
-      "title": "User Stats",
-      "description": "User solved, unsolved puzzle counts, theme and game stats",
+    "TelegramUserStats": {
+      "title": "Telegram User Profile and Game Stats",
+      "description": "Consolidated record of a Telegram player, including stats, settings, and profile info",
       "type": "object",
       "properties": {
+        "tgUserId": { "type": "number", "description": "Telegram user ID" },
+        "firstName": { "type": "string", "description": "Player's first name" },
+        "lastName": { "type": "string", "description": "Player's last name" },
+        "photoUrl": { "type": "string", "description": "Player's avatar photo URL" },
+        "username": { "type": "string", "description": "Telegram username" },
         "solvedCount": { "type": "number", "description": "Number of tickets solved" },
         "unsolvedCount": { "type": "number", "description": "Number of tickets unsolved/skipped" },
         "totalSolveTime": { "type": "number", "description": "Total time spent solving in seconds" },
@@ -16,32 +21,13 @@
         "vibrationEnabled": { "type": "boolean", "description": "Whether vibration is enabled" },
         "hasSeenOnboarding": { "type": "boolean", "description": "Whether onboarding demo has been seen" }
       },
-      "required": []
-    },
-    "PublicStats": {
-      "title": "Public Scorecard",
-      "description": "User puzzle progress, display name and Telegram ID for public leaderboard",
-      "type": "object",
-      "properties": {
-        "solvedCount": { "type": "number", "description": "Number of tickets solved" },
-        "unsolvedCount": { "type": "number", "description": "Number of tickets unsolved/skipped" },
-        "totalSolveTime": { "type": "number", "description": "Total time spent solving in seconds" },
-        "totalOperatorsUsed": { "type": "number", "description": "Total number of mathematical operators used" },
-        "displayName": { "type": "string", "description": "User's display name or username" },
-        "photoURL": { "type": "string", "description": "User's avatar image URL" },
-        "tgUserId": { "type": "number", "description": "Optional Telegram user ID" }
-      },
-      "required": []
+      "required": ["tgUserId", "firstName"]
     }
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "User",
-      "description": "Private user game stats and configuration settings."
-    },
-    "/public_stats/{userId}": {
-      "schema": "PublicStats",
-      "description": "Public statistics synced for highscore leaderboard listing."
+    "/tg_users/{userId}": {
+      "schema": "TelegramUserStats",
+      "description": "Consolidated Telegram user record containing stats, settings, and ratings."
     }
   }
 }
