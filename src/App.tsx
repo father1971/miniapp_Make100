@@ -1919,9 +1919,10 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
 export default function App() {
   const isPreviewEnv = (() => {
     try {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const isDevAndInIframe = window.location.hostname.includes('ais-dev-') && window.self !== window.top;
-      return isLocalhost || isDevAndInIframe;
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+      const isDevOrPre = hostname.includes('ais-dev-') || hostname.includes('ais-pre-');
+      return isLocalhost || isDevOrPre;
     } catch (e) {
       return false;
     }
@@ -3119,7 +3120,7 @@ export default function App() {
     );
   }
 
-  const isRealTelegramUser = !!(tgUser && tgUser.id && tgUser.id !== 1 && (tgUser.id !== 9999 || isPreviewEnv));
+  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id && tgUser.id !== 1 && (tgUser.id !== 9999 || isPreviewEnv));
 
   if (!isRealTelegramUser && !devBypassed) {
     return (
@@ -3137,7 +3138,16 @@ export default function App() {
         </p>
         <button 
           onClick={() => {
-            window.location.href = "https://t.me/Game_Make100_bot";
+            const tg = (window as any).Telegram?.WebApp;
+            if (tg && typeof tg.openTelegramLink === 'function') {
+              try {
+                tg.openTelegramLink("https://t.me/Game_Make100_bot");
+              } catch (e) {
+                window.open("https://t.me/Game_Make100_bot", "_blank");
+              }
+            } else {
+              window.open("https://t.me/Game_Make100_bot", "_blank");
+            }
           }}
           className="px-6 py-3 bg-orange-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg"
         >
