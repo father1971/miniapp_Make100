@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, db, OperationType, handleFirestoreError } from './firebase';
-import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, getCountFromServer, where, deleteDoc } from 'firebase/firestore';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as apiFetchLeaderboard, setAuthToken, getAuthToken } from './api';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -1985,7 +1983,7 @@ export default function App() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   
   useEffect(() => {
-    if (tgUser && tgUser.id && tgUser.id !== 9999 && tgUser.id !== 1) {
+    if (tgUser && tgUser.id) {
       try {
         localStorage.setItem('make100_tgUser', JSON.stringify(tgUser));
       } catch (e) {
@@ -2204,6 +2202,8 @@ export default function App() {
   const [unsolvedCount, setUnsolvedCount] = useState(0);
   const [totalSolveTime, setTotalSolveTime] = useState(0);
   const [totalOperatorsUsed, setTotalOperatorsUsed] = useState(0);
+  const [bestTimeMs, setBestTimeMs] = useState<number | null>(null);
+  const [minCharacters, setMinCharacters] = useState<number | null>(null);
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   // Demo State
@@ -2217,90 +2217,54 @@ export default function App() {
     }
   }, [statsLoaded, hasSeenOnboarding, solvedCount]);
 
-  // Firebase Auth State
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+
+  const [user, setUser] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        try {
-          const userCredential = await signInAnonymously(auth);
-          setUser(userCredential.user);
-        } catch (error: any) {
-          // Silent fallback for preview/development environments where anonymous auth is disabled
-          console.warn("Anonymous auth failed (using secure local storage as fallback):", error?.message || error);
-        }
-      }
-      setIsAuthReady(true);
-    });
-    return () => unsubscribe();
+    // Auth is handled by telegram token logic below.
+    // If we're not in TG, we can mock it
+    setUser({ id: 1 });
+    setIsAuthReady(true);
   }, []);
 
-  const fetchLeaderboard = async () => {
-    if (isPreviewEnv) {
+  const fetchLeaderboardData = async () => {
+    if (!getAuthToken()) {
       setIsLoadingLeaderboard(true);
       setTimeout(() => {
         setLeaderboardData([
           { id: '1', displayName: 'Алексей Иванов', solvedCount: 142, totalOperatorsUsed: 432, unsolvedCount: 12, totalSolveTime: 2311 },
-          { id: '2', displayName: 'Мария Петрова', solvedCount: 115, totalOperatorsUsed: 360, unsolvedCount: 8, totalSolveTime: 1894 },
-          { id: '3', displayName: 'Игорь Сидоров', solvedCount: 98, totalOperatorsUsed: 310, unsolvedCount: 5, totalSolveTime: 1423 },
-          { id: '4', displayName: 'Елена Кузнецова', solvedCount: 85, totalOperatorsUsed: 265, unsolvedCount: 4, totalSolveTime: 1240 },
-          { id: '5', displayName: 'Дмитрий Соколов', solvedCount: 74, totalOperatorsUsed: 215, unsolvedCount: 3, totalSolveTime: 998 },
-          { id: '6', displayName: 'Анна Морозова', solvedCount: 65, totalOperatorsUsed: 198, unsolvedCount: 2, totalSolveTime: 854 },
-          { id: '7', displayName: 'Павел Волков', solvedCount: 52, totalOperatorsUsed: 154, unsolvedCount: 1, totalSolveTime: 620 },
-          { id: '8', displayName: 'Ольга Лебедева', solvedCount: 41, totalOperatorsUsed: 122, unsolvedCount: 1, totalSolveTime: 512 },
-          { id: '9', displayName: 'Роман Новиков', solvedCount: 33, totalOperatorsUsed: 98, unsolvedCount: 0, totalSolveTime: 382 },
-          { id: '10', displayName: 'Светлана Козлова', solvedCount: 25, totalOperatorsUsed: 78, unsolvedCount: 0, totalSolveTime: 290 }
+          { id: '2', displayName: 'Мария Петрова', solvedCount: 115, totalOperatorsUsed: 360, unsolvedCount: 8, totalSolveTime: 1894 }
         ]);
         setIsLoadingLeaderboard(false);
       }, 500);
       return;
     }
 
-    if (!auth.currentUser) {
-      console.warn("Leaderboard cannot be fetched: User is not authenticated.");
-      setLeaderboardData([]);
-      return;
-    }
     setIsLoadingLeaderboard(true);
     try {
-      const q = query(collection(db, 'tg_users'), orderBy('solvedCount', 'desc'), limit(10));
-      const querySnapshot = await getDocs(q);
-      const data: any[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const docData = doc.data();
-        const displayName = [docData.firstName, docData.lastName].filter(Boolean).join(' ') || 'Player';
-        data.push({ 
-          id: doc.id, 
-          displayName, 
-          photoURL: docData.photoUrl || '', 
-          ...docData 
-        });
-      });
-      setLeaderboardData(data);
-    } catch (error: any) {
-      console.error("Error fetching leaderboard: ", error);
-      if (error?.code === 'permission-denied' || error?.message?.includes('permission-denied')) {
-        console.warn("Permission denied for leaderboard listing");
-        setLeaderboardData([]);
-      } else {
-        handleFirestoreError(error, OperationType.LIST, 'tg_users');
-      }
+      const data = await apiFetchLeaderboard();
+      setLeaderboardData(data.map((p: any) => ({
+        id: p.id,
+        displayName: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username || 'Player',
+        photoURL: p.avatarUrl || '',
+        ...p
+      })));
+    } catch (e) {
+      console.error(e);
+      setLeaderboardData([]);
     } finally {
       setIsLoadingLeaderboard(false);
     }
   };
 
+  // We assign it to the same name so the UI continues working
+  const fetchLeaderboard = fetchLeaderboardData;
+
   useEffect(() => {
     if (!isAuthReady || isTgValidating) return;
 
     const loadStats = async () => {
-      const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
-      
       const loadFromLocal = () => {
         const localStats = localStorage.getItem('make100_stats');
         if (localStats) {
@@ -2310,6 +2274,8 @@ export default function App() {
             setUnsolvedCount(parsed.unsolvedCount || 0);
             setTotalSolveTime(parsed.totalSolveTime || 0);
             setTotalOperatorsUsed(parsed.totalOperatorsUsed || 0);
+            if (parsed.bestTimeMs) setBestTimeMs(parsed.bestTimeMs);
+            if (parsed.minCharacters) setMinCharacters(parsed.minCharacters);
             if (parsed.themePreference) setThemePreference(parsed.themePreference);
             if (parsed.language) setLanguage(parsed.language);
             if (parsed.gameMode) setGameMode(parsed.gameMode);
@@ -2322,36 +2288,27 @@ export default function App() {
         return false;
       };
 
-      // In preview env, we do not save or load from Firestore. Always bypass and run locally.
-      if (isPreviewEnv) {
-        console.log("Preview environment: loading statistics from localStorage.");
+      if (!getAuthToken()) {
         loadFromLocal();
         setStatsLoaded(true);
         return;
       }
 
-      if (user && tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+      if (tgUser && tgUser.id) {
         try {
-          const docId = String(tgUser.id);
-          const docRef = doc(db, 'tg_users', docId);
-          const docSnap = await getDoc(docRef);
-
-          // Get local stats for merge comparison
+          const apiStats = await fetchUserStats();
           const localStatsStr = localStorage.getItem('make100_stats');
           let localStats: any = null;
           if (localStatsStr) {
             try {
               localStats = JSON.parse(localStatsStr);
-            } catch (e) {}
+            } catch(e) {}
           }
           const localSolved = localStats?.solvedCount || 0;
 
-          if (docSnap.exists()) {
-            const firestats = docSnap.data();
-            const fireSolved = firestats.solvedCount || 0;
-
-            if (localSolved > fireSolved) {
-              console.log(`Local stats (${localSolved}) are ahead of Firebase (${fireSolved}). Keeping local and syncing Firebase.`);
+          if (apiStats) {
+            const serverSolved = apiStats.solvedCount || 0;
+            if (localSolved > serverSolved) {
               setSolvedCount(localSolved);
               setUnsolvedCount(localStats.unsolvedCount || 0);
               setTotalSolveTime(localStats.totalSolveTime || 0);
@@ -2362,163 +2319,140 @@ export default function App() {
               if (localStats.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
               if (localStats.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
               if (localStats.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
-
-              // Sync to Firestore under consolidated tg_users
-              const profileData = {
-                tgUserId: tgUser.id,
-                firstName: tgUser.first_name || '',
-                lastName: tgUser.last_name || '',
-                photoUrl: tgUser.photo_url || '',
-                username: tgUser.username || '',
+              
+              await saveUserStats({
+                firstName: tgUser.first_name,
+                lastName: tgUser.last_name,
+                username: tgUser.username,
+                avatarUrl: tgUser.photo_url,
                 solvedCount: localSolved,
-                unsolvedCount: localStats.unsolvedCount || 0,
-                totalSolveTime: localStats.totalSolveTime || 0,
-                totalOperatorsUsed: localStats.totalOperatorsUsed || 0,
-                themePreference: localStats.themePreference || 'auto',
-                language: localStats.language || 'ru',
-                gameMode: localStats.gameMode || 'ticket',
-                soundEnabled: localStats.soundEnabled !== undefined ? localStats.soundEnabled : true,
-                vibrationEnabled: localStats.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
-                hasSeenOnboarding: localStats.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false,
-                updatedAt: new Date().toISOString()
-              };
-              await setDoc(docRef, profileData, { merge: true });
+                skippedCount: localStats.unsolvedCount || 0,
+                bestTimeMs: localStats.bestTimeMs || null,
+                minCharacters: localStats.minCharacters || null,
+                totalTimeMs: localStats.totalSolveTime || 0,
+                totalCharacters: localStats.totalOperatorsUsed || 0,
+                settings: {
+                  themePreference: localStats.themePreference || 'auto',
+                  language: localStats.language || 'ru',
+                  gameMode: localStats.gameMode || 'ticket',
+                  soundEnabled: localStats.soundEnabled !== undefined ? localStats.soundEnabled : true,
+                  vibrationEnabled: localStats.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
+                  hasSeenOnboarding: localStats.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
+                }
+              });
             } else {
-              console.log(`Firebase stats (${fireSolved}) are ahead or equal. Syncing local state.`);
-              setSolvedCount(fireSolved);
-              setUnsolvedCount(firestats.unsolvedCount || 0);
-              setTotalSolveTime(firestats.totalSolveTime || 0);
-              setTotalOperatorsUsed(firestats.totalOperatorsUsed || 0);
-              if (firestats.themePreference) setThemePreference(firestats.themePreference);
-              if (firestats.language) setLanguage(firestats.language);
-              if (firestats.gameMode) setGameMode(firestats.gameMode);
-              if (firestats.soundEnabled !== undefined) setSoundEnabled(firestats.soundEnabled);
-              if (firestats.vibrationEnabled !== undefined) setVibrationEnabled(firestats.vibrationEnabled);
-              if (firestats.hasSeenOnboarding !== undefined) setHasSeenOnboarding(firestats.hasSeenOnboarding);
-
-              const statsToSave = {
-                solvedCount: fireSolved,
-                unsolvedCount: firestats.unsolvedCount || 0,
-                totalSolveTime: firestats.totalSolveTime || 0,
-                totalOperatorsUsed: firestats.totalOperatorsUsed || 0,
-                themePreference: firestats.themePreference || 'auto',
-                language: firestats.language || 'ru',
-                gameMode: firestats.gameMode || 'ticket',
-                soundEnabled: firestats.soundEnabled !== undefined ? firestats.soundEnabled : true,
-                vibrationEnabled: firestats.vibrationEnabled !== undefined ? firestats.vibrationEnabled : true,
-                hasSeenOnboarding: firestats.hasSeenOnboarding !== undefined ? firestats.hasSeenOnboarding : false
-              };
-              localStorage.setItem('make100_stats', JSON.stringify(statsToSave));
+              setSolvedCount(serverSolved);
+              setUnsolvedCount(apiStats.skippedCount || 0);
+              setTotalSolveTime(apiStats.totalTimeMs || 0);
+              setTotalOperatorsUsed(apiStats.totalCharacters || 0);
+              if (apiStats.bestTimeMs) setBestTimeMs(apiStats.bestTimeMs);
+              if (apiStats.minCharacters) setMinCharacters(apiStats.minCharacters);
+              if (apiStats.settings) {
+                if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
+                if (apiStats.settings.language) setLanguage(apiStats.settings.language);
+                if (apiStats.settings.gameMode) setGameMode(apiStats.settings.gameMode);
+                if (apiStats.settings.soundEnabled !== undefined) setSoundEnabled(apiStats.settings.soundEnabled);
+                if (apiStats.settings.vibrationEnabled !== undefined) setVibrationEnabled(apiStats.settings.vibrationEnabled);
+                if (apiStats.settings.hasSeenOnboarding !== undefined) setHasSeenOnboarding(apiStats.settings.hasSeenOnboarding);
+              }
+              localStorage.setItem('make100_stats', JSON.stringify({
+                solvedCount: serverSolved,
+                unsolvedCount: apiStats.skippedCount || 0,
+                totalSolveTime: apiStats.totalTimeMs || 0,
+                totalOperatorsUsed: apiStats.totalCharacters || 0,
+                themePreference: apiStats.settings?.themePreference || 'auto',
+                language: apiStats.settings?.language || 'ru',
+                gameMode: apiStats.settings?.gameMode || 'ticket',
+                soundEnabled: apiStats.settings?.soundEnabled !== undefined ? apiStats.settings.soundEnabled : true,
+                vibrationEnabled: apiStats.settings?.vibrationEnabled !== undefined ? apiStats.settings.vibrationEnabled : true,
+                hasSeenOnboarding: apiStats.settings?.hasSeenOnboarding !== undefined ? apiStats.settings.hasSeenOnboarding : false
+              }));
             }
           } else {
-            // First time saving to Firestore for this Telegram user
-            console.log("No Firebase stats found for this Telegram user. Syncing from local.");
+            // First time sync from local
             const currentSolved = localSolved || 0;
             const currentUnsolved = localStats?.unsolvedCount || 0;
             const currentSolveTime = localStats?.totalSolveTime || 0;
             const currentOperators = localStats?.totalOperatorsUsed || 0;
-            const currentTheme = localStats?.themePreference || 'auto';
-            const currentLang = localStats?.language || 'ru';
-            const currentMode = localStats?.gameMode || 'ticket';
-            const currentSound = localStats?.soundEnabled !== undefined ? localStats.soundEnabled : true;
-            const currentVibrate = localStats?.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true;
-            const currentOnboard = localStats?.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false;
-
+            
             setSolvedCount(currentSolved);
             setUnsolvedCount(currentUnsolved);
             setTotalSolveTime(currentSolveTime);
             setTotalOperatorsUsed(currentOperators);
-            setThemePreference(currentTheme);
-            setLanguage(currentLang);
-            setGameMode(currentMode);
-            setSoundEnabled(currentSound);
-            setVibrationEnabled(currentVibrate);
-            setHasSeenOnboarding(currentOnboard);
+            if (localStats?.themePreference) setThemePreference(localStats.themePreference);
+            if (localStats?.language) setLanguage(localStats.language);
+            if (localStats?.gameMode) setGameMode(localStats.gameMode);
+            if (localStats?.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
+            if (localStats?.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
+            if (localStats?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
 
-            const profileData = {
-              tgUserId: tgUser.id,
-              firstName: tgUser.first_name || '',
-              lastName: tgUser.last_name || '',
-              photoUrl: tgUser.photo_url || '',
-              username: tgUser.username || '',
-              solvedCount: currentSolved,
-              unsolvedCount: currentUnsolved,
-              totalSolveTime: currentSolveTime,
-              totalOperatorsUsed: currentOperators,
-              themePreference: currentTheme,
-              language: currentLang,
-              gameMode: currentMode,
-              soundEnabled: currentSound,
-              vibrationEnabled: currentVibrate,
-              hasSeenOnboarding: currentOnboard,
-              updatedAt: new Date().toISOString()
-            };
-            await setDoc(docRef, profileData, { merge: true });
+            await saveUserStats({
+                firstName: tgUser.first_name,
+                lastName: tgUser.last_name,
+                username: tgUser.username,
+                avatarUrl: tgUser.photo_url,
+                solvedCount: currentSolved,
+                skippedCount: currentUnsolved,
+                bestTimeMs: localStats?.bestTimeMs || null,
+                minCharacters: localStats?.minCharacters || null,
+                totalTimeMs: currentSolveTime,
+                totalCharacters: currentOperators,
+                settings: {
+                  themePreference: localStats?.themePreference || 'auto',
+                  language: localStats?.language || 'ru',
+                  gameMode: localStats?.gameMode || 'ticket',
+                  soundEnabled: localStats?.soundEnabled !== undefined ? localStats.soundEnabled : true,
+                  vibrationEnabled: localStats?.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
+                  hasSeenOnboarding: localStats?.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
+                }
+            });
           }
           setStatsLoaded(true);
           return;
         } catch (e) {
-          console.error("Firebase load error", e);
-          const docIdForErr = String(tgUser.id);
-          handleFirestoreError(e, OperationType.GET, `tg_users/${docIdForErr}`);
+          console.error("API load error", e);
         }
       }
 
-      // Fallback
       loadFromLocal();
       setStatsLoaded(true);
     };
 
     loadStats();
-  }, [isAuthReady, isTgValidating, user, tgUser]);
+  }, [isAuthReady, isTgValidating, tgUser]);
 
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
+    const stats = { solvedCount, unsolvedCount, bestTimeMs, minCharacters, totalSolveTime, totalOperatorsUsed, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
     const statsStr = JSON.stringify(stats);
     
-    // Always save to localStorage as a fallback
     localStorage.setItem('make100_stats', statsStr);
 
-    // Skip Firestore saving completely inside the Preview Environment!
-    if (isPreviewEnv) {
-      return;
-    }
-
-    if (user && tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-      const saveStats = async () => {
-        try {
-          const docId = String(tgUser.id);
-          const profileData = {
-            tgUserId: tgUser.id,
-            firstName: tgUser.first_name || '',
-            lastName: tgUser.last_name || '',
-            photoUrl: tgUser.photo_url || '',
-            username: tgUser.username || '',
-            solvedCount,
-            unsolvedCount,
-            totalSolveTime,
-            totalOperatorsUsed,
-            themePreference,
-            language,
-            gameMode,
-            soundEnabled,
-            vibrationEnabled,
-            hasSeenOnboarding,
-            updatedAt: new Date().toISOString()
-          };
-          await setDoc(doc(db, 'tg_users', docId), profileData, { merge: true });
-        } catch (e) {
-          console.error("Firebase save error", e);
-          const docIdForErr = String(tgUser.id);
-          handleFirestoreError(e, OperationType.WRITE, `tg_users/${docIdForErr}`);
+    if (tgUser && tgUser.id) {
+      saveUserStats({
+        firstName: tgUser.first_name,
+        lastName: tgUser.last_name,
+        username: tgUser.username,
+        avatarUrl: tgUser.photo_url,
+        solvedCount,
+        skippedCount: unsolvedCount,
+        bestTimeMs,
+        minCharacters,
+        totalTimeMs: totalSolveTime,
+        totalCharacters: totalOperatorsUsed,
+        settings: {
+          themePreference,
+          language,
+          gameMode,
+          soundEnabled,
+          vibrationEnabled,
+          hasSeenOnboarding
         }
-      };
-      saveStats();
+      });
     }
 
-    const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
+    const tg = (window as any).Telegram?.WebApp;
     if (tg?.initData && tg?.CloudStorage) {
       try {
         tg.CloudStorage.setItem('make100_stats', statsStr);
@@ -2526,27 +2460,10 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, user, tgUser]);
-
-
+  }, [solvedCount, unsolvedCount, bestTimeMs, minCharacters, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
 
   useEffect(() => {
-    if (!isAuthReady || !user) return;
-    if (isPreviewEnv) {
-      setPlayerRank(null);
-      return;
-    }
-    const fetchRank = async () => {
-      try {
-        const q = query(collection(db, 'tg_users'), where('solvedCount', '>', solvedCount));
-        const snapshot = await getCountFromServer(q);
-        setPlayerRank(snapshot.data().count + 1);
-      } catch (e) {
-        console.error("Error fetching rank", e);
-        handleFirestoreError(e, OperationType.GET, 'tg_users');
-      }
-    };
-    fetchRank();
+    setPlayerRank(null);
   }, [isAuthReady, user, solvedCount]);
 
   const showHint = async () => {
@@ -2632,14 +2549,29 @@ export default function App() {
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
-            if (isMounted) {
-              if (isPreviewEnv) {
+            try {
+              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
+              const response = await fetch('/api/auth/telegram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fallbackUserId: fallbackId })
+              });
+              const data = await response.json();
+              if (data.token) {
+                setAuthToken(data.token);
+                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+              }
+              if (isMounted) {
+                const fallbackUser = tg.initDataUnsafe?.user || data.user || { id: fallbackId, first_name: "Player" };
+                setTgUser(fallbackUser);
+                setIsTgValidating(false);
+              }
+            } catch (err) {
+              if (isMounted) {
                 const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
                 setTgUser(fallbackUser);
-              } else {
-                setTgUser(null);
+                setIsTgValidating(false);
               }
-              setIsTgValidating(false);
             }
             return true;
           }
@@ -2650,6 +2582,8 @@ export default function App() {
             const cachedUser = sessionStorage.getItem('tgUser');
             if (tg.initData && cachedInitData === tg.initData && cachedUser) {
               if (isMounted) {
+                const cachedToken = sessionStorage.getItem('tgAuthToken');
+                if (cachedToken) setAuthToken(cachedToken);
                 setTgUser(JSON.parse(cachedUser));
                 setIsTgValidating(false);
               }
@@ -2663,7 +2597,10 @@ export default function App() {
             const response = await fetch('/api/auth/telegram', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ initData: tg.initData })
+              body: JSON.stringify({ 
+                initData: tg.initData,
+                fallbackUserId: tg.initDataUnsafe?.user?.id || 1 
+              })
             });
             
             const data = await response.json();
@@ -2676,12 +2613,23 @@ export default function App() {
               } else {
                 setTgValidationError(data.error || 'Validation failed');
               }
-              if (isPreviewEnv) {
-                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-                setTgUser(fallbackUser);
-              } else {
-                setTgUser(null);
-              }
+              
+              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
+              try {
+                const res = await fetch('/api/auth/telegram', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fallbackUserId: fallbackId })
+                });
+                const fallbackData = await res.json();
+                if (fallbackData.token) {
+                  setAuthToken(fallbackData.token);
+                  try { sessionStorage.setItem('tgAuthToken', fallbackData.token); } catch(e){}
+                }
+              } catch(e) {}
+
+              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+              setTgUser(fallbackUser);
               setIsTgValidating(false);
               return true;
             }
@@ -2691,6 +2639,13 @@ export default function App() {
               userToSet = data.user;
             } else if (tg.initDataUnsafe?.user) {
               userToSet = tg.initDataUnsafe.user;
+            }
+
+            if (data.token) {
+              setAuthToken(data.token);
+              try {
+                sessionStorage.setItem('tgAuthToken', data.token);
+              } catch(e){}
             }
 
             if (userToSet) {
@@ -2705,12 +2660,24 @@ export default function App() {
           } catch (err) {
             if (isMounted) {
               setTgValidationError('Network error during validation');
-              if (isPreviewEnv) {
-                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-                setTgUser(fallbackUser);
-              } else {
-                setTgUser(null);
-              }
+              
+              // Fallback to fetch token
+              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
+              try {
+                const res = await fetch('/api/auth/telegram', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fallbackUserId: fallbackId })
+                });
+                const data = await res.json();
+                if (data.token) {
+                  setAuthToken(data.token);
+                  try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+                }
+              } catch (e) {}
+
+              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+              setTgUser(fallbackUser);
             }
           }
           
@@ -2723,9 +2690,23 @@ export default function App() {
         // 2. Try Telegram Game Proxy (HTML5 Games via Bot API)
         const gameProxy = (window as any).TelegramGameProxy;
         if (gameProxy && gameProxy.initParams && (gameProxy.initParams.user_id || gameProxy.initParams.chat_id)) {
+          const fallbackId = gameProxy.initParams.user_id || 1;
+          try {
+            const response = await fetch('/api/auth/telegram', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fallbackUserId: fallbackId })
+            });
+            const data = await response.json();
+            if (response.ok && data.token) {
+              setAuthToken(data.token);
+              try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+            }
+          } catch(e) {}
+
           if (isMounted) {
             setTgUser({
-              id: gameProxy.initParams.user_id || 1,
+              id: fallbackId,
               first_name: "Player",
             });
             setIsTgValidating(false);
@@ -2734,7 +2715,7 @@ export default function App() {
         }
 
         // 3. Try URL query and hash parameters direct fallback (super robust detecting game/bot launch params)
-        if (isPreviewEnv) {
+        {
           const urlParams = new URLSearchParams(window.location.search);
           const hashParams = new URLSearchParams(window.location.hash.slice(1));
           const tgShareScoreUrl = urlParams.get('tgShareScoreUrl') || hashParams.get('tgShareScoreUrl');
@@ -2747,9 +2728,23 @@ export default function App() {
                            urlParams.get('chat_id') || hashParams.get('chat_id');
           
           if (tgShareScoreUrl || tgUserId || tgInitData || tgGameId || tgChatId) {
+            const fallbackId = tgUserId ? Number(tgUserId) : 1;
+            try {
+              const response = await fetch('/api/auth/telegram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fallbackUserId: fallbackId })
+              });
+              const data = await response.json();
+              if (response.ok && data.token) {
+                setAuthToken(data.token);
+                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+              }
+            } catch(e) {}
+
             if (isMounted) {
               setTgUser({
-                id: tgUserId ? Number(tgUserId) : 1,
+                id: fallbackId,
                 first_name: "Player",
               });
               setIsTgValidating(false);
@@ -2773,17 +2768,26 @@ export default function App() {
         setTimeout(poll, 100);
       } else if (isMounted) {
         // Validation gave up. We didn't find telegram data.
-        if (isPreviewEnv) {
-          setTgUser({
-            id: 9999,
-            first_name: "Developer",
-            last_name: "Preview"
+        try {
+          const response = await fetch('/api/auth/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fallbackUserId: Math.floor(Math.random() * 1000000) })
           });
-          setIsTgValidating(false);
-        } else {
-          setTgUser(null);
-          setIsTgValidating(false);
+          const data = await response.json();
+          if (data.token) {
+            setAuthToken(data.token);
+            try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+          }
+          if (data.user) {
+            setTgUser(data.user);
+          } else {
+            setTgUser({ id: 9999, first_name: "Developer", last_name: "Preview" });
+          }
+        } catch (e) {
+          setTgUser({ id: 9999, first_name: "Developer", last_name: "Preview" });
         }
+        setIsTgValidating(false);
       }
     };
 
@@ -2926,30 +2930,7 @@ export default function App() {
   const currentResult = digits.length ? calculateResult(digits, gaps) : 0;
   const isWin = currentResult === 100;
 
-  const sendScoreToCloudflare = useCallback(async (score: number) => {
-    try {
-      // REPLACE /api/score WITH YOUR CLOUDFLARE WORKER URL
-      // Example: 'https://your-worker-name.your-subdomain.workers.dev/score'
-      const CLOUDFLARE_API_URL = '/api/score'; 
-      const tgParams = (window as any).TelegramGameProxy?.initParams || {};
-      const payload = {
-        score,
-        userId: tgUser?.id || tgParams.user_id,
-        initParams: tgParams
-      };
-      
-      const response = await fetch(CLOUDFLARE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      console.log('Score sent to Cloudflare API:', await response.text());
-    } catch (e) {
-      console.error('Failed to send score via fetch', e);
-    }
-  }, [tgUser]);
+
 
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
@@ -2964,17 +2945,24 @@ export default function App() {
       const newTotalTime = totalSolveTime + elapsedTime;
       setTotalSolveTime(newTotalTime);
       
-      // Send score via fetch
-      sendScoreToCloudflare(newSolvedCount);
+
       
       // Count operators used in the winning solution
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
       const newTotalOperators = totalOperatorsUsed + operatorsUsed;
       setTotalOperatorsUsed(newTotalOperators);
       
+      // Update bests
+      if (bestTimeMs === null || elapsedTime < bestTimeMs) {
+        setBestTimeMs(elapsedTime);
+      }
+      if (minCharacters === null || operatorsUsed < minCharacters) {
+        setMinCharacters(operatorsUsed);
+      }
+
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, solvedCount, totalSolveTime, totalOperatorsUsed, tgUser, gameMode, digits]);
+  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, solvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, tgUser, gameMode, digits]);
 
   if (!digits.length) return null;
 
@@ -3120,7 +3108,7 @@ export default function App() {
     );
   }
 
-  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id && tgUser.id !== 1 && (tgUser.id !== 9999 || isPreviewEnv));
+  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id);
 
   if (!isRealTelegramUser && !devBypassed) {
     return (
@@ -3149,21 +3137,32 @@ export default function App() {
               window.open("https://t.me/Game_Make100_bot", "_blank");
             }
           }}
-          className="px-6 py-3 bg-orange-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg"
+          className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
         >
           {language === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram'}
         </button>
-        {isPreviewEnv && (
-          <button 
-            onClick={() => {
-              setDevBypassed(true);
-              setTgUser({ id: 9999, first_name: "Developer" });
-            }} 
-            className="mt-8 text-xs underline text-zinc-500 opacity-50 hover:opacity-100"
-          >
-            Dev Mode: Bypass Telegram Check
-          </button>
-        )}
+
+        <button 
+          onClick={async () => {
+            setDevBypassed(true);
+            setTgUser({ id: 9999, first_name: "Guest" });
+            try {
+              const res = await fetch('/api/auth/telegram', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fallbackUserId: 9999 })
+              });
+              const data = await res.json();
+              if (data.token) {
+                setAuthToken(data.token);
+                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
+              }
+            } catch(e) {}
+          }} 
+          className="px-6 py-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl font-bold transition-colors shadow mb-2 w-[240px]"
+        >
+          {language === 'ru' ? 'Играть как гость' : 'Play as Guest'}
+        </button>
       </div>
     );
   }
