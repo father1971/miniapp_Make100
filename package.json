@@ -15,7 +15,6 @@
     "@libsql/client": "^0.17.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.19",
-    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "esbuild": "^0.28.0",
     "express": "^5.2.1",

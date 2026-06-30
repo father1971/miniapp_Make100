@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as apiFetchLeaderboard, setAuthToken, getAuthToken } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard, setAuthToken, getAuthToken } from './api';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -1983,7 +1983,7 @@ export default function App() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   
   useEffect(() => {
-    if (tgUser && tgUser.id) {
+    if (tgUser && tgUser.id && tgUser.id !== 9999 && tgUser.id !== 1) {
       try {
         localStorage.setItem('make100_tgUser', JSON.stringify(tgUser));
       } catch (e) {
@@ -2202,8 +2202,6 @@ export default function App() {
   const [unsolvedCount, setUnsolvedCount] = useState(0);
   const [totalSolveTime, setTotalSolveTime] = useState(0);
   const [totalOperatorsUsed, setTotalOperatorsUsed] = useState(0);
-  const [bestTimeMs, setBestTimeMs] = useState<number | null>(null);
-  const [minCharacters, setMinCharacters] = useState<number | null>(null);
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   // Demo State
@@ -2229,7 +2227,7 @@ export default function App() {
   }, []);
 
   const fetchLeaderboardData = async () => {
-    if (!getAuthToken()) {
+    if (isPreviewEnv) {
       setIsLoadingLeaderboard(true);
       setTimeout(() => {
         setLeaderboardData([
@@ -2243,7 +2241,7 @@ export default function App() {
 
     setIsLoadingLeaderboard(true);
     try {
-      const data = await apiFetchLeaderboard();
+      const data = await fetchLeaderboard();
       setLeaderboardData(data.map((p: any) => ({
         id: p.id,
         displayName: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username || 'Player',
@@ -2274,8 +2272,6 @@ export default function App() {
             setUnsolvedCount(parsed.unsolvedCount || 0);
             setTotalSolveTime(parsed.totalSolveTime || 0);
             setTotalOperatorsUsed(parsed.totalOperatorsUsed || 0);
-            if (parsed.bestTimeMs) setBestTimeMs(parsed.bestTimeMs);
-            if (parsed.minCharacters) setMinCharacters(parsed.minCharacters);
             if (parsed.themePreference) setThemePreference(parsed.themePreference);
             if (parsed.language) setLanguage(parsed.language);
             if (parsed.gameMode) setGameMode(parsed.gameMode);
@@ -2288,13 +2284,13 @@ export default function App() {
         return false;
       };
 
-      if (!getAuthToken()) {
+      if (isPreviewEnv) {
         loadFromLocal();
         setStatsLoaded(true);
         return;
       }
 
-      if (tgUser && tgUser.id) {
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && getAuthToken()) {
         try {
           const apiStats = await fetchUserStats();
           const localStatsStr = localStorage.getItem('make100_stats');
@@ -2327,8 +2323,6 @@ export default function App() {
                 avatarUrl: tgUser.photo_url,
                 solvedCount: localSolved,
                 skippedCount: localStats.unsolvedCount || 0,
-                bestTimeMs: localStats.bestTimeMs || null,
-                minCharacters: localStats.minCharacters || null,
                 totalTimeMs: localStats.totalSolveTime || 0,
                 totalCharacters: localStats.totalOperatorsUsed || 0,
                 settings: {
@@ -2345,8 +2339,6 @@ export default function App() {
               setUnsolvedCount(apiStats.skippedCount || 0);
               setTotalSolveTime(apiStats.totalTimeMs || 0);
               setTotalOperatorsUsed(apiStats.totalCharacters || 0);
-              if (apiStats.bestTimeMs) setBestTimeMs(apiStats.bestTimeMs);
-              if (apiStats.minCharacters) setMinCharacters(apiStats.minCharacters);
               if (apiStats.settings) {
                 if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
                 if (apiStats.settings.language) setLanguage(apiStats.settings.language);
@@ -2393,8 +2385,6 @@ export default function App() {
                 avatarUrl: tgUser.photo_url,
                 solvedCount: currentSolved,
                 skippedCount: currentUnsolved,
-                bestTimeMs: localStats?.bestTimeMs || null,
-                minCharacters: localStats?.minCharacters || null,
                 totalTimeMs: currentSolveTime,
                 totalCharacters: currentOperators,
                 settings: {
@@ -2424,12 +2414,16 @@ export default function App() {
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const stats = { solvedCount, unsolvedCount, bestTimeMs, minCharacters, totalSolveTime, totalOperatorsUsed, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
+    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
     const statsStr = JSON.stringify(stats);
     
     localStorage.setItem('make100_stats', statsStr);
 
-    if (tgUser && tgUser.id) {
+    if (isPreviewEnv) {
+      return;
+    }
+
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && getAuthToken()) {
       saveUserStats({
         firstName: tgUser.first_name,
         lastName: tgUser.last_name,
@@ -2437,8 +2431,6 @@ export default function App() {
         avatarUrl: tgUser.photo_url,
         solvedCount,
         skippedCount: unsolvedCount,
-        bestTimeMs,
-        minCharacters,
         totalTimeMs: totalSolveTime,
         totalCharacters: totalOperatorsUsed,
         settings: {
@@ -2460,7 +2452,7 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, bestTimeMs, minCharacters, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
+  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
 
   useEffect(() => {
     setPlayerRank(null);
@@ -2549,29 +2541,14 @@ export default function App() {
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
-            try {
-              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
-              const response = await fetch('/api/auth/telegram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fallbackUserId: fallbackId })
-              });
-              const data = await response.json();
-              if (data.token) {
-                setAuthToken(data.token);
-                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-              }
-              if (isMounted) {
-                const fallbackUser = tg.initDataUnsafe?.user || data.user || { id: fallbackId, first_name: "Player" };
-                setTgUser(fallbackUser);
-                setIsTgValidating(false);
-              }
-            } catch (err) {
-              if (isMounted) {
+            if (isMounted) {
+              if (isPreviewEnv) {
                 const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
                 setTgUser(fallbackUser);
-                setIsTgValidating(false);
+              } else {
+                setTgUser(null);
               }
+              setIsTgValidating(false);
             }
             return true;
           }
@@ -2597,10 +2574,7 @@ export default function App() {
             const response = await fetch('/api/auth/telegram', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                initData: tg.initData,
-                fallbackUserId: tg.initDataUnsafe?.user?.id || 1 
-              })
+              body: JSON.stringify({ initData: tg.initData })
             });
             
             const data = await response.json();
@@ -2613,23 +2587,12 @@ export default function App() {
               } else {
                 setTgValidationError(data.error || 'Validation failed');
               }
-              
-              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
-              try {
-                const res = await fetch('/api/auth/telegram', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ fallbackUserId: fallbackId })
-                });
-                const fallbackData = await res.json();
-                if (fallbackData.token) {
-                  setAuthToken(fallbackData.token);
-                  try { sessionStorage.setItem('tgAuthToken', fallbackData.token); } catch(e){}
-                }
-              } catch(e) {}
-
-              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-              setTgUser(fallbackUser);
+              if (isPreviewEnv) {
+                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+                setTgUser(fallbackUser);
+              } else {
+                setTgUser(null);
+              }
               setIsTgValidating(false);
               return true;
             }
@@ -2660,24 +2623,12 @@ export default function App() {
           } catch (err) {
             if (isMounted) {
               setTgValidationError('Network error during validation');
-              
-              // Fallback to fetch token
-              const fallbackId = tg.initDataUnsafe?.user?.id || 1;
-              try {
-                const res = await fetch('/api/auth/telegram', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ fallbackUserId: fallbackId })
-                });
-                const data = await res.json();
-                if (data.token) {
-                  setAuthToken(data.token);
-                  try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-                }
-              } catch (e) {}
-
-              const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-              setTgUser(fallbackUser);
+              if (isPreviewEnv) {
+                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
+                setTgUser(fallbackUser);
+              } else {
+                setTgUser(null);
+              }
             }
           }
           
@@ -2690,23 +2641,9 @@ export default function App() {
         // 2. Try Telegram Game Proxy (HTML5 Games via Bot API)
         const gameProxy = (window as any).TelegramGameProxy;
         if (gameProxy && gameProxy.initParams && (gameProxy.initParams.user_id || gameProxy.initParams.chat_id)) {
-          const fallbackId = gameProxy.initParams.user_id || 1;
-          try {
-            const response = await fetch('/api/auth/telegram', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fallbackUserId: fallbackId })
-            });
-            const data = await response.json();
-            if (response.ok && data.token) {
-              setAuthToken(data.token);
-              try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-            }
-          } catch(e) {}
-
           if (isMounted) {
             setTgUser({
-              id: fallbackId,
+              id: gameProxy.initParams.user_id || 1,
               first_name: "Player",
             });
             setIsTgValidating(false);
@@ -2715,7 +2652,7 @@ export default function App() {
         }
 
         // 3. Try URL query and hash parameters direct fallback (super robust detecting game/bot launch params)
-        {
+        if (isPreviewEnv) {
           const urlParams = new URLSearchParams(window.location.search);
           const hashParams = new URLSearchParams(window.location.hash.slice(1));
           const tgShareScoreUrl = urlParams.get('tgShareScoreUrl') || hashParams.get('tgShareScoreUrl');
@@ -2728,23 +2665,9 @@ export default function App() {
                            urlParams.get('chat_id') || hashParams.get('chat_id');
           
           if (tgShareScoreUrl || tgUserId || tgInitData || tgGameId || tgChatId) {
-            const fallbackId = tgUserId ? Number(tgUserId) : 1;
-            try {
-              const response = await fetch('/api/auth/telegram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fallbackUserId: fallbackId })
-              });
-              const data = await response.json();
-              if (response.ok && data.token) {
-                setAuthToken(data.token);
-                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-              }
-            } catch(e) {}
-
             if (isMounted) {
               setTgUser({
-                id: fallbackId,
+                id: tgUserId ? Number(tgUserId) : 1,
                 first_name: "Player",
               });
               setIsTgValidating(false);
@@ -2768,26 +2691,17 @@ export default function App() {
         setTimeout(poll, 100);
       } else if (isMounted) {
         // Validation gave up. We didn't find telegram data.
-        try {
-          const response = await fetch('/api/auth/telegram', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fallbackUserId: Math.floor(Math.random() * 1000000) })
+        if (isPreviewEnv) {
+          setTgUser({
+            id: 9999,
+            first_name: "Developer",
+            last_name: "Preview"
           });
-          const data = await response.json();
-          if (data.token) {
-            setAuthToken(data.token);
-            try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-          }
-          if (data.user) {
-            setTgUser(data.user);
-          } else {
-            setTgUser({ id: 9999, first_name: "Developer", last_name: "Preview" });
-          }
-        } catch (e) {
-          setTgUser({ id: 9999, first_name: "Developer", last_name: "Preview" });
+          setIsTgValidating(false);
+        } else {
+          setTgUser(null);
+          setIsTgValidating(false);
         }
-        setIsTgValidating(false);
       }
     };
 
@@ -2930,7 +2844,30 @@ export default function App() {
   const currentResult = digits.length ? calculateResult(digits, gaps) : 0;
   const isWin = currentResult === 100;
 
-
+  const sendScoreToCloudflare = useCallback(async (score: number) => {
+    try {
+      // REPLACE /api/score WITH YOUR CLOUDFLARE WORKER URL
+      // Example: 'https://your-worker-name.your-subdomain.workers.dev/score'
+      const CLOUDFLARE_API_URL = '/api/score'; 
+      const tgParams = (window as any).TelegramGameProxy?.initParams || {};
+      const payload = {
+        score,
+        userId: tgUser?.id || tgParams.user_id,
+        initParams: tgParams
+      };
+      
+      const response = await fetch(CLOUDFLARE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      console.log('Score sent to Cloudflare API:', await response.text());
+    } catch (e) {
+      console.error('Failed to send score via fetch', e);
+    }
+  }, [tgUser]);
 
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
@@ -2945,24 +2882,17 @@ export default function App() {
       const newTotalTime = totalSolveTime + elapsedTime;
       setTotalSolveTime(newTotalTime);
       
-
+      // Send score via fetch
+      sendScoreToCloudflare(newSolvedCount);
       
       // Count operators used in the winning solution
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
       const newTotalOperators = totalOperatorsUsed + operatorsUsed;
       setTotalOperatorsUsed(newTotalOperators);
       
-      // Update bests
-      if (bestTimeMs === null || elapsedTime < bestTimeMs) {
-        setBestTimeMs(elapsedTime);
-      }
-      if (minCharacters === null || operatorsUsed < minCharacters) {
-        setMinCharacters(operatorsUsed);
-      }
-
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, solvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, tgUser, gameMode, digits]);
+  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, solvedCount, totalSolveTime, totalOperatorsUsed, tgUser, gameMode, digits]);
 
   if (!digits.length) return null;
 
@@ -3108,7 +3038,7 @@ export default function App() {
     );
   }
 
-  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id);
+  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id && tgUser.id !== 1 && (tgUser.id !== 9999 || isPreviewEnv));
 
   if (!isRealTelegramUser && !devBypassed) {
     return (
@@ -3143,21 +3073,9 @@ export default function App() {
         </button>
 
         <button 
-          onClick={async () => {
+          onClick={() => {
             setDevBypassed(true);
             setTgUser({ id: 9999, first_name: "Guest" });
-            try {
-              const res = await fetch('/api/auth/telegram', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fallbackUserId: 9999 })
-              });
-              const data = await res.json();
-              if (data.token) {
-                setAuthToken(data.token);
-                try { sessionStorage.setItem('tgAuthToken', data.token); } catch(e){}
-              }
-            } catch(e) {}
           }} 
           className="px-6 py-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl font-bold transition-colors shadow mb-2 w-[240px]"
         >

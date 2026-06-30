@@ -34,13 +34,6 @@ export async function fetchUserStats(): Promise<UserStats | null> {
     if (res.ok) {
       return await res.json();
     }
-    if (res.status === 401 || res.status === 403) {
-      sessionStorage.removeItem('tgAuthToken');
-      sessionStorage.removeItem('tgInitData');
-      sessionStorage.removeItem('tgUser');
-      // A reload might be harsh, but it forces re-auth
-      window.location.reload();
-    }
     return null;
   } catch (e) {
     console.error("Failed to fetch user stats", e);
@@ -51,7 +44,7 @@ export async function fetchUserStats(): Promise<UserStats | null> {
 export async function saveUserStats(stats: UserStats): Promise<void> {
   if (!authToken) return;
   try {
-    const res = await fetch('/api/user', {
+    await fetch('/api/user', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -59,15 +52,6 @@ export async function saveUserStats(stats: UserStats): Promise<void> {
       },
       body: JSON.stringify(stats)
     });
-    if (!res.ok) {
-      console.error("Failed to save user stats, status:", res.status, await res.text());
-      if (res.status === 401 || res.status === 403) {
-        sessionStorage.removeItem('tgAuthToken');
-        sessionStorage.removeItem('tgInitData');
-        sessionStorage.removeItem('tgUser');
-        window.location.reload();
-      }
-    }
   } catch (e) {
     console.error("Failed to save user stats", e);
   }

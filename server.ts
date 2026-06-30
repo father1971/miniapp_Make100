@@ -7,16 +7,12 @@ import { users } from "./src/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 const PORT = 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'local_development_secret_do_not_use_in_prod';
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_TEST_BOT_TOKEN = process.env.TELEGRAM_TEST_BOT_TOKEN;
 
 // Combine tokens into an array, filtering out any undefined ones
-const BOT_TOKENS = [TELEGRAM_BOT_TOKEN, TELEGRAM_TEST_BOT_TOKEN]
-  .filter(Boolean)
-  .map(t => t!.trim())
-  .map(t => t.match(/^bot/i) ? t.substring(3) : t)
-  .filter(t => t.length > 0);
+const BOT_TOKENS = [TELEGRAM_BOT_TOKEN, TELEGRAM_TEST_BOT_TOKEN].filter(Boolean) as string[];
 
 // Middleware to authenticate JWT
 function authenticateToken(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -37,28 +33,8 @@ async function startServer() {
   
   app.use(express.json());
 
-  // Health check endpoint
-  app.get('/api/health', async (req, res) => {
-    try {
-      await db.run(sql`SELECT 1`);
-      res.json({ status: "ok", database: "connected" });
-    } catch (e) {
-      console.error("Database health check failed:", e);
-      res.status(500).json({ status: "error", database: "disconnected" });
-    }
-  });
-
   // Initialize DB table
   try {
-    if (!process.env.TURSO_DATABASE_URL) {
-      console.warn("=================================================");
-      console.warn("WARNING: TURSO_DATABASE_URL is not set!");
-      console.warn("The application will use an ephemeral 'local.db' file.");
-      console.warn("Users from Telegram will NOT be saved to your Turso database.");
-      console.warn("Please add TURSO_DATABASE_URL to your environment secrets.");
-      console.warn("=================================================");
-    }
-    
     await db.run(sql`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
@@ -76,26 +52,16 @@ async function startServer() {
         last_saved_at INTEGER NOT NULL
       )
     `);
-    
-    // Explicit health check on startup
-    await db.run(sql`SELECT 1`);
-    console.log("Database connection successful and initialized");
+    console.log("Database initialized");
   } catch (err) {
-    console.error("Failed to connect to or initialize database:", err);
+    console.error("Failed to initialize database:", err);
   }
 
   // API routes
   app.post("/api/auth/telegram", (req, res) => {
-    const { initData, fallbackUserId } = req.body;
+    const { initData } = req.body;
 
     if (!initData) {
-      if (fallbackUserId) {
-         // Fallback for HTML5 Games via Bot API where initData is not available
-         const tgId = Number(fallbackUserId) || 1;
-         const token = jwt.sign({ tgId, mock: true }, JWT_SECRET, { expiresIn: '24h' });
-         const user = { id: tgId, first_name: "Player" };
-         return res.json({ token, user, message: "Fallback token generated for HTML5 Game" });
-      }
       return res.status(400).json({ error: "initData is required" });
     }
 
@@ -143,18 +109,7 @@ async function startServer() {
       }
 
       if (!isValid) {
-        console.log("Validation failed for initData, but proceeding to allow user to play");
-        let fallbackId = req.body.fallbackUserId || 1;
-        let userStr = urlParams.get('user');
-        let userObj = null;
-        if (userStr) {
-          try {
-            userObj = JSON.parse(userStr);
-            if (userObj.id) fallbackId = userObj.id;
-          } catch(e) {}
-        }
-        const token = jwt.sign({ tgId: fallbackId, mock: true }, JWT_SECRET, { expiresIn: '24h' });
-        return res.json({ token, user: userObj, error: "Validation failed, using fallback token" });
+        return res.status(401).json({ error: "Invalid signature" });
       }
 
       const authDate = parseInt(urlParams.get('auth_date') || '0', 10);
@@ -162,7 +117,7 @@ async function startServer() {
       const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
       if (Math.abs(now - authDate) > THIRTY_DAYS) {
-        console.warn("Session expired (auth_date is too old), but allowing to proceed");
+        return res.status(401).json({ error: "Session expired (auth_date is too old)", code: "SESSION_EXPIRED" });
       }
 
       // Validation successful, extract user info
@@ -177,10 +132,9 @@ async function startServer() {
       }
 
       // Generate JWT
-      const tgId = user?.id || req.body.fallbackUserId || 1;
       const token = jwt.sign(
         { 
-          tgId,
+          tgId: user?.id,
           username: user?.username,
           authDate
         }, 
@@ -203,13 +157,7 @@ async function startServer() {
       
       const userRecords = await db.select().from(users).where(eq(users.id, tgId));
       if (userRecords.length > 0) {
-        const user = userRecords[0];
-        if (typeof user.settings === 'string') {
-          try {
-            user.settings = JSON.parse(user.settings);
-          } catch(e){}
-        }
-        res.json(user);
+        res.json(userRecords[0]);
       } else {
         res.status(404).json({ error: "User not found" });
       }
@@ -225,8 +173,6 @@ async function startServer() {
       const { tgId } = (req as any).user;
       if (!tgId) return res.status(400).json({ error: "No user ID" });
       
-      // Allow all users to save stats
-
       const { 
         firstName, lastName, username, avatarUrl, 
         solvedCount, skippedCount, bestTimeMs, minCharacters, 
@@ -248,7 +194,7 @@ async function startServer() {
           minCharacters: minCharacters !== undefined ? minCharacters : existingUser[0].minCharacters,
           totalTimeMs: totalTimeMs !== undefined ? totalTimeMs : existingUser[0].totalTimeMs,
           totalCharacters: totalCharacters !== undefined ? totalCharacters : existingUser[0].totalCharacters,
-          settings: settings ? settings : existingUser[0].settings,
+          settings: settings ? JSON.stringify(settings) : existingUser[0].settings,
           lastSavedAt: new Date(),
         }).where(eq(users.id, tgId));
       } else {
@@ -264,7 +210,7 @@ async function startServer() {
           minCharacters: minCharacters || null,
           totalTimeMs: totalTimeMs || 0,
           totalCharacters: totalCharacters || 0,
-          settings: settings ? settings : {},
+          settings: settings ? JSON.stringify(settings) : '{}',
           lastSavedAt: new Date(),
         });
       }
