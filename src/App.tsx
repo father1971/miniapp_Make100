@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { fetchUserStats, saveUserStats, fetchLeaderboard, setAuthToken, getAuthToken } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi } from './api';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -1950,7 +1950,6 @@ export default function App() {
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
-  const [tgValidationError, setTgValidationError] = useState<string | null>(null);
   
   const [gameMode, setGameMode] = useState<'ticket' | 'car'>('ticket');
   const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>('auto');
@@ -2241,7 +2240,7 @@ export default function App() {
 
     setIsLoadingLeaderboard(true);
     try {
-      const data = await fetchLeaderboard();
+      const data = await fetchLeaderboardApi();
       setLeaderboardData(data.map((p: any) => ({
         id: p.id,
         displayName: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username || 'Player',
@@ -2290,7 +2289,7 @@ export default function App() {
         return;
       }
 
-      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && getAuthToken()) {
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
         try {
           const apiStats = await fetchUserStats();
           const localStatsStr = localStorage.getItem('make100_stats');
@@ -2423,9 +2422,8 @@ export default function App() {
       return;
     }
 
-    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999 && getAuthToken()) {
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
       saveUserStats({
-        firstName: tgUser.first_name,
         lastName: tgUser.last_name,
         username: tgUser.username,
         avatarUrl: tgUser.photo_url,
@@ -2559,8 +2557,6 @@ export default function App() {
             const cachedUser = sessionStorage.getItem('tgUser');
             if (tg.initData && cachedInitData === tg.initData && cachedUser) {
               if (isMounted) {
-                const cachedToken = sessionStorage.getItem('tgAuthToken');
-                if (cachedToken) setAuthToken(cachedToken);
                 setTgUser(JSON.parse(cachedUser));
                 setIsTgValidating(false);
               }
@@ -2570,74 +2566,36 @@ export default function App() {
             console.error("Session storage error", e);
           }
 
-          try {
-            const response = await fetch('/api/auth/telegram', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ initData: tg.initData })
-            });
-            
-            const data = await response.json();
-            
-            if (!isMounted) return true;
-
-            if (!response.ok) {
-              if (data.code === 'SESSION_EXPIRED') {
-                setTgValidationError('SESSION_EXPIRED');
-              } else {
-                setTgValidationError(data.error || 'Validation failed');
-              }
-              if (isPreviewEnv) {
-                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-                setTgUser(fallbackUser);
-              } else {
-                setTgUser(null);
-              }
-              setIsTgValidating(false);
-              return true;
-            }
-            
-            let userToSet = null;
-            if (data.user) {
-              userToSet = data.user;
-            } else if (tg.initDataUnsafe?.user) {
-              userToSet = tg.initDataUnsafe.user;
-            }
-
-            if (data.token) {
-              setAuthToken(data.token);
-              try {
-                sessionStorage.setItem('tgAuthToken', data.token);
-              } catch(e){}
-            }
-
-            if (userToSet) {
-              setTgUser(userToSet);
-              try {
-                sessionStorage.setItem('tgInitData', tg.initData);
-                sessionStorage.setItem('tgUser', JSON.stringify(userToSet));
-              } catch (e) {
-                console.error("Failed to save to session storage", e);
-              }
-            }
-          } catch (err) {
-            if (isMounted) {
-              setTgValidationError('Network error during validation');
-              if (isPreviewEnv) {
-                const fallbackUser = tg.initDataUnsafe?.user || { id: 1, first_name: "Player" };
-                setTgUser(fallbackUser);
-              } else {
-                setTgUser(null);
-              }
-            }
+          let userToSet = null;
+          if (tg.initDataUnsafe?.user) {
+            userToSet = tg.initDataUnsafe.user;
           }
-          
-          if (isMounted) {
-            setIsTgValidating(false);
+
+          if (userToSet) {
+            if (isMounted) {
+              setTgUser(userToSet);
+              setIsTgValidating(false);
+            }
+            try {
+              sessionStorage.setItem('tgInitData', tg.initData);
+              sessionStorage.setItem('tgUser', JSON.stringify(userToSet));
+            } catch (e) {
+              console.error("Failed to save to session storage", e);
+            }
+          } else {
+             if (isMounted) {
+                if (isPreviewEnv) {
+                  const fallbackUser = { id: 1, first_name: "Player" };
+                  setTgUser(fallbackUser);
+                } else {
+                  setTgUser(null);
+                }
+                setIsTgValidating(false);
+             }
           }
           return true;
         }
-
+          
         // 2. Try Telegram Game Proxy (HTML5 Games via Bot API)
         const gameProxy = (window as any).TelegramGameProxy;
         if (gameProxy && gameProxy.initParams && (gameProxy.initParams.user_id || gameProxy.initParams.chat_id)) {
@@ -2996,45 +2954,6 @@ export default function App() {
         t={t} 
         isTgValidating={true} 
       />
-    );
-  }
-
-  if (tgValidationError && !tgUser) {
-    if (tgValidationError === 'SESSION_EXPIRED') {
-      return (
-        <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center p-4 text-center`}>
-          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-500 p-4 rounded-full mb-4">
-            <Clock size={32} />
-          </div>
-          <h2 className="text-xl font-bold mb-2">Session Expired</h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-xs">
-            For security reasons, your session has expired. Please restart the app to continue.
-          </p>
-          <button 
-            onClick={() => {
-              const tg = (window as unknown as { Telegram?: { WebApp: any } }).Telegram?.WebApp;
-              if (tg?.close) {
-                tg.close();
-              } else {
-                window.location.reload();
-              }
-            }}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors"
-          >
-            Restart App
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-red-500' : 'bg-zinc-50 text-red-600'} flex flex-col items-center justify-center p-4 text-center`}>
-        <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full mb-4">
-          <X size={32} />
-        </div>
-        <h2 className="text-xl font-bold mb-2">Authentication Failed</h2>
-        <p className="text-sm text-red-400">{tgValidationError}</p>
-      </div>
     );
   }
 

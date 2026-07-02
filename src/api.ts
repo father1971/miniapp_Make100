@@ -13,24 +13,19 @@ export interface UserStats {
   settings?: any;
 }
 
-let authToken: string | null = null;
+const API_URL = import.meta.env.VITE_API_URL || '';
 
-export function setAuthToken(token: string) {
-  authToken = token;
-}
-
-export function getAuthToken() {
-  return authToken;
+function getAuthHeader(): Record<string, string> {
+  // @ts-ignore
+  const initData = window.Telegram?.WebApp?.initData;
+  return initData ? { 'Authorization': `Bearer ${initData}` } : {};
 }
 
 export async function fetchUserStats(): Promise<UserStats | null> {
-  if (!authToken) return null;
+  const headers = getAuthHeader();
+  if (!headers.Authorization) return null;
   try {
-    const res = await fetch('/api/user', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
-    });
+    const res = await fetch(`${API_URL}/api/user`, { headers });
     if (res.ok) {
       return await res.json();
     }
@@ -42,13 +37,14 @@ export async function fetchUserStats(): Promise<UserStats | null> {
 }
 
 export async function saveUserStats(stats: UserStats): Promise<void> {
-  if (!authToken) return;
+  const headers = getAuthHeader();
+  if (!headers.Authorization) return;
   try {
-    await fetch('/api/user', {
+    await fetch(`${API_URL}/api/user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
+        ...headers
       },
       body: JSON.stringify(stats)
     });
@@ -59,7 +55,8 @@ export async function saveUserStats(stats: UserStats): Promise<void> {
 
 export async function fetchLeaderboard(): Promise<UserStats[]> {
   try {
-    const res = await fetch('/api/leaderboard');
+    const headers = getAuthHeader();
+    const res = await fetch(`${API_URL}/api/leaderboard`, { headers });
     if (res.ok) {
       return await res.json();
     }
