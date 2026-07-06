@@ -16,7 +16,7 @@ export interface UserStats {
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 function getAuthHeader(): Record<string, string> {
-  // @ts-ignore
+  // @ts-expect-error - Telegram WebApp is injected globally
   const initData = window.Telegram?.WebApp?.initData;
   return initData ? { 'Authorization': `Bearer ${initData}` } : {};
 }
