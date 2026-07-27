@@ -130,6 +130,11 @@ const TRANSLATIONS = {
     time: "Время",
     shareScore: "Поделиться",
     playAsGuest: "Играть как гость",
+    authorizing: "Авторизация...",
+    authorizingTg: "Авторизация в Telegram...",
+    loading: "Загрузка...",
+    level: "Уровень",
+    imageLoadError: "Ошибка загрузки изображения",
     tickets: {
       flight: { title: 'ПОСАДОЧНЫЙ ТАЛОН', subtitle: 'ПЕРВЫЙ КЛАСС', footerLeft: 'ГЕЙТ 14', footerRight: 'МЕСТО 2А' },
       concert: { title: 'LIVE КОНЦЕРТ', subtitle: 'VIP ДОСТУП', footerLeft: 'МИРОВОЙ ТУР', footerRight: 'РЯД 1' },
@@ -191,6 +196,11 @@ const TRANSLATIONS = {
     time: "Time",
     shareScore: "Share",
     playAsGuest: "Play as guest",
+    authorizing: "Authorizing...",
+    authorizingTg: "Authorizing with Telegram...",
+    loading: "Loading...",
+    level: "Level",
+    imageLoadError: "Image load error",
     tickets: {
       flight: { title: 'BOARDING PASS', subtitle: 'FIRST CLASS', footerLeft: 'GATE 14', footerRight: 'SEAT 2A' },
       concert: { title: 'LIVE CONCERT', subtitle: 'VIP ACCESS', footerLeft: 'WORLD TOUR', footerRight: 'ROW 1' },
@@ -251,6 +261,12 @@ const TRANSLATIONS = {
     noData: "Noch keine Daten",
     time: "Zeit",
     shareScore: "Teilen",
+    playAsGuest: "Als Gast spielen",
+    authorizing: "Autorisierung...",
+    authorizingTg: "Autorisierung mit Telegram...",
+    loading: "Wird geladen...",
+    level: "Level",
+    imageLoadError: "Bildladefehler",
     tickets: {
       flight: { title: 'BORDKARTE', subtitle: 'ERSTE KLASSE', footerLeft: 'GATE 14', footerRight: 'SITZ 2A' },
       concert: { title: 'LIVE-KONZERT', subtitle: 'VIP-ZUGANG', footerLeft: 'WELTTOURNEE', footerRight: 'REIHE 1' },
@@ -311,6 +327,12 @@ const TRANSLATIONS = {
     noData: "Pas encore de données",
     time: "Temps",
     shareScore: "Partager",
+    playAsGuest: "Jouer en tant qu'invité",
+    authorizing: "Autorisation...",
+    authorizingTg: "Autorisation avec Telegram...",
+    loading: "Chargement...",
+    level: "Niveau",
+    imageLoadError: "Erreur de chargement d'image",
     tickets: {
       flight: { title: 'CARTE D\'EMBARQUEMENT', subtitle: 'PREMIÈRE CLASSE', footerLeft: 'PORTE 14', footerRight: 'SIÈGE 2A' },
       concert: { title: 'CONCERT LIVE', subtitle: 'ACCÈS VIP', footerLeft: 'TOURNÉE MONDIALE', footerRight: 'RANG 1' },
@@ -371,6 +393,12 @@ const TRANSLATIONS = {
     noData: "Ainda sem dados",
     time: "Tempo",
     shareScore: "Compartilhar",
+    playAsGuest: "Jogar como convidado",
+    authorizing: "Autorizando...",
+    authorizingTg: "Autorizando com Telegram...",
+    loading: "Carregando...",
+    level: "Nível",
+    imageLoadError: "Erro ao carregar imagem",
     tickets: {
       flight: { title: 'CARTÃO DE EMBARQUE', subtitle: 'PRIMEIRA CLASSE', footerLeft: 'PORTÃO 14', footerRight: 'ASSENTO 2A' },
       concert: { title: 'CONCERTO AO VIVO', subtitle: 'ACESSO VIP', footerLeft: 'TURNÊ MUNDIAL', footerRight: 'FILA 1' },
@@ -431,6 +459,12 @@ const TRANSLATIONS = {
     noData: "Aún no hay datos",
     time: "Tiempo",
     shareScore: "Compartir",
+    playAsGuest: "Jugar como invitado",
+    authorizing: "Autorizando...",
+    authorizingTg: "Autorizando con Telegram...",
+    loading: "Cargando...",
+    level: "Nivel",
+    imageLoadError: "Error al cargar la imagen",
     tickets: {
       flight: { title: 'TARJETA DE EMBARQUE', subtitle: 'PRIMERA CLASSE', footerLeft: 'PUERTA 14', footerRight: 'ASIENTO 2A' },
       concert: { title: 'CONCIERTO EN VIVO', subtitle: 'ACCESO VIP', footerLeft: 'GIRA MUNDIAL', footerRight: 'FILA 1' },
@@ -491,6 +525,12 @@ const TRANSLATIONS = {
     noData: "暂无数据",
     time: "时间",
     shareScore: "分享",
+    playAsGuest: "以访客身份游玩",
+    authorizing: "授权中...",
+    authorizingTg: "正在通过 Telegram 授权...",
+    loading: "加载中...",
+    level: "等级",
+    imageLoadError: "图片加载错误",
     tickets: {
       flight: { title: '登机牌', subtitle: '头等舱', footerLeft: '登机口 14', footerRight: '座位 2A' },
       concert: { title: '现场演唱会', subtitle: 'VIP 通道', footerLeft: '世界巡演', footerRight: '第 1 排' },
@@ -551,6 +591,12 @@ const TRANSLATIONS = {
     noData: "まだデータがありません",
     time: "時間",
     shareScore: "シェア",
+    playAsGuest: "ゲストとしてプレイ",
+    authorizing: "認証中...",
+    authorizingTg: "Telegramで認証中...",
+    loading: "読み込み中...",
+    level: "レベル",
+    imageLoadError: "画像の読み込みエラー",
     tickets: {
       flight: { title: '搭乗券', subtitle: 'ファーストクラス', footerLeft: 'ゲート 14', footerRight: '座席 2A' },
       concert: { title: 'ライブコンサート', subtitle: 'VIPアクセス', footerLeft: 'ワールドツアー', footerRight: '1列目' },
@@ -611,6 +657,12 @@ const TRANSLATIONS = {
     noData: "Nessun dato ancora",
     time: "Tempo",
     shareScore: "Condividi",
+    playAsGuest: "Gioca come ospite",
+    authorizing: "Autorizzazione...",
+    authorizingTg: "Autorizzazione con Telegram...",
+    loading: "Caricamento...",
+    level: "Livello",
+    imageLoadError: "Errore di caricamento immagine",
     tickets: {
       flight: { title: 'CARTA D\'IMBARCO', subtitle: 'PRIMA CLASSE', footerLeft: 'GATE 14', footerRight: 'POSTO 2A' },
       concert: { title: 'CONCERTO LIVE', subtitle: 'ACCESSO VIP', footerLeft: 'TOUR MONDIALE', footerRight: 'FILA 1' },
@@ -671,6 +723,12 @@ const TRANSLATIONS = {
     noData: "아직 데이터가 없습니다",
     time: "시간",
     shareScore: "공유하기",
+    playAsGuest: "게스트로 플레이",
+    authorizing: "인증 중...",
+    authorizingTg: "Telegram으로 인증 중...",
+    loading: "로딩 중...",
+    level: "레벨",
+    imageLoadError: "이미지 로드 오류",
     tickets: {
       flight: { title: '탑승권', subtitle: '일등석', footerLeft: '게이트 14', footerRight: '좌석 2A' },
       concert: { title: '라이브 콘서트', subtitle: 'VIP 입장', footerLeft: '월드 투어', footerRight: '1열' },
@@ -731,6 +789,12 @@ const TRANSLATIONS = {
     noData: "Henüz veri yok",
     time: "Zaman",
     shareScore: "Paylaş",
+    playAsGuest: "Misafir olarak oyna",
+    authorizing: "Yetkilendiriliyor...",
+    authorizingTg: "Telegram ile yetkilendiriliyor...",
+    loading: "Yükleniyor...",
+    level: "Seviye",
+    imageLoadError: "Görüntü yükleme hatası",
     tickets: {
       flight: { title: 'BİNİŞ KARTI', subtitle: 'BİRİNCİ SINIF', footerLeft: 'KAPI 14', footerRight: 'KOLTUK 2A' },
       concert: { title: 'CANLI KONSER', subtitle: 'VIP GİRİŞ', footerLeft: 'DÜNYA TURU', footerRight: 'SIRA 1' },
@@ -791,6 +855,12 @@ const TRANSLATIONS = {
     noData: "אין נתונים עדיין",
     time: "זמן",
     shareScore: "שיתוף",
+    playAsGuest: "שחק כאורח",
+    authorizing: "מאשר...",
+    authorizingTg: "מאשר מול טלגרם...",
+    loading: "טוען...",
+    level: "רמה",
+    imageLoadError: "שגיאת טעינת תמונה",
     tickets: {
       flight: { title: 'כרטיס עלייה למטוס', subtitle: 'מחלקה ראשונה', footerLeft: 'שער 14', footerRight: 'מושב 2A' },
       concert: { title: 'הופעה חיה', subtitle: 'גישת VIP', footerLeft: 'סיבוב הופעות עולמי', footerRight: 'שורה 1' },
@@ -851,6 +921,12 @@ const TRANSLATIONS = {
     noData: "لا توجد بيانات بعد",
     time: "الوقت",
     shareScore: "مشاركة",
+    playAsGuest: "العب كضيف",
+    authorizing: "جاري التفويض...",
+    authorizingTg: "جاري التفويض عبر تيليجرام...",
+    loading: "جاري التحميل...",
+    level: "مستوى",
+    imageLoadError: "خطأ في تحميل الصورة",
     tickets: {
       flight: { title: 'بطاقة صعود', subtitle: 'الدرجة الأولى', footerLeft: 'بوابة 14', footerRight: 'مقعد 2A' },
       concert: { title: 'حفل مباشر', subtitle: 'دخول VIP', footerLeft: 'جولة عالمية', footerRight: 'صف 1' },
@@ -911,6 +987,12 @@ const TRANSLATIONS = {
     noData: "अभी तक कोई डेटा नहीं",
     time: "समय",
     shareScore: "साझा करें",
+    playAsGuest: "अतिथि के रूप में खेलें",
+    authorizing: "प्राधिकृत कर रहा है...",
+    authorizingTg: "टेलीग्राम के साथ प्राधिकृत कर रहा है...",
+    loading: "लोड हो रहा है...",
+    level: "स्तर",
+    imageLoadError: "छवि लोड करने में त्रुटि",
     tickets: {
       flight: { title: 'बोर्डिंग पास', subtitle: 'प्रथम श्रेणी', footerLeft: 'गेट 14', footerRight: 'सीट 2A' },
       concert: { title: 'लाइव कॉन्सर्ट', subtitle: 'वीआईपी एक्सेस', footerLeft: 'वर्ल्ड टूर', footerRight: 'पंक्ति 1' },
@@ -971,6 +1053,12 @@ const TRANSLATIONS = {
     noData: "Nulla data adhuc",
     time: "Tempus",
     shareScore: "Communicare",
+    playAsGuest: "Lude ut hospes",
+    authorizing: "Auctorizans...",
+    authorizingTg: "Auctorizans cum Telegram...",
+    loading: "Onerans...",
+    level: "Gradus",
+    imageLoadError: "Error loading imago",
     tickets: {
       flight: { title: 'TESSERA CONSCENDENDI', subtitle: 'PRIMA CLASSIS', footerLeft: 'PORTA 14', footerRight: 'SEDES 2A' },
       concert: { title: 'CONCENTUS VIVUS', subtitle: 'ADITUS VIP', footerLeft: 'ITER MUNDANUM', footerRight: 'ORDO 1' },
@@ -1031,6 +1119,12 @@ const TRANSLATIONS = {
     noData: "Ankoraŭ neniuj datumoj",
     time: "Tempo",
     shareScore: "Dividi",
+    playAsGuest: "Ludi kiel gasto",
+    authorizing: "Aŭtorizante...",
+    authorizingTg: "Aŭtorizante kun Telegram...",
+    loading: "Ŝargante...",
+    level: "Nivelo",
+    imageLoadError: "Eraro dum ŝargado de bildo",
     tickets: {
       flight: { title: 'ENIRBILETO', subtitle: 'UNUA KLASO', footerLeft: 'PORDEGO 14', footerRight: 'SEĜO 2A' },
       concert: { title: 'VIVA KONCERTO', subtitle: 'VIP-ALIRO', footerLeft: 'MONDA TURNEO', footerRight: 'VICO 1' },
@@ -1091,6 +1185,12 @@ const TRANSLATIONS = {
     noData: "Lá quenta",
     time: "Lúmë",
     shareScore: "Gweria",
+    playAsGuest: "Tyala ve nér",
+    authorizing: "Lestan...",
+    authorizingTg: "Lestan as Telegram...",
+    loading: "Tultan...",
+    level: "Tyellë",
+    imageLoadError: "Emiel cantë",
     tickets: {
       flight: { title: 'TARMA', subtitle: 'MINYA', footerLeft: 'ANDO 14', footerRight: 'HAMA 2A' },
       concert: { title: 'LINDIË', subtitle: 'VIP', footerLeft: 'AMBAR', footerRight: 'TÉMA 1' },
@@ -1151,6 +1251,12 @@ const TRANSLATIONS = {
     noData: "De' ghobe'",
     time: "poH",
     shareScore: "Quv",
+    playAsGuest: "Quj qorDu'",
+    authorizing: "chaw' jaw...",
+    authorizingTg: "Telegram tlhej chaw' jaw...",
+    loading: "lIgh...",
+    level: "patlh",
+    imageLoadError: "nagh mI'",
     tickets: {
       flight: { title: 'chaw\'', subtitle: 'wa\'DIch', footerLeft: 'lojmIt 14', footerRight: 'quS 2A' },
       concert: { title: 'bom', subtitle: 'VIP', footerLeft: 'qo\'', footerRight: 'tlhegh 1' },
@@ -1211,6 +1317,12 @@ const TRANSLATIONS = {
     noData: "Vos",
     time: "Atea",
     shareScore: "Share",
+    playAsGuest: "Lajat kisa",
+    authorizing: "Ase...",
+    authorizingTg: "Ase mra Telegram...",
+    loading: "Nakhaan...",
+    level: "Zheana",
+    imageLoadError: "Khaleesi",
     tickets: {
       flight: { title: 'TIM', subtitle: 'KHAL', footerLeft: '14', footerRight: '2A' },
       concert: { title: 'KHALASAR', subtitle: 'VIP', footerLeft: 'RHAESH', footerRight: '1' },
@@ -1271,6 +1383,12 @@ const TRANSLATIONS = {
     noData: "Daor",
     time: "Sīr",
     shareScore: "Share",
+    playAsGuest: "Tyvās jentys",
+    authorizing: "Mīso...",
+    authorizingTg: "Mīso isse Telegram...",
+    loading: "Zaldrīzes...",
+    level: "Tēmi",
+    imageLoadError: "Sīkudarys",
     tickets: {
       flight: { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: '14', footerRight: '2A' },
       concert: { title: 'ZALDRĪZES', subtitle: 'VIP', footerLeft: 'ZALDRĪZES', footerRight: '1' },
@@ -1878,7 +1996,7 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
             {isTgValidating ? (
               <div className="w-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-lg sm:text-xl flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-800 opacity-65">
                 <RefreshCw size={18} className="animate-spin text-orange-500" />
-                <span>Авторизация...</span>
+                <span>{t.authorizing}</span>
               </div>
             ) : step >= 6 ? (
               <motion.div initial={{scale: 0}} animate={{scale: 1}} className="w-full">
@@ -1900,7 +2018,7 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
         {isTgValidating ? (
           <div className="mt-4 flex items-center gap-2 text-zinc-500 font-medium text-sm sm:text-base">
             <RefreshCw size={16} className="animate-spin text-orange-500" />
-            <span>Авторизация в Telegram...</span>
+            <span>{t.authorizingTg}</span>
           </div>
         ) : (
           step < 6 && (
@@ -2859,7 +2977,7 @@ export default function App() {
     return (
       <div className="w-full h-full max-h-[650px] max-w-[1000px] mx-auto flex flex-col items-center justify-center gap-4">
         <div className="w-full h-full min-h-[150px] shrink rounded-2xl overflow-hidden shadow-lg border-4 border-white dark:border-zinc-800 relative bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-          {!carImage && <span className="text-zinc-400">Loading...</span>}
+          {!carImage && <span className="text-zinc-400">{t.loading}</span>}
           {carImage && (
             <>
               <img 
@@ -2873,7 +2991,7 @@ export default function App() {
                   if (parent) {
                     const errorMsg = document.createElement('span');
                     errorMsg.className = 'text-red-500 font-bold absolute z-20';
-                    errorMsg.innerText = 'Image load error';
+                    errorMsg.innerText = t.imageLoadError;
                     parent.appendChild(errorMsg);
                   }
                 }}
@@ -3120,7 +3238,7 @@ export default function App() {
                 {/* Progress */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between items-end">
-                    <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Level {getLevelInfo(solvedCount).level}</span>
+                    <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.level} {getLevelInfo(solvedCount).level}</span>
                     <span className="text-xs font-bold text-zinc-400">{solvedCount} / {getLevelInfo(solvedCount).nextMilestone}</span>
                   </div>
                   <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
