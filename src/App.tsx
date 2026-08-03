@@ -2922,9 +2922,8 @@ export default function App() {
 
   const sendScoreToCloudflare = useCallback(async (score: number) => {
     try {
-      // REPLACE /api/score WITH YOUR CLOUDFLARE WORKER URL
-      // Example: 'https://your-worker-name.your-subdomain.workers.dev/score'
-      const CLOUDFLARE_API_URL = '/api/score'; 
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const CLOUDFLARE_API_URL = `${API_URL}/api/score`; 
       const tgParams = (window as any).TelegramGameProxy?.initParams || {};
       const payload = {
         score,
