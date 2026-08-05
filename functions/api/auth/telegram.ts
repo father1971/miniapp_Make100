@@ -1,8 +1,5 @@
 export async function onRequestPost({ request, env }) {
   const TELEGRAM_BOT_TOKEN = env.TELEGRAM_BOT_TOKEN;
-  const TELEGRAM_TEST_BOT_TOKEN = env.TELEGRAM_TEST_BOT_TOKEN;
-
-  const BOT_TOKENS = [TELEGRAM_BOT_TOKEN, TELEGRAM_TEST_BOT_TOKEN].filter(Boolean);
 
   try {
     const { initData } = await request.json();
@@ -11,7 +8,7 @@ export async function onRequestPost({ request, env }) {
       return new Response(JSON.stringify({ error: "initData is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    if (BOT_TOKENS.length === 0) {
+    if (!TELEGRAM_BOT_TOKEN) {
       let user = null;
       try {
         const urlParams = new URLSearchParams(initData);
@@ -42,32 +39,29 @@ export async function onRequestPost({ request, env }) {
     const encoder = new TextEncoder();
     const message = encoder.encode(dataCheckString);
 
-    for (const token of BOT_TOKENS) {
-      const secretKeyParams = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode("WebAppData"),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      const secretKeyBuffer = await crypto.subtle.sign("HMAC", secretKeyParams, encoder.encode(token));
-      
-      const keyParams = await crypto.subtle.importKey(
-        "raw",
-        secretKeyBuffer,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
+    const secretKeyParams = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode("WebAppData"),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const secretKeyBuffer = await crypto.subtle.sign("HMAC", secretKeyParams, encoder.encode(TELEGRAM_BOT_TOKEN));
+    
+    const keyParams = await crypto.subtle.importKey(
+      "raw",
+      secretKeyBuffer,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
 
-      const signatureBuffer = await crypto.subtle.sign("HMAC", keyParams, message);
-      const hashArray = Array.from(new Uint8Array(signatureBuffer));
-      const calculatedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const signatureBuffer = await crypto.subtle.sign("HMAC", keyParams, message);
+    const hashArray = Array.from(new Uint8Array(signatureBuffer));
+    const calculatedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      if (calculatedHash === hash) {
-        isValid = true;
-        break;
-      }
+    if (calculatedHash === hash) {
+      isValid = true;
     }
 
     if (!isValid) {
