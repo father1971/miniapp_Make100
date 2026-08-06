@@ -2361,7 +2361,7 @@ export default function App() {
       const data = await fetchLeaderboardApi();
       setLeaderboardData(data.map((p: any) => ({
         id: p.id,
-        displayName: [p.firstName, p.lastName].filter(Boolean).join(' ') || p.username || 'Player',
+        displayName: p.username || 'Player',
         photoURL: p.avatarUrl || '',
         ...p
       })));
@@ -3139,16 +3139,14 @@ export default function App() {
             {tgUser ? (
               <div className="flex items-center gap-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 pr-3 pl-1 py-1 rounded-full shadow-sm">
                 {tgUser.photo_url ? (
-                  <img src={tgUser.photo_url} alt={tgUser.first_name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={tgUser.photo_url} alt={tgUser.username || 'Player'} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center">
                     <User size={16} />
                   </div>
                 )}
                 <span className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[100px] sm:max-w-[150px]">
-                  {tgUser.first_name === 'Player' || tgUser.first_name === 'Guest' || tgUser.first_name === 'Test Player' 
-                    ? t.player || tgUser.first_name 
-                    : [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ')}
+                  {tgUser.username || t.player || 'Player'}
                 </span>
                 {playerRank !== null && (
                   <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-xs font-bold">
