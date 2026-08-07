@@ -2319,6 +2319,8 @@ export default function App() {
   const [unsolvedCount, setUnsolvedCount] = useState(0);
   const [totalSolveTime, setTotalSolveTime] = useState(0);
   const [totalOperatorsUsed, setTotalOperatorsUsed] = useState(0);
+  const [bestTimeMs, setBestTimeMs] = useState<number | null>(null);
+  const [minCharacters, setMinCharacters] = useState<number | null>(null);
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   // Demo State
@@ -2389,6 +2391,8 @@ export default function App() {
             setUnsolvedCount(parsed.unsolvedCount || 0);
             setTotalSolveTime(parsed.totalSolveTime || 0);
             setTotalOperatorsUsed(parsed.totalOperatorsUsed || 0);
+            setBestTimeMs(parsed.bestTimeMs ?? null);
+            setMinCharacters(parsed.minCharacters ?? null);
             if (parsed.themePreference) setThemePreference(parsed.themePreference);
             if (parsed.language) setLanguage(parsed.language);
             if (parsed.gameMode) setGameMode(parsed.gameMode);
@@ -2426,6 +2430,8 @@ export default function App() {
               setUnsolvedCount(localStats.unsolvedCount || 0);
               setTotalSolveTime(localStats.totalSolveTime || 0);
               setTotalOperatorsUsed(localStats.totalOperatorsUsed || 0);
+              setBestTimeMs(localStats.bestTimeMs ?? null);
+              setMinCharacters(localStats.minCharacters ?? null);
               if (localStats.themePreference) setThemePreference(localStats.themePreference);
               if (localStats.language) setLanguage(localStats.language);
               if (localStats.gameMode) setGameMode(localStats.gameMode);
@@ -2442,6 +2448,8 @@ export default function App() {
                 skippedCount: localStats.unsolvedCount || 0,
                 totalTimeMs: localStats.totalSolveTime || 0,
                 totalCharacters: localStats.totalOperatorsUsed || 0,
+                bestTimeMs: localStats.bestTimeMs ?? undefined,
+                minCharacters: localStats.minCharacters ?? undefined,
                 settings: {
                   themePreference: localStats.themePreference || 'auto',
                   language: localStats.language || 'ru',
@@ -2456,6 +2464,8 @@ export default function App() {
               setUnsolvedCount(apiStats.skippedCount || 0);
               setTotalSolveTime(apiStats.totalTimeMs || 0);
               setTotalOperatorsUsed(apiStats.totalCharacters || 0);
+              setBestTimeMs(apiStats.bestTimeMs ?? null);
+              setMinCharacters(apiStats.minCharacters ?? null);
               if (apiStats.settings) {
                 if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
                 if (apiStats.settings.language) setLanguage(apiStats.settings.language);
@@ -2469,6 +2479,8 @@ export default function App() {
                 unsolvedCount: apiStats.skippedCount || 0,
                 totalSolveTime: apiStats.totalTimeMs || 0,
                 totalOperatorsUsed: apiStats.totalCharacters || 0,
+                bestTimeMs: apiStats.bestTimeMs ?? null,
+                minCharacters: apiStats.minCharacters ?? null,
                 themePreference: apiStats.settings?.themePreference || 'auto',
                 language: apiStats.settings?.language || 'ru',
                 gameMode: apiStats.settings?.gameMode || 'ticket',
@@ -2488,6 +2500,8 @@ export default function App() {
             setUnsolvedCount(currentUnsolved);
             setTotalSolveTime(currentSolveTime);
             setTotalOperatorsUsed(currentOperators);
+            setBestTimeMs(localStats?.bestTimeMs ?? null);
+            setMinCharacters(localStats?.minCharacters ?? null);
             if (localStats?.themePreference) setThemePreference(localStats.themePreference);
             if (localStats?.language) setLanguage(localStats.language);
             if (localStats?.gameMode) setGameMode(localStats.gameMode);
@@ -2504,6 +2518,8 @@ export default function App() {
                 skippedCount: currentUnsolved,
                 totalTimeMs: currentSolveTime,
                 totalCharacters: currentOperators,
+                bestTimeMs: localStats?.bestTimeMs ?? undefined,
+                minCharacters: localStats?.minCharacters ?? undefined,
                 settings: {
                   themePreference: localStats?.themePreference || 'auto',
                   language: localStats?.language || 'ru',
@@ -2531,7 +2547,7 @@ export default function App() {
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
+    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
     const statsStr = JSON.stringify(stats);
     
     localStorage.setItem('make100_stats', statsStr);
@@ -2542,6 +2558,7 @@ export default function App() {
 
     if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
       saveUserStats({
+        firstName: tgUser.first_name,
         lastName: tgUser.last_name,
         username: tgUser.username,
         avatarUrl: tgUser.photo_url,
@@ -2549,6 +2566,8 @@ export default function App() {
         skippedCount: unsolvedCount,
         totalTimeMs: totalSolveTime,
         totalCharacters: totalOperatorsUsed,
+        bestTimeMs: bestTimeMs ?? undefined,
+        minCharacters: minCharacters ?? undefined,
         settings: {
           themePreference,
           language,
@@ -2568,7 +2587,7 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
+  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
 
   useEffect(() => {
     setPlayerRank(null);
@@ -2920,30 +2939,6 @@ export default function App() {
   const currentResult = digits.length ? calculateResult(digits, gaps) : 0;
   const isWin = currentResult === 100;
 
-  const sendScoreToCloudflare = useCallback(async (score: number) => {
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      const CLOUDFLARE_API_URL = `${API_URL}/api/score`; 
-      const tgParams = (window as any).TelegramGameProxy?.initParams || {};
-      const payload = {
-        score,
-        userId: tgUser?.id || tgParams.user_id,
-        initParams: tgParams
-      };
-      
-      const response = await fetch(CLOUDFLARE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      console.log('Score sent to Cloudflare API:', await response.text());
-    } catch (e) {
-      console.error('Failed to send score via fetch', e);
-    }
-  }, [tgUser]);
-
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
       setWon(true);
@@ -2957,13 +2952,13 @@ export default function App() {
       const newTotalTime = totalSolveTime + elapsedTime;
       setTotalSolveTime(newTotalTime);
       
-      // Send score via fetch
-      sendScoreToCloudflare(newSolvedCount);
-      
       // Count operators used in the winning solution
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
       const newTotalOperators = totalOperatorsUsed + operatorsUsed;
       setTotalOperatorsUsed(newTotalOperators);
+
+      setBestTimeMs(prev => (prev === null || elapsedTime < prev) ? elapsedTime : prev);
+      setMinCharacters(prev => (prev === null || operatorsUsed < prev) ? operatorsUsed : prev);
       
       setSelectedSlot(null);
     }
