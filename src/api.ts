@@ -57,7 +57,7 @@ export async function saveUserStats(stats: UserStats): Promise<void> {
   const headers = getAuthHeader();
   if (!headers.Authorization) return;
   try {
-    await fetch(`${API_URL}/api/score`, {
+    await fetch(`${API_URL}/api/user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
