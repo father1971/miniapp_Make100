@@ -1,16 +1,33 @@
+export interface ModeDetail {
+  solvedCount: number;
+  skippedCount: number;
+  bestTimeMs: number | null;
+  minCharacters: number | null;
+  totalTimeMs: number;
+  totalCharacters: number;
+}
+
 export interface UserStats {
   id?: number;
   firstName?: string;
   lastName?: string;
   username?: string;
   avatarUrl?: string;
-  solvedCount?: number;
-  skippedCount?: number;
-  bestTimeMs?: number;
-  minCharacters?: number;
-  totalTimeMs?: number;
-  totalCharacters?: number;
-  settings?: any;
+  solvedCount: number;
+  skippedCount: number;
+  bestTimeMs?: number | null;
+  minCharacters?: number | null;
+  totalTimeMs: number;
+  totalCharacters: number;
+  settings: {
+    currentMode?: 'tickets' | 'car';
+    [key: string]: any;
+  };
+  modeStats: {
+    tickets?: ModeDetail;
+    car?: ModeDetail;
+    [key: string]: any;
+  };
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -40,7 +57,7 @@ export async function saveUserStats(stats: UserStats): Promise<void> {
   const headers = getAuthHeader();
   if (!headers.Authorization) return;
   try {
-    await fetch(`${API_URL}/api/user`, {
+    await fetch(`${API_URL}/api/score`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -2321,6 +2321,7 @@ export default function App() {
   const [totalOperatorsUsed, setTotalOperatorsUsed] = useState(0);
   const [bestTimeMs, setBestTimeMs] = useState<number | null>(null);
   const [minCharacters, setMinCharacters] = useState<number | null>(null);
+  const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
   // Demo State
