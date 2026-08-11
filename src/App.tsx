@@ -2439,6 +2439,7 @@ export default function App() {
               if (localStats.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
               if (localStats.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
               if (localStats.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
+              if (localStats.modeStats) setModeStats(localStats.modeStats);
               
               await saveUserStats({
                 firstName: tgUser.first_name,
@@ -2469,6 +2470,7 @@ export default function App() {
               setTotalOperatorsUsed(apiStats.totalCharacters || 0);
               setBestTimeMs(apiStats.bestTimeMs ?? null);
               setMinCharacters(apiStats.minCharacters ?? null);
+              if (apiStats.modeStats) setModeStats(apiStats.modeStats);
               if (apiStats.settings) {
                 if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
                 if (apiStats.settings.language) setLanguage(apiStats.settings.language);
@@ -2489,7 +2491,8 @@ export default function App() {
                 gameMode: apiStats.settings?.gameMode || 'ticket',
                 soundEnabled: apiStats.settings?.soundEnabled !== undefined ? apiStats.settings.soundEnabled : true,
                 vibrationEnabled: apiStats.settings?.vibrationEnabled !== undefined ? apiStats.settings.vibrationEnabled : true,
-                hasSeenOnboarding: apiStats.settings?.hasSeenOnboarding !== undefined ? apiStats.settings.hasSeenOnboarding : false
+                hasSeenOnboarding: apiStats.settings?.hasSeenOnboarding !== undefined ? apiStats.settings.hasSeenOnboarding : false,
+                modeStats: apiStats.modeStats || {}
               }));
             }
           } else {
@@ -2511,6 +2514,7 @@ export default function App() {
             if (localStats?.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
             if (localStats?.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
             if (localStats?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
+            if (localStats?.modeStats) setModeStats(localStats.modeStats);
 
             await saveUserStats({
                 firstName: tgUser.first_name,
@@ -2552,7 +2556,7 @@ export default function App() {
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding };
+    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding, modeStats };
     const statsStr = JSON.stringify(stats);
     
     localStorage.setItem('make100_stats', statsStr);
@@ -2594,7 +2598,7 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser]);
+  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats]);
 
   useEffect(() => {
     setPlayerRank(null);
