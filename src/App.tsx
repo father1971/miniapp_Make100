@@ -2455,10 +2455,12 @@ export default function App() {
                   themePreference: localStats.themePreference || 'auto',
                   language: localStats.language || 'ru',
                   gameMode: localStats.gameMode || 'ticket',
+                  currentMode: (localStats.gameMode || 'ticket') === 'ticket' ? 'tickets' : 'car',
                   soundEnabled: localStats.soundEnabled !== undefined ? localStats.soundEnabled : true,
                   vibrationEnabled: localStats.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
                   hasSeenOnboarding: localStats.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
-                }
+                },
+                modeStats: localStats.modeStats || {}
               });
             } else {
               setSolvedCount(serverSolved);
@@ -2525,10 +2527,12 @@ export default function App() {
                   themePreference: localStats?.themePreference || 'auto',
                   language: localStats?.language || 'ru',
                   gameMode: localStats?.gameMode || 'ticket',
+                  currentMode: (localStats?.gameMode || 'ticket') === 'ticket' ? 'tickets' : 'car',
                   soundEnabled: localStats?.soundEnabled !== undefined ? localStats.soundEnabled : true,
                   vibrationEnabled: localStats?.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
                   hasSeenOnboarding: localStats?.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
-                }
+                },
+                modeStats: localStats?.modeStats || {}
             });
           }
           setStatsLoaded(true);
@@ -2573,10 +2577,12 @@ export default function App() {
           themePreference,
           language,
           gameMode,
+          currentMode: gameMode === 'ticket' ? 'tickets' : 'car',
           soundEnabled,
           vibrationEnabled,
           hasSeenOnboarding
-        }
+        },
+        modeStats
       });
     }
 
@@ -2623,10 +2629,54 @@ export default function App() {
     setIsHinting(false);
   };
 
+  const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number) => {
+    const activeMode = gameMode === 'ticket' ? 'tickets' : 'car';
+    
+    setModeStats(prev => {
+      const currentModeStats = prev[activeMode] || {
+        solvedCount: 0,
+        skippedCount: 0,
+        bestTimeMs: null,
+        minCharacters: null,
+        totalTimeMs: 0,
+        totalCharacters: 0
+      };
+      
+      const updatedModeStats = {
+        ...prev,
+        [activeMode]: {
+          solvedCount: currentModeStats.solvedCount + (isSolved ? 1 : 0),
+          skippedCount: currentModeStats.skippedCount + (isSolved ? 0 : 1),
+          bestTimeMs: isSolved
+            ? (currentModeStats.bestTimeMs === null ? timeSpent : Math.min(currentModeStats.bestTimeMs, timeSpent))
+            : currentModeStats.bestTimeMs,
+          minCharacters: isSolved
+            ? (currentModeStats.minCharacters === null ? solutionLength : Math.min(currentModeStats.minCharacters, solutionLength))
+            : currentModeStats.minCharacters,
+          totalTimeMs: currentModeStats.totalTimeMs + timeSpent,
+          totalCharacters: currentModeStats.totalCharacters + solutionLength
+        }
+      };
+      return updatedModeStats;
+    });
+
+    if (isSolved) {
+      setSolvedCount(prev => prev + 1);
+      setTotalSolveTime(prev => prev + timeSpent);
+      setTotalOperatorsUsed(prev => prev + solutionLength);
+      setBestTimeMs(prev => (prev === null || timeSpent < prev) ? timeSpent : prev);
+      setMinCharacters(prev => (prev === null || solutionLength < prev) ? solutionLength : prev);
+    } else {
+      setUnsolvedCount(prev => prev + 1);
+      setTotalSolveTime(prev => prev + timeSpent);
+      setTotalOperatorsUsed(prev => prev + solutionLength);
+    }
+  }, [gameMode]);
+
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
     setNoSolutionMessage(false);
     if (isSkip) {
-      setUnsolvedCount(prev => prev + 1);
+      handleGameUpdate(false, 0, elapsedTime);
       playSound('skip');
       playVibration('medium');
     } else if (!startAsIdle) {
@@ -2657,7 +2707,7 @@ export default function App() {
     setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
     setElapsedTime(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
-  }, [playSound, playVibration, language]);
+  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime]);
 
   useEffect(() => {
     let attempts = 0;
@@ -2947,23 +2997,13 @@ export default function App() {
       playSound('success');
       playVibration('success');
       
-      // Update statistics
-      const newSolvedCount = solvedCount + 1;
-      setSolvedCount(newSolvedCount);
-      const newTotalTime = totalSolveTime + elapsedTime;
-      setTotalSolveTime(newTotalTime);
-      
-      // Count operators used in the winning solution
+      // Update statistics via handleGameUpdate
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
-      const newTotalOperators = totalOperatorsUsed + operatorsUsed;
-      setTotalOperatorsUsed(newTotalOperators);
-
-      setBestTimeMs(prev => (prev === null || elapsedTime < prev) ? elapsedTime : prev);
-      setMinCharacters(prev => (prev === null || operatorsUsed < prev) ? operatorsUsed : prev);
+      handleGameUpdate(true, operatorsUsed, elapsedTime);
       
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, solvedCount, totalSolveTime, totalOperatorsUsed, tgUser, gameMode, digits]);
+  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate]);
 
   if (!digits.length) return null;
 
