@@ -2930,7 +2930,8 @@ export default function App() {
 
   useEffect(() => {
     initGame(true);
-  }, [initGame]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (gameState !== 'playing' || won) return;
