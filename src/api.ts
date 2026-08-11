@@ -19,6 +19,8 @@ export interface UserStats {
   minCharacters?: number | null;
   totalTimeMs: number;
   totalCharacters: number;
+  coins?: number;
+  hintsCount?: number;
   settings: {
     currentMode?: 'tickets' | 'car';
     [key: string]: any;

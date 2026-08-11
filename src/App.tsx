@@ -2324,6 +2324,15 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
+  const [stats, setStats] = useState({ coins: 0, hintsCount: 0 });
+  const statsRef = useRef(stats);
+
+  useEffect(() => {
+    statsRef.current = stats;
+  }, [stats]);
+
+
+
   // Demo State
   const [showDemo, setShowDemo] = useState(true);
 
@@ -2440,6 +2449,7 @@ export default function App() {
               if (localStats.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
               if (localStats.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
               if (localStats.modeStats) setModeStats(localStats.modeStats);
+              if (localStats.coins !== undefined) setStats({ coins: localStats.coins, hintsCount: localStats.hintsCount || 0 });
               
               await saveUserStats({
                 firstName: tgUser.first_name,
@@ -2452,6 +2462,8 @@ export default function App() {
                 totalCharacters: localStats.totalOperatorsUsed || 0,
                 bestTimeMs: localStats.bestTimeMs ?? undefined,
                 minCharacters: localStats.minCharacters ?? undefined,
+                coins: localStats.coins || 0,
+                hintsCount: localStats.hintsCount || 0,
                 settings: {
                   themePreference: localStats.themePreference || 'auto',
                   language: localStats.language || 'ru',
@@ -2470,6 +2482,7 @@ export default function App() {
               setTotalOperatorsUsed(apiStats.totalCharacters || 0);
               setBestTimeMs(apiStats.bestTimeMs ?? null);
               setMinCharacters(apiStats.minCharacters ?? null);
+              setStats({ coins: apiStats.coins || 0, hintsCount: apiStats.hintsCount || 0 });
               if (apiStats.modeStats) setModeStats(apiStats.modeStats);
               if (apiStats.settings) {
                 if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
@@ -2492,7 +2505,9 @@ export default function App() {
                 soundEnabled: apiStats.settings?.soundEnabled !== undefined ? apiStats.settings.soundEnabled : true,
                 vibrationEnabled: apiStats.settings?.vibrationEnabled !== undefined ? apiStats.settings.vibrationEnabled : true,
                 hasSeenOnboarding: apiStats.settings?.hasSeenOnboarding !== undefined ? apiStats.settings.hasSeenOnboarding : false,
-                modeStats: apiStats.modeStats || {}
+                modeStats: apiStats.modeStats || {},
+                coins: apiStats.coins || 0,
+                hintsCount: apiStats.hintsCount || 0
               }));
             }
           } else {
@@ -2515,6 +2530,7 @@ export default function App() {
             if (localStats?.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
             if (localStats?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
             if (localStats?.modeStats) setModeStats(localStats.modeStats);
+            if (localStats?.coins !== undefined) setStats({ coins: localStats.coins, hintsCount: localStats.hintsCount || 0 });
 
             await saveUserStats({
                 firstName: tgUser.first_name,
@@ -2527,6 +2543,8 @@ export default function App() {
                 totalCharacters: currentOperators,
                 bestTimeMs: localStats?.bestTimeMs ?? undefined,
                 minCharacters: localStats?.minCharacters ?? undefined,
+                coins: localStats?.coins || 0,
+                hintsCount: localStats?.hintsCount || 0,
                 settings: {
                   themePreference: localStats?.themePreference || 'auto',
                   language: localStats?.language || 'ru',
@@ -2556,8 +2574,8 @@ export default function App() {
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const stats = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding, modeStats };
-    const statsStr = JSON.stringify(stats);
+    const dataToSave = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding, modeStats, coins: stats.coins, hintsCount: stats.hintsCount };
+    const statsStr = JSON.stringify(dataToSave);
     
     localStorage.setItem('make100_stats', statsStr);
 
@@ -2577,6 +2595,8 @@ export default function App() {
         totalCharacters: totalOperatorsUsed,
         bestTimeMs: bestTimeMs ?? undefined,
         minCharacters: minCharacters ?? undefined,
+        coins: stats.coins,
+        hintsCount: stats.hintsCount,
         settings: {
           themePreference,
           language,
@@ -2598,14 +2618,35 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats]);
+  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount]);
 
   useEffect(() => {
     setPlayerRank(null);
   }, [isAuthReady, user, solvedCount]);
 
-  const showHint = async () => {
+  const showHint = () => {
     if (isHinting || won) return;
+    
+    const currentStats = statsRef.current;
+    
+    if (currentStats.hintsCount > 0) {
+      setStats(prev => {
+        const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
+        return newStats;
+      });
+      showHintOnScreen();
+    } else if (currentStats.coins >= 20) {
+      setStats(prev => {
+        const newStats = { ...prev, coins: prev.coins - 20, hintsCount: prev.hintsCount + 1 };
+        return newStats;
+      });
+      window.alert("Куплена 1 подсказка за 20 🪙!");
+    } else {
+      window.alert("Недостаточно монет! Стоимость подсказки: 20 🪙");
+    }
+  };
+
+  const showHintOnScreen = async () => {
     const solution = findSolution(digits);
     if (!solution) {
       setNoSolutionMessage(true);
@@ -2665,6 +2706,7 @@ export default function App() {
     });
 
     if (isSolved) {
+      setStats(prev => ({ ...prev, coins: prev.coins + 10 }));
       setSolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
@@ -3195,6 +3237,12 @@ export default function App() {
                     <span>#{playerRank}</span>
                   </div>
                 )}
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-bold shadow-sm border border-yellow-200 dark:border-yellow-800/50 ml-1" title="Баланс монет">
+                  <span>🪙 {stats.coins}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-bold shadow-sm border border-blue-200 dark:border-blue-800/50" title="Количество подсказок">
+                  <span>💡 {stats.hintsCount}</span>
+                </div>
               </div>
             ) : (
               <div className="flex items-baseline gap-2">
