@@ -21,6 +21,8 @@ export interface UserStats {
   totalCharacters: number;
   coins?: number;
   hintsCount?: number;
+  referredBy?: number | null;
+  referralCount?: number;
   settings: {
     currentMode?: 'tickets' | 'car';
     [key: string]: any;

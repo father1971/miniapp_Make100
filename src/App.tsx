@@ -2392,6 +2392,20 @@ export default function App() {
     if (!isAuthReady || isTgValidating) return;
 
     const loadStats = async () => {
+      // Получаем данные от Telegram
+      const tg = (window as any).Telegram?.WebApp;
+      let referrerId: number | undefined = undefined;
+
+      if (tg && tg.initDataUnsafe) {
+        const startParam = tg.initDataUnsafe.start_param;
+        if (startParam) {
+          const parsedId = parseInt(startParam, 10);
+          if (!isNaN(parsedId)) {
+            referrerId = parsedId;
+          }
+        }
+      }
+
       const loadFromLocal = () => {
         const localStats = localStorage.getItem('make100_stats');
         if (localStats) {
@@ -2530,7 +2544,11 @@ export default function App() {
             if (localStats?.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
             if (localStats?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
             if (localStats?.modeStats) setModeStats(localStats.modeStats);
-            if (localStats?.coins !== undefined) setStats({ coins: localStats.coins, hintsCount: localStats.hintsCount || 0 });
+            
+            // Apply referral bonus for new users
+            const startingCoins = referrerId ? 250 : (localStats?.coins || 100);
+            const startingHints = localStats?.hintsCount !== undefined ? localStats.hintsCount : 3;
+            setStats({ coins: startingCoins, hintsCount: startingHints });
 
             await saveUserStats({
                 firstName: tgUser.first_name,
@@ -2543,8 +2561,11 @@ export default function App() {
                 totalCharacters: currentOperators,
                 bestTimeMs: localStats?.bestTimeMs ?? undefined,
                 minCharacters: localStats?.minCharacters ?? undefined,
-                coins: localStats?.coins || 0,
-                hintsCount: localStats?.hintsCount || 0,
+                coins: startingCoins,
+                hintsCount: startingHints,
+                referredBy: referrerId,
+                referralCount: 0,
+
                 settings: {
                   themePreference: localStats?.themePreference || 'auto',
                   language: localStats?.language || 'ru',
@@ -2623,6 +2644,25 @@ export default function App() {
   useEffect(() => {
     setPlayerRank(null);
   }, [isAuthReady, user, solvedCount]);
+
+  const handleInviteFriend = () => {
+    const myId = tgUser?.id;
+    if (!myId) return;
+
+    const botUsername = 'make100_bot'; 
+    const inviteLink = `https://t.me/${botUsername}/app?startapp=${myId}`;
+
+    navigator.clipboard.writeText(inviteLink);
+    
+    const shareText = `Привет! Попробуй решить примеры на скорость в Make100! По этой ссылке ты получишь 250 монет на старт! 🪙`;
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+    
+    if ((window as any).Telegram?.WebApp) {
+      (window as any).Telegram.WebApp.openTelegramLink(shareUrl);
+    } else {
+      window.open(shareUrl, '_blank');
+    }
+  };
 
   const showHint = () => {
     if (isHinting || won) return;
@@ -3349,6 +3389,21 @@ export default function App() {
                     className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md"
                   >
                     <Trophy size={18} /> {t.topPlayers}
+                  </button>
+                </div>
+
+                {/* Invite Friend */}
+                <div className="flex flex-col gap-3">
+                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Пригласи друга</span>
+                  <button 
+                    onClick={() => { 
+                      handleInviteFriend(); 
+                      playSound('click'); 
+                      playVibration('light'); 
+                    }}
+                    className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md"
+                  >
+                    <User size={18} /> Пригласить друга
                   </button>
                 </div>
 
