@@ -34,7 +34,7 @@ export interface UserStats {
   };
 }
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://make100-backend.rotanovav.workers.dev';
 
 function getAuthHeader(): Record<string, string> {
   // @ts-expect-error - Telegram WebApp is injected globally
