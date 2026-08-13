@@ -2,12 +2,10 @@ const fs = require('fs');
 
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-const regex = /const loadFromLocal = \(\) => \{[\s\S]*?setStatsLoaded\(true\);\n    \};/g;
-const match = regex.test(code);
-console.log("Match found:", match);
+// Replace loadFromLocal and fetchUserStats block
+const oldLoadBlockRegex = /const loadFromLocal = \(\) => \{[\s\S]*?loadFromLocal\(\);\n      setStatsLoaded\(true\);\n    \};/g;
 
-if (match) {
-    const newLoadBlock = `      const applyStatsToState = (data: any) => {
+const newLoadBlock = `      const applyStatsToState = (data: any) => {
         setSolvedCount(data.solvedCount || 0);
         setUnsolvedCount(data.skippedCount || data.unsolvedCount || 0);
         setTotalSolveTime(data.totalTimeMs || data.totalSolveTime || 0);
@@ -84,70 +82,7 @@ if (match) {
       }
     };`;
 
-    code = code.replace(regex, newLoadBlock);
-}
-
-// Also update save logic
-const saveRegex = /const dataToSave = \{[\s\S]*?try \{\n        tg\.CloudStorage\.setItem\('make100_stats', statsStr\);\n      \} catch \(e\) \{\n        console\.error\("Failed to save to CloudStorage", e\);\n      \}\n    \}/g;
-
-const newSaveBlock = `const dataToSave = { 
-      solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, 
-      bestTimeMs, minCharacters, 
-      settings: { themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding }, 
-      modeStats, coins: stats.coins, hintsCount: stats.hintsCount 
-    };
-    const statsStr = JSON.stringify(dataToSave);
-    
-    if (isPreviewEnv) {
-      localStorage.setItem('stats_preview', statsStr);
-      return;
-    }
-
-    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-      localStorage.setItem(\`stats_\${tgUser.id}\`, statsStr);
-      
-      saveUserStats({
-        firstName: tgUser.first_name,
-        lastName: tgUser.last_name,
-        username: tgUser.username,
-        avatarUrl: tgUser.photo_url,
-        solvedCount,
-        skippedCount: unsolvedCount,
-        totalTimeMs: totalSolveTime,
-        totalCharacters: totalOperatorsUsed,
-        bestTimeMs: bestTimeMs ?? undefined,
-        minCharacters: minCharacters ?? undefined,
-        coins: stats.coins,
-        hintsCount: stats.hintsCount,
-        settings: {
-          themePreference,
-          language,
-          gameMode,
-          currentMode: gameMode === 'ticket' ? 'tickets' : 'car',
-          soundEnabled,
-          vibrationEnabled,
-          hasSeenOnboarding
-        },
-        modeStats
-      });
-      
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg?.initData && tg?.CloudStorage) {
-        try {
-          tg.CloudStorage.setItem(\`stats_\${tgUser.id}\`, statsStr);
-        } catch (e) {
-          console.error("Failed to save to CloudStorage", e);
-        }
-      }
-    } else {
-      localStorage.setItem('make100_stats', statsStr);
-    }`;
-
-const saveMatch = saveRegex.test(code);
-console.log("Save match found:", saveMatch);
-if(saveMatch) {
-    code = code.replace(saveRegex, newSaveBlock);
-}
+code = code.replace(oldLoadBlockRegex, newLoadBlock);
 
 fs.writeFileSync('src/App.tsx', code);
-console.log('App.tsx patched for save/load.');
+console.log('Load block patched.');

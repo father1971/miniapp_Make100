@@ -2407,31 +2407,30 @@ export default function App() {
         }
       }
 
-      const loadFromLocal = () => {
-        const localStats = localStorage.getItem('make100_stats');
-        if (localStats) {
-          try {
-            const parsed = JSON.parse(localStats);
-            setSolvedCount(parsed.solvedCount || 0);
-            setUnsolvedCount(parsed.unsolvedCount || 0);
-            setTotalSolveTime(parsed.totalSolveTime || 0);
-            setTotalOperatorsUsed(parsed.totalOperatorsUsed || 0);
-            setBestTimeMs(parsed.bestTimeMs ?? null);
-            setMinCharacters(parsed.minCharacters ?? null);
-            if (parsed.themePreference) setThemePreference(parsed.themePreference);
-            if (parsed.language) setLanguage(parsed.language);
-            if (parsed.gameMode) setGameMode(parsed.gameMode);
-            if (parsed.soundEnabled !== undefined) setSoundEnabled(parsed.soundEnabled);
-            if (parsed.vibrationEnabled !== undefined) setVibrationEnabled(parsed.vibrationEnabled);
-            if (parsed.hasSeenOnboarding !== undefined) setHasSeenOnboarding(parsed.hasSeenOnboarding);
-            return true;
-          } catch (e) { console.error(e); }
-        }
-        return false;
+            const applyStatsToState = (data: any) => {
+        setSolvedCount(data.solvedCount || 0);
+        setUnsolvedCount(data.skippedCount || data.unsolvedCount || 0);
+        setTotalSolveTime(data.totalTimeMs || data.totalSolveTime || 0);
+        setTotalOperatorsUsed(data.totalCharacters || data.totalOperatorsUsed || 0);
+        setBestTimeMs(data.bestTimeMs ?? null);
+        setMinCharacters(data.minCharacters ?? null);
+        if (data.settings?.themePreference) setThemePreference(data.settings.themePreference);
+        if (data.settings?.language) setLanguage(data.settings.language);
+        if (data.settings?.gameMode) setGameMode(data.settings.gameMode);
+        if (data.settings?.soundEnabled !== undefined) setSoundEnabled(data.settings.soundEnabled);
+        if (data.settings?.vibrationEnabled !== undefined) setVibrationEnabled(data.settings.vibrationEnabled);
+        if (data.settings?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(data.settings.hasSeenOnboarding);
+        if (data.modeStats) setModeStats(data.modeStats);
+        setStats({ coins: data.coins !== undefined ? data.coins : 100, hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3 });
       };
 
       if (isPreviewEnv) {
-        loadFromLocal();
+        const localStats = localStorage.getItem('stats_preview');
+        if (localStats) {
+          try {
+            applyStatsToState(JSON.parse(localStats));
+          } catch(e) {}
+        }
         setStatsLoaded(true);
         return;
       }
@@ -2439,155 +2438,50 @@ export default function App() {
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
         try {
           const apiStats = await fetchUserStats();
-          const localStatsStr = localStorage.getItem('make100_stats');
-          let localStats: any = null;
-          if (localStatsStr) {
-            try {
-              localStats = JSON.parse(localStatsStr);
-            } catch(e) {}
+          if (apiStats && apiStats.id) {
+            applyStatsToState(apiStats);
+            localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(apiStats));
+            setStatsLoaded(true);
+            return;
           }
-          const localSolved = localStats?.solvedCount || 0;
-
-          if (apiStats) {
-            const serverSolved = apiStats.solvedCount || 0;
-            if (localSolved > serverSolved) {
-              setSolvedCount(localSolved);
-              setUnsolvedCount(localStats.unsolvedCount || 0);
-              setTotalSolveTime(localStats.totalSolveTime || 0);
-              setTotalOperatorsUsed(localStats.totalOperatorsUsed || 0);
-              setBestTimeMs(localStats.bestTimeMs ?? null);
-              setMinCharacters(localStats.minCharacters ?? null);
-              if (localStats.themePreference) setThemePreference(localStats.themePreference);
-              if (localStats.language) setLanguage(localStats.language);
-              if (localStats.gameMode) setGameMode(localStats.gameMode);
-              if (localStats.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
-              if (localStats.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
-              if (localStats.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
-              if (localStats.modeStats) setModeStats(localStats.modeStats);
-              if (localStats.coins !== undefined) setStats({ coins: localStats.coins, hintsCount: localStats.hintsCount || 0 });
-              
-              await saveUserStats({
-                firstName: tgUser.first_name,
-                lastName: tgUser.last_name,
-                username: tgUser.username,
-                avatarUrl: tgUser.photo_url,
-                solvedCount: localSolved,
-                skippedCount: localStats.unsolvedCount || 0,
-                totalTimeMs: localStats.totalSolveTime || 0,
-                totalCharacters: localStats.totalOperatorsUsed || 0,
-                bestTimeMs: localStats.bestTimeMs ?? undefined,
-                minCharacters: localStats.minCharacters ?? undefined,
-                coins: localStats.coins || 0,
-                hintsCount: localStats.hintsCount || 0,
-                settings: {
-                  themePreference: localStats.themePreference || 'auto',
-                  language: localStats.language || 'ru',
-                  gameMode: localStats.gameMode || 'ticket',
-                  currentMode: (localStats.gameMode || 'ticket') === 'ticket' ? 'tickets' : 'car',
-                  soundEnabled: localStats.soundEnabled !== undefined ? localStats.soundEnabled : true,
-                  vibrationEnabled: localStats.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
-                  hasSeenOnboarding: localStats.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
-                },
-                modeStats: localStats.modeStats || {}
-              });
-            } else {
-              setSolvedCount(serverSolved);
-              setUnsolvedCount(apiStats.skippedCount || 0);
-              setTotalSolveTime(apiStats.totalTimeMs || 0);
-              setTotalOperatorsUsed(apiStats.totalCharacters || 0);
-              setBestTimeMs(apiStats.bestTimeMs ?? null);
-              setMinCharacters(apiStats.minCharacters ?? null);
-              setStats({ coins: apiStats.coins || 0, hintsCount: apiStats.hintsCount || 0 });
-              if (apiStats.modeStats) setModeStats(apiStats.modeStats);
-              if (apiStats.settings) {
-                if (apiStats.settings.themePreference) setThemePreference(apiStats.settings.themePreference);
-                if (apiStats.settings.language) setLanguage(apiStats.settings.language);
-                if (apiStats.settings.gameMode) setGameMode(apiStats.settings.gameMode);
-                if (apiStats.settings.soundEnabled !== undefined) setSoundEnabled(apiStats.settings.soundEnabled);
-                if (apiStats.settings.vibrationEnabled !== undefined) setVibrationEnabled(apiStats.settings.vibrationEnabled);
-                if (apiStats.settings.hasSeenOnboarding !== undefined) setHasSeenOnboarding(apiStats.settings.hasSeenOnboarding);
-              }
-              localStorage.setItem('make100_stats', JSON.stringify({
-                solvedCount: serverSolved,
-                unsolvedCount: apiStats.skippedCount || 0,
-                totalSolveTime: apiStats.totalTimeMs || 0,
-                totalOperatorsUsed: apiStats.totalCharacters || 0,
-                bestTimeMs: apiStats.bestTimeMs ?? null,
-                minCharacters: apiStats.minCharacters ?? null,
-                themePreference: apiStats.settings?.themePreference || 'auto',
-                language: apiStats.settings?.language || 'ru',
-                gameMode: apiStats.settings?.gameMode || 'ticket',
-                soundEnabled: apiStats.settings?.soundEnabled !== undefined ? apiStats.settings.soundEnabled : true,
-                vibrationEnabled: apiStats.settings?.vibrationEnabled !== undefined ? apiStats.settings.vibrationEnabled : true,
-                hasSeenOnboarding: apiStats.settings?.hasSeenOnboarding !== undefined ? apiStats.settings.hasSeenOnboarding : false,
-                modeStats: apiStats.modeStats || {},
-                coins: apiStats.coins || 0,
-                hintsCount: apiStats.hintsCount || 0
-              }));
-            }
-          } else {
-            // First time sync from local
-            const currentSolved = localSolved || 0;
-            const currentUnsolved = localStats?.unsolvedCount || 0;
-            const currentSolveTime = localStats?.totalSolveTime || 0;
-            const currentOperators = localStats?.totalOperatorsUsed || 0;
-            
-            setSolvedCount(currentSolved);
-            setUnsolvedCount(currentUnsolved);
-            setTotalSolveTime(currentSolveTime);
-            setTotalOperatorsUsed(currentOperators);
-            setBestTimeMs(localStats?.bestTimeMs ?? null);
-            setMinCharacters(localStats?.minCharacters ?? null);
-            if (localStats?.themePreference) setThemePreference(localStats.themePreference);
-            if (localStats?.language) setLanguage(localStats.language);
-            if (localStats?.gameMode) setGameMode(localStats.gameMode);
-            if (localStats?.soundEnabled !== undefined) setSoundEnabled(localStats.soundEnabled);
-            if (localStats?.vibrationEnabled !== undefined) setVibrationEnabled(localStats.vibrationEnabled);
-            if (localStats?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(localStats.hasSeenOnboarding);
-            if (localStats?.modeStats) setModeStats(localStats.modeStats);
-            
-            // Apply referral bonus for new users
-            const startingCoins = referrerId ? 250 : (localStats?.coins || 100);
-            const startingHints = localStats?.hintsCount !== undefined ? localStats.hintsCount : 3;
-            setStats({ coins: startingCoins, hintsCount: startingHints });
-
-            await saveUserStats({
-                firstName: tgUser.first_name,
-                lastName: tgUser.last_name,
-                username: tgUser.username,
-                avatarUrl: tgUser.photo_url,
-                solvedCount: currentSolved,
-                skippedCount: currentUnsolved,
-                totalTimeMs: currentSolveTime,
-                totalCharacters: currentOperators,
-                bestTimeMs: localStats?.bestTimeMs ?? undefined,
-                minCharacters: localStats?.minCharacters ?? undefined,
-                coins: startingCoins,
-                hintsCount: startingHints,
-                referredBy: referrerId,
-                referralCount: 0,
-
-                settings: {
-                  themePreference: localStats?.themePreference || 'auto',
-                  language: localStats?.language || 'ru',
-                  gameMode: localStats?.gameMode || 'ticket',
-                  currentMode: (localStats?.gameMode || 'ticket') === 'ticket' ? 'tickets' : 'car',
-                  soundEnabled: localStats?.soundEnabled !== undefined ? localStats.soundEnabled : true,
-                  vibrationEnabled: localStats?.vibrationEnabled !== undefined ? localStats.vibrationEnabled : true,
-                  hasSeenOnboarding: localStats?.hasSeenOnboarding !== undefined ? localStats.hasSeenOnboarding : false
-                },
-                modeStats: localStats?.modeStats || {}
-            });
-          }
-          setStatsLoaded(true);
-          return;
         } catch (e) {
-          console.error("API load error", e);
+          console.warn("Server unavailable, trying local cache:", e);
         }
-      }
 
-      loadFromLocal();
-      setStatsLoaded(true);
+        const localStatsStr = localStorage.getItem(`stats_${tgUser.id}`);
+        if (localStatsStr) {
+          try {
+            const localData = JSON.parse(localStatsStr);
+            applyStatsToState(localData);
+            console.log("Loaded local cache for ID:", tgUser.id);
+            setStatsLoaded(true);
+            return;
+          } catch (err) {
+            console.error("Local cache parse error:", err);
+          }
+        }
+
+        applyStatsToState({
+          solvedCount: 0,
+          skippedCount: 0,
+          totalTimeMs: 0,
+          totalCharacters: 0,
+          settings: {},
+          modeStats: {},
+          coins: 100,
+          hintsCount: 3,
+          referralCount: 0
+        });
+        setStatsLoaded(true);
+      } else {
+        const localStatsStr = localStorage.getItem('make100_stats');
+        if (localStatsStr) {
+          try {
+            applyStatsToState(JSON.parse(localStatsStr));
+          } catch(e) {}
+        }
+        setStatsLoaded(true);
+      }
     };
 
     loadStats();
@@ -2596,13 +2490,23 @@ export default function App() {
   useEffect(() => {
     if (!statsLoaded) return;
     
-    const dataToSave = { solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding, modeStats, coins: stats.coins, hintsCount: stats.hintsCount };
+    const dataToSave = { 
+      solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, 
+      bestTimeMs, minCharacters, 
+      settings: { themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding }, 
+      modeStats, coins: stats.coins, hintsCount: stats.hintsCount 
+    };
     const statsStr = JSON.stringify(dataToSave);
     
-    localStorage.setItem('make100_stats', statsStr);
-
     if (isPreviewEnv) {
+      localStorage.setItem('stats_preview', statsStr);
       return;
+    }
+    
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+      localStorage.setItem(`stats_${tgUser.id}`, statsStr);
+    } else {
+      localStorage.setItem('make100_stats', statsStr);
     }
 
     if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
@@ -2798,6 +2702,17 @@ export default function App() {
     const checkAndInit = async () => {
       if (isInitializing) return false;
       isInitializing = true;
+      
+      const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
+      const tgUserId = tg?.initDataUnsafe?.user?.id;
+      if (tgUserId) {
+        const lastUserId = localStorage.getItem('last_logged_user_id');
+        if (lastUserId !== String(tgUserId)) {
+          localStorage.removeItem('make100_stats');
+          localStorage.removeItem('make100_tgUser');
+          localStorage.setItem('last_logged_user_id', String(tgUserId));
+        }
+      }
 
       try {
         // 1. Try Telegram Web App (Mini Apps) - High priority to capture actual Telegram user profiles
