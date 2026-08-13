@@ -36,7 +36,7 @@ export interface UserStats {
 
 export const API_URL = import.meta.env.VITE_API_URL || 'https://make100-backend.rotanovav.workers.dev';
 
-function getAuthHeader(): Record<string, string> {
+export function getAuthHeader(): Record<string, string> {
   // @ts-expect-error - Telegram WebApp is injected globally
   const initData = window.Telegram?.WebApp?.initData;
   return initData ? { 'Authorization': `Bearer ${initData}` } : {};

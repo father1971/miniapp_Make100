@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader } from './api';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -2444,18 +2444,78 @@ export default function App() {
       }
 
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        let isNewUser = false;
+        let serverData = null;
+
         try {
-          const apiStats = await fetchUserStats();
-          if (apiStats && apiStats.id) {
-            applyStatsToState(apiStats);
-            localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(apiStats));
-            setStatsLoaded(true);
-            return;
+          const res = await fetch(`${API_URL}/api/user`, { headers: getAuthHeader() });
+          
+          if (res.status === 200) {
+            const data = await res.json();
+            if (data && data.id) {
+              serverData = data;
+            } else {
+              // Status 200 but no ID - fallback just in case
+              isNewUser = true;
+            }
+          } else if (res.status === 404 || res.status === 401) {
+            // User definitely not in DB (New referral user)
+            isNewUser = true;
           }
         } catch (e) {
-          console.warn("Server unavailable, trying local cache:", e);
+          console.warn("Server unavailable, falling back to local cache:", e);
         }
 
+        if (serverData) {
+          applyStatsToState(serverData);
+          localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(serverData));
+          setStatsLoaded(true);
+          return;
+        }
+
+        if (isNewUser) {
+          const initialStats = {
+            solvedCount: 0,
+            skippedCount: 0,
+            totalTimeMs: 0,
+            totalCharacters: 0,
+            settings: {},
+            modeStats: {},
+            coins: referrerId ? 250 : 100,
+            hintsCount: 3,
+            referredBy: referrerId,
+            referralCount: 0
+          };
+
+          applyStatsToState(initialStats);
+          localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(initialStats));
+          
+          // Immediately save the new user to server to record referral
+          try {
+            await fetch(`${API_URL}/api/user`, {
+              method: 'POST',
+              headers: {
+                ...getAuthHeader(),
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                firstName: tgUser.first_name,
+                lastName: tgUser.last_name,
+                username: tgUser.username,
+                avatarUrl: tgUser.photo_url,
+                ...initialStats
+              })
+            });
+            console.log("Новый реферал успешно зарегистрирован на сервере сразу при входе!");
+          } catch (postErr) {
+            console.error("Ошибка при регистрации реферала:", postErr);
+          }
+
+          setStatsLoaded(true);
+          return;
+        }
+
+        // If it was a network error (serverData = null and isNewUser = false), try local cache
         const localStatsStr = localStorage.getItem(`stats_${tgUser.id}`);
         if (localStatsStr) {
           try {
@@ -2469,32 +2529,18 @@ export default function App() {
           }
         }
 
-        const initialStats = {
+        // Failsafe initialization if local cache doesn't exist
+        applyStatsToState({
           solvedCount: 0,
           skippedCount: 0,
           totalTimeMs: 0,
           totalCharacters: 0,
           settings: {},
           modeStats: {},
-          coins: referrerId ? 250 : 100,
+          coins: 100,
           hintsCount: 3,
-          referredBy: referrerId,
           referralCount: 0
-        };
-
-        applyStatsToState(initialStats);
-        localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(initialStats));
-        
-        // Immediately save the new user to server to record referral
-        saveUserStats({
-          firstName: tgUser.first_name,
-          lastName: tgUser.last_name,
-          username: tgUser.username,
-          avatarUrl: tgUser.photo_url,
-          ...initialStats
         });
-        console.log("New referral user registered on server immediately!");
-
         setStatsLoaded(true);
       } else {
         const localStatsStr = localStorage.getItem('make100_stats');
