@@ -2650,7 +2650,7 @@ export default function App() {
     const myId = tgUser?.id;
     if (!myId) return;
 
-    const botUsername = 'make100_bot'; 
+    const botUsername = 'Test_Make100_bot'; 
     const inviteLink = `https://t.me/${botUsername}/app?startapp=${myId}`;
 
     navigator.clipboard.writeText(inviteLink);
