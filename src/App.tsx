@@ -2389,12 +2389,20 @@ export default function App() {
   // We assign it to the same name so the UI continues working
   const fetchLeaderboard = fetchLeaderboardData;
 
-  useEffect(() => {
+    useEffect(() => {
     if (!isAuthReady || isTgValidating) return;
 
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      try {
+        tg.ready();
+        tg.expand();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     const loadStats = async () => {
-      // Получаем данные от Telegram
-      const tg = (window as any).Telegram?.WebApp;
       let referrerId: number | undefined = undefined;
 
       if (tg && tg.initDataUnsafe) {
@@ -2407,7 +2415,7 @@ export default function App() {
         }
       }
 
-            const applyStatsToState = (data: any) => {
+      const applyStatsToState = (data: any) => {
         setSolvedCount(data.solvedCount || 0);
         setUnsolvedCount(data.skippedCount || data.unsolvedCount || 0);
         setTotalSolveTime(data.totalTimeMs || data.totalSolveTime || 0);
@@ -2461,17 +2469,32 @@ export default function App() {
           }
         }
 
-        applyStatsToState({
+        const initialStats = {
           solvedCount: 0,
           skippedCount: 0,
           totalTimeMs: 0,
           totalCharacters: 0,
           settings: {},
           modeStats: {},
-          coins: 100,
+          coins: referrerId ? 250 : 100,
           hintsCount: 3,
+          referredBy: referrerId,
           referralCount: 0
+        };
+
+        applyStatsToState(initialStats);
+        localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(initialStats));
+        
+        // Immediately save the new user to server to record referral
+        saveUserStats({
+          firstName: tgUser.first_name,
+          lastName: tgUser.last_name,
+          username: tgUser.username,
+          avatarUrl: tgUser.photo_url,
+          ...initialStats
         });
+        console.log("New referral user registered on server immediately!");
+
         setStatsLoaded(true);
       } else {
         const localStatsStr = localStorage.getItem('make100_stats');
@@ -2484,6 +2507,16 @@ export default function App() {
       }
     };
 
+    const currentUserId = tg?.initDataUnsafe?.user?.id;
+    if (currentUserId) {
+      const lastLogged = localStorage.getItem('last_logged_user_id');
+      if (lastLogged && lastLogged !== String(currentUserId)) {
+        localStorage.removeItem('make100_stats');
+        localStorage.removeItem(`stats_${lastLogged}`);
+      }
+      localStorage.setItem('last_logged_user_id', String(currentUserId));
+    }
+    
     loadStats();
   }, [isAuthReady, isTgValidating, tgUser]);
 
