@@ -2490,26 +2490,25 @@ export default function App() {
           applyStatsToState(initialStats);
           localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(initialStats));
           
-          // Immediately save the new user to server to record referral
-          try {
-            await fetch(`${API_URL}/api/user`, {
-              method: 'POST',
-              headers: {
-                ...getAuthHeader(),
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                firstName: tgUser.first_name,
-                lastName: tgUser.last_name,
-                username: tgUser.username,
-                avatarUrl: tgUser.photo_url,
-                ...initialStats
-              })
-            });
-            console.log("Новый реферал успешно зарегистрирован на сервере сразу при входе!");
-          } catch (postErr) {
-            console.error("Ошибка при регистрации реферала:", postErr);
-          }
+          // Immediately save the new user to server to record referral (background, no await)
+          fetch(`${API_URL}/api/user`, {
+            method: 'POST',
+            headers: {
+              ...getAuthHeader(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              firstName: tgUser.first_name,
+              lastName: tgUser.last_name,
+              username: tgUser.username,
+              avatarUrl: tgUser.photo_url,
+              ...initialStats
+            })
+          }).then(() => {
+            console.log("Фоновая регистрация нового пользователя завершена успешно!");
+          }).catch(err => {
+            console.error("Ошибка фоновой регистрации профиля:", err);
+          });
 
           setStatsLoaded(true);
           return;
