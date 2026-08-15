@@ -1,7 +1,7 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-const botVar = "import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'";
+const botVar = "import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'";
 
 code = code.replace(
   /tg\.openTelegramLink\("https:\/\/t\.me\/Game_Make100_bot"\);/,

@@ -2646,7 +2646,7 @@ export default function App() {
     const myId = tgUser?.id;
     if (!myId) return;
 
-    const botUsername = import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'; 
+    const botUsername = import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'; 
     const inviteLink = `https://t.me/${botUsername}/app?startapp=${myId}`;
 
     navigator.clipboard.writeText(inviteLink);
@@ -3257,12 +3257,12 @@ export default function App() {
             const tg = (window as any).Telegram?.WebApp;
             if (tg && typeof tg.openTelegramLink === 'function') {
               try {
-                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`);
+                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`);
               } catch (e) {
-                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`, "_blank");
+                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`, "_blank");
               }
             } else {
-              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`, "_blank");
+              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`, "_blank");
             }
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
