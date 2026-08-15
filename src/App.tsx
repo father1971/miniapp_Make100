@@ -2322,6 +2322,8 @@ export default function App() {
   const [totalSolveTime, setTotalSolveTime] = useState(0);
   const [totalOperatorsUsed, setTotalOperatorsUsed] = useState(0);
   const [bestTimeMs, setBestTimeMs] = useState<number | null>(null);
+  const [newRecordTimeMs, setNewRecordTimeMs] = useState<number | null>(null);
+  const puzzleStartTimeRef = useRef(Date.now());
   const [minCharacters, setMinCharacters] = useState<number | null>(null);
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
@@ -2421,7 +2423,12 @@ export default function App() {
         setUnsolvedCount(data.skippedCount || data.unsolvedCount || 0);
         setTotalSolveTime(data.totalTimeMs || data.totalSolveTime || 0);
         setTotalOperatorsUsed(data.totalCharacters || data.totalOperatorsUsed || 0);
-        setBestTimeMs(data.bestTimeMs ?? null);
+        let loadedBestTime = data.bestTimeMs ?? null;
+        // Migrate old records stored in seconds to milliseconds
+        if (loadedBestTime !== null && loadedBestTime < 1000) {
+          loadedBestTime = loadedBestTime * 1000;
+        }
+        setBestTimeMs(loadedBestTime);
         setMinCharacters(data.minCharacters ?? null);
         if (data.settings?.themePreference) setThemePreference(data.settings.themePreference);
         if (data.settings?.language) setLanguage(data.settings.language);
@@ -2642,7 +2649,7 @@ export default function App() {
     const myId = tgUser?.id;
     if (!myId) return;
 
-    const botUsername = 'Test_Make100_bot'; 
+    const botUsername = import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'; 
     const inviteLink = `https://t.me/${botUsername}/app?startapp=${myId}`;
 
     navigator.clipboard.writeText(inviteLink);
@@ -2702,6 +2709,7 @@ export default function App() {
   };
 
   const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number) => {
+    const timeSpentMs = Date.now() - puzzleStartTimeRef.current;
     const activeMode = gameMode === 'ticket' ? 'tickets' : 'car';
     
     setModeStats(prev => {
@@ -2720,7 +2728,7 @@ export default function App() {
           solvedCount: currentModeStats.solvedCount + (isSolved ? 1 : 0),
           skippedCount: currentModeStats.skippedCount + (isSolved ? 0 : 1),
           bestTimeMs: isSolved
-            ? (currentModeStats.bestTimeMs === null ? timeSpent : Math.min(currentModeStats.bestTimeMs, timeSpent))
+            ? (currentModeStats.bestTimeMs === null ? timeSpentMs : Math.min(currentModeStats.bestTimeMs, timeSpentMs))
             : currentModeStats.bestTimeMs,
           minCharacters: isSolved
             ? (currentModeStats.minCharacters === null ? solutionLength : Math.min(currentModeStats.minCharacters, solutionLength))
@@ -2737,14 +2745,41 @@ export default function App() {
       setSolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
-      setBestTimeMs(prev => (prev === null || timeSpent < prev) ? timeSpent : prev);
+      setBestTimeMs(prev => {
+        const previousBest = prev || Infinity;
+        const isNewRecord = timeSpentMs < previousBest;
+        
+        if (isNewRecord) {
+          console.log(`[New Global Record!] Старый рекорд побит: ${previousBest}мс -> ${timeSpentMs}мс`);
+          
+          try {
+            import('canvas-confetti').then((confetti) => {
+              confetti.default({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 }
+              });
+            });
+          } catch (e) {
+            console.warn("Библиотека конфетти недоступна", e);
+          }
+          
+          if (vibrationEnabled && (window as any).Telegram?.WebApp?.HapticFeedback) {
+            (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          }
+          
+          setNewRecordTimeMs(timeSpentMs);
+          return timeSpentMs;
+        }
+        return prev;
+      });
       setMinCharacters(prev => (prev === null || solutionLength < prev) ? solutionLength : prev);
     } else {
       setUnsolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
     }
-  }, [gameMode]);
+  }, [gameMode, vibrationEnabled]);
 
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
     setNoSolutionMessage(false);
@@ -2779,6 +2814,8 @@ export default function App() {
     const styles = getTicketStyles(TRANSLATIONS[language] || TRANSLATIONS['ru']);
     setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
     setElapsedTime(0);
+    puzzleStartTimeRef.current = Date.now();
+    setNewRecordTimeMs(null);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
   }, [playSound, playVibration, language, handleGameUpdate, elapsedTime]);
 
@@ -3080,15 +3117,13 @@ export default function App() {
       setWon(true);
       setGameState('idle');
       playSound('success');
-      playVibration('success');
       
-      // Update statistics via handleGameUpdate
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
       handleGameUpdate(true, operatorsUsed, elapsedTime);
       
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate]);
+  }, [isWin, won, hintUsed, gaps, playSound, tgUser, digits, handleGameUpdate]);
 
   if (!digits.length) return null;
 
@@ -3216,12 +3251,12 @@ export default function App() {
             const tg = (window as any).Telegram?.WebApp;
             if (tg && typeof tg.openTelegramLink === 'function') {
               try {
-                tg.openTelegramLink("https://t.me/Game_Make100_bot");
+                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`);
               } catch (e) {
-                window.open("https://t.me/Game_Make100_bot", "_blank");
+                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`, "_blank");
               }
             } else {
-              window.open("https://t.me/Game_Make100_bot", "_blank");
+              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Game_Make100_bot'}`, "_blank");
             }
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
@@ -3801,6 +3836,15 @@ export default function App() {
                  <span className="text-5xl sm:text-6xl">🎉</span>
               </div>
               <h2 className="text-4xl sm:text-5xl font-black mb-3 tracking-tighter">{t.perfect}</h2>
+              {newRecordTimeMs && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 py-2 px-4 rounded-xl mb-6 font-bold text-lg inline-flex items-center gap-2 border border-orange-200 dark:border-orange-500/30 shadow-sm mx-auto"
+                >
+                  ⚡️ НОВЫЙ РЕКОРД: {(newRecordTimeMs / 1000).toFixed(2)} сек!
+                </motion.div>
+              )}
               <div className="flex flex-col items-center gap-1 mb-8">
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
