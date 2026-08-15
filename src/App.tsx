@@ -2366,8 +2366,8 @@ export default function App() {
       setIsLoadingLeaderboard(true);
       setTimeout(() => {
         setLeaderboardData([
-          { id: '1', displayName: 'Алексей Иванов', solvedCount: 142, totalOperatorsUsed: 432, unsolvedCount: 12, totalSolveTime: 2311 },
-          { id: '2', displayName: 'Мария Петрова', solvedCount: 115, totalOperatorsUsed: 360, unsolvedCount: 8, totalSolveTime: 1894 }
+          { id: '1', displayName: 'Алексей Иванов', solvedCount: 142, totalOperatorsUsed: 432, unsolvedCount: 12, totalSolveTime: 2311000, totalTimeMs: 2311000 },
+          { id: '2', displayName: 'Мария Петрова', solvedCount: 115, totalOperatorsUsed: 360, unsolvedCount: 8, totalSolveTime: 1894000, totalTimeMs: 1894000 }
         ]);
         setIsLoadingLeaderboard(false);
       }, 500);
@@ -2756,7 +2756,10 @@ export default function App() {
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
     setNoSolutionMessage(false);
     if (isSkip) {
-      handleGameUpdate(false, 0, elapsedTime);
+      const now = Date.now();
+      const calculatedMs = now - roundStartTimeRef.current;
+      const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
+      handleGameUpdate(false, 0, timeSpentMs);
       playSound('skip');
       playVibration('medium');
     } else if (!startAsIdle) {
@@ -3367,7 +3370,7 @@ export default function App() {
 
          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
             <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.total}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-zinc-700 dark:text-zinc-200">{Math.floor(totalSolveTime / 60)}:{(totalSolveTime % 60).toString().padStart(2, '0')}</span>
+            <span className="font-mono text-base sm:text-lg font-bold text-zinc-700 dark:text-zinc-200">{Math.floor(totalSolveTime / 60000)}:{(Math.floor((totalSolveTime % 60000) / 1000)).toString().padStart(2, '0')}</span>
          </div>
       </div>
 
@@ -3626,7 +3629,7 @@ export default function App() {
                             </div>
                             <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title={t.time}>
                               <Clock size={12} className="text-emerald-500" />
-                              <span className="font-medium">{Math.floor((player.totalSolveTime || 0) / 60)}m {(player.totalSolveTime || 0) % 60}s</span>
+                              <span className="font-medium">{Math.floor(((player.totalTimeMs ?? player.totalSolveTime) || 0) / 60000)}m {Math.floor((((player.totalTimeMs ?? player.totalSolveTime) || 0) % 60000) / 1000)}s</span>
                             </div>
                           </div>
                         </div>
