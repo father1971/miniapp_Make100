@@ -2033,6 +2033,7 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
 }
 
 export default function App() {
+  const isStatsLoadedRef = useRef(false);
   const isPreviewEnv = (() => {
     try {
       const hostname = window.location.hostname;
@@ -2439,6 +2440,7 @@ export default function App() {
             applyStatsToState(JSON.parse(localStats));
           } catch(e) {}
         }
+        isStatsLoadedRef.current = true;
         setStatsLoaded(true);
         return;
       }
@@ -2448,6 +2450,7 @@ export default function App() {
         let serverData = null;
 
         try {
+          isStatsLoadedRef.current = false; // Сбрасываем флаг перед загрузкой
           const res = await fetch(`${API_URL}/api/user`, { headers: getAuthHeader() });
           
           if (res.status === 200) {
@@ -2455,11 +2458,9 @@ export default function App() {
             if (data && data.id) {
               serverData = data;
             } else {
-              // Status 200 but no ID - fallback just in case
               isNewUser = true;
             }
           } else if (res.status === 404 || res.status === 401) {
-            // User definitely not in DB (New referral user)
             isNewUser = true;
           }
         } catch (e) {
@@ -2469,11 +2470,14 @@ export default function App() {
         if (serverData) {
           applyStatsToState(serverData);
           localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(serverData));
+          isStatsLoadedRef.current = true; // Разрешаем автосохранения
+          console.log("Данные старого пользователя успешно загружены с сервера.");
           setStatsLoaded(true);
           return;
         }
 
         if (isNewUser) {
+          console.log("Регистрация нового пользователя. ID пригласителя:", referrerId);
           const initialStats = {
             solvedCount: 0,
             skippedCount: 0,
@@ -2487,29 +2491,29 @@ export default function App() {
             referralCount: 0
           };
 
+          try {
+            await fetch(`${API_URL}/api/user`, {
+              method: 'POST',
+              headers: {
+                ...getAuthHeader(),
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                firstName: tgUser.first_name,
+                lastName: tgUser.last_name,
+                username: tgUser.username,
+                avatarUrl: tgUser.photo_url,
+                ...initialStats
+              })
+            });
+            console.log("Новый пользователь успешно зарегистрирован в базе данных!");
+          } catch (postErr) {
+            console.error("Ошибка при регистрации реферала:", postErr);
+          }
+
           applyStatsToState(initialStats);
           localStorage.setItem(`stats_${tgUser.id}`, JSON.stringify(initialStats));
-          
-          // Immediately save the new user to server to record referral (background, no await)
-          fetch(`${API_URL}/api/user`, {
-            method: 'POST',
-            headers: {
-              ...getAuthHeader(),
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              firstName: tgUser.first_name,
-              lastName: tgUser.last_name,
-              username: tgUser.username,
-              avatarUrl: tgUser.photo_url,
-              ...initialStats
-            })
-          }).then(() => {
-            console.log("Фоновая регистрация нового пользователя завершена успешно!");
-          }).catch(err => {
-            console.error("Ошибка фоновой регистрации профиля:", err);
-          });
-
+          isStatsLoadedRef.current = true;
           setStatsLoaded(true);
           return;
         }
@@ -2540,6 +2544,7 @@ export default function App() {
           hintsCount: 3,
           referralCount: 0
         });
+        isStatsLoadedRef.current = true;
         setStatsLoaded(true);
       } else {
         const localStatsStr = localStorage.getItem('make100_stats');
@@ -2548,6 +2553,7 @@ export default function App() {
             applyStatsToState(JSON.parse(localStatsStr));
           } catch(e) {}
         }
+        isStatsLoadedRef.current = true;
         setStatsLoaded(true);
       }
     };
@@ -2567,6 +2573,10 @@ export default function App() {
 
   useEffect(() => {
     if (!statsLoaded) return;
+    if (!isStatsLoadedRef.current) {
+      console.log('[Save Shield] Блокировка автосохранения: свежий профиль еще не загружен.');
+      return;
+    }
     
     const dataToSave = { 
       solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, 
