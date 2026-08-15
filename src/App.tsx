@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader } from './api';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
@@ -2066,6 +2067,9 @@ export default function App() {
 
   const [ticketStyleId, setTicketStyleId] = useState('flight');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
+  const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
+  const roundStartTimeRef = useRef<number>(Date.now());
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
@@ -2701,7 +2705,7 @@ export default function App() {
     setIsHinting(false);
   };
 
-  const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number) => {
+  const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number, isNewGlobalRecord?: boolean) => {
     const activeMode = gameMode === 'ticket' ? 'tickets' : 'car';
     
     setModeStats(prev => {
@@ -2737,7 +2741,10 @@ export default function App() {
       setSolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
-      setBestTimeMs(prev => (prev === null || timeSpent < prev) ? timeSpent : prev);
+      setBestTimeMs(prev => {
+        const previousGlobalBest = prev || Infinity;
+        return (isNewGlobalRecord ?? (timeSpent < previousGlobalBest)) ? timeSpent : (prev ?? timeSpent);
+      });
       setMinCharacters(prev => (prev === null || solutionLength < prev) ? solutionLength : prev);
     } else {
       setUnsolvedCount(prev => prev + 1);
@@ -2779,6 +2786,9 @@ export default function App() {
     const styles = getTicketStyles(TRANSLATIONS[language] || TRANSLATIONS['ru']);
     setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
     setElapsedTime(0);
+    roundStartTimeRef.current = Date.now();
+    setIsNewRecord(false);
+    setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
   }, [playSound, playVibration, language, handleGameUpdate, elapsedTime]);
 
@@ -3082,13 +3092,41 @@ export default function App() {
       playSound('success');
       playVibration('success');
       
+      const now = Date.now();
+      const calculatedMs = now - roundStartTimeRef.current;
+      const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
+      setLastRoundTimeMs(timeSpentMs);
+
+      // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
+      const previousGlobalBest = bestTimeMs || Infinity;
+      const isNewGlobalRecord = timeSpentMs < previousGlobalBest;
+
+      if (isNewGlobalRecord) {
+        setIsNewRecord(true);
+        try {
+          confetti({
+            particleCount: 100,
+            spread: 80,
+            origin: { y: 0.6 },
+            zIndex: 9999
+          });
+        } catch (e) {}
+
+        const tg = (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: { notificationOccurred: (type: string) => void } } } }).Telegram?.WebApp;
+        if (tg?.HapticFeedback?.notificationOccurred) {
+          try {
+            tg.HapticFeedback.notificationOccurred('success');
+          } catch (e) {}
+        }
+      }
+
       // Update statistics via handleGameUpdate
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
-      handleGameUpdate(true, operatorsUsed, elapsedTime);
+      handleGameUpdate(true, operatorsUsed, timeSpentMs, isNewGlobalRecord);
       
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate]);
+  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs]);
 
   if (!digits.length) return null;
 
@@ -3801,6 +3839,16 @@ export default function App() {
                  <span className="text-5xl sm:text-6xl">🎉</span>
               </div>
               <h2 className="text-4xl sm:text-5xl font-black mb-3 tracking-tighter">{t.perfect}</h2>
+              {isNewRecord && (
+                <motion.div
+                  initial={{ scale: 0.85, opacity: 0, y: -8 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                  className="mb-4 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-orange-500/25 flex items-center justify-center gap-1.5"
+                >
+                  <span>⚡️ НОВЫЙ РЕКОРД: {(lastRoundTimeMs / 1000).toFixed(2)} сек!</span>
+                </motion.div>
+              )}
               <div className="flex flex-col items-center gap-1 mb-8">
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
