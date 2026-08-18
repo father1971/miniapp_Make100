@@ -3131,7 +3131,24 @@ export default function App() {
     }
   }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs]);
 
-  if (!digits.length) return null;
+  // Защитный экран загрузки (Предохранитель)
+  if (!stats || !statsLoaded || !digits.length) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white font-sans">
+        {/* Простой CSS-спиннер */}
+        <div className="relative w-16 h-16 mb-4">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+        </div>
+        <h1 className="text-xl font-black tracking-wider text-orange-500 animate-pulse">
+          СДЕЛАЙ 100
+        </h1>
+        <p className="mt-2 text-xs text-slate-400">
+          Синхронизация с базой данных...
+        </p>
+      </div>
+    );
+  }
 
   const renderLicensePlate = () => {
     // A generic, clean CSS-based Russian-style license plate
