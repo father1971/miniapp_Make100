@@ -41,7 +41,7 @@ const getLevelInfo = (solved: number) => {
   
   const progress = nextMilestone === prevMilestone ? 100 : ((solved - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
   
-  return { level, nextMilestone, progress };
+  return { level, prevMilestone, nextMilestone, progress };
 };
 
 interface TelegramUser {
@@ -3335,6 +3335,8 @@ export default function App() {
     );
   }
 
+  const levelInfo = getLevelInfo((stats as any)?.solvedCount ?? solvedCount);
+
   return (
     <div 
       className={`h-[100dvh] w-full ${theme} ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
@@ -3962,11 +3964,47 @@ export default function App() {
               </p>
             </div>
 
-            {/* Контейнер для будущей статистики (адаптивная заглушка) */}
-            <div className="mt-6 flex-1 space-y-4">
-              <p className="text-center text-slate-400 dark:text-slate-500 text-sm italic py-10 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-900">
-                Здесь скоро появится статистика ваших побед и рефералы...
-              </p>
+            {/* Блок уровней и прогресса */}
+            <div className="mt-6 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 space-y-3">
+              
+              {/* Номер уровня и текстовый счетчик */}
+              <div className="flex justify-between items-end">
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold">
+                    Ранг игрока
+                  </span>
+                  <span className="text-xl font-black text-orange-500 dark:text-orange-400">
+                    Уровень {levelInfo.level}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                    Решено примеров:
+                  </span>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-400 font-normal">/ {levelInfo.nextMilestone}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Шкала прогресса (Прогресс-бар) */}
+              <div className="relative w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${levelInfo.progress}%` }}
+                ></div>
+              </div>
+
+              {/* Мотивирующая подсказка до следующего уровня */}
+              {levelInfo.level < 11 ? (
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
+                  Реши ещё <span className="font-bold text-slate-600 dark:text-slate-300">{levelInfo.nextMilestone - ((stats as any)?.solvedCount ?? solvedCount)}</span> примеров до Уровня {levelInfo.level + 1}!
+                </p>
+              ) : (
+                <p className="text-xs text-emerald-500 font-bold text-center animate-pulse">
+                  👑 Достигнут максимальный уровень! Вы легенда математики!
+                </p>
+              )}
             </div>
 
           </div>
