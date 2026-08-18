@@ -2405,7 +2405,7 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
-  const [stats, setStats] = useState({ coins: 0, hintsCount: 0 });
+  const [stats, setStats] = useState<any>({ coins: 0, hintsCount: 0 });
   const statsRef = useRef(stats);
 
   useEffect(() => {
@@ -2824,7 +2824,19 @@ export default function App() {
     });
 
     if (isSolved) {
-      setStats(prev => ({ ...prev, coins: prev.coins + 10 }));
+      setStats(prev => {
+        const prevBest = (prev as any)?.bestTimeMs ?? bestTimeMs ?? Infinity;
+        const prevMin = (prev as any)?.minCharacters ?? minCharacters ?? Infinity;
+        return {
+          ...prev,
+          coins: ((prev as any)?.coins ?? 0) + 10,
+          solvedCount: ((prev as any)?.solvedCount ?? 0) + 1,
+          totalTimeMs: ((prev as any)?.totalTimeMs ?? 0) + timeSpent,
+          totalCharacters: ((prev as any)?.totalCharacters ?? 0) + solutionLength,
+          bestTimeMs: (isNewGlobalRecord ?? (timeSpent < prevBest)) ? timeSpent : (prevBest === Infinity ? timeSpent : prevBest),
+          minCharacters: (prevMin === Infinity || solutionLength < prevMin) ? solutionLength : prevMin
+        };
+      });
       setSolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
@@ -2834,6 +2846,12 @@ export default function App() {
       });
       setMinCharacters(prev => (prev === null || solutionLength < prev) ? solutionLength : prev);
     } else {
+      setStats(prev => ({
+        ...prev,
+        skippedCount: ((prev as any)?.skippedCount ?? 0) + 1,
+        totalTimeMs: ((prev as any)?.totalTimeMs ?? 0) + timeSpent,
+        totalCharacters: ((prev as any)?.totalCharacters ?? 0) + solutionLength
+      }));
       setUnsolvedCount(prev => prev + 1);
       setTotalSolveTime(prev => prev + timeSpent);
       setTotalOperatorsUsed(prev => prev + solutionLength);
@@ -3198,11 +3216,26 @@ export default function App() {
       setLastRoundTimeMs(exactSolveTimeMs);
 
       // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
-      const previousGlobalBest = bestTimeMs || Infinity;
+      const previousGlobalBest = (stats as any)?.bestTimeMs || bestTimeMs || Infinity;
       const isNewGlobalRecord = exactSolveTimeMs < previousGlobalBest;
 
       if (isNewGlobalRecord) {
         setIsNewRecord(true);
+
+        // 1. СИНХРОННО обновляем локальный стейт, чтобы Профиль мгновенно перерисовал рекорд!
+        setStats(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            bestTimeMs: exactSolveTimeMs // Записываем новый рекорд прямо в память телефона
+          };
+        });
+
+        // 2. Также не забываем обновить реф для синхронизации автосохранений
+        if (statsRef.current) {
+          (statsRef.current as any).bestTimeMs = exactSolveTimeMs;
+        }
+
         try {
           confetti({
             particleCount: 100,
@@ -3217,6 +3250,22 @@ export default function App() {
           try {
             tg.HapticFeedback.notificationOccurred('success');
           } catch (e) {}
+        }
+      }
+
+      // Проверяем рекорд по краткости ввода (minCharacters)
+      const currentMinChars = (stats as any)?.minCharacters || minCharacters;
+      if (!currentMinChars || currentInput.length < currentMinChars) {
+        setStats(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            minCharacters: currentInput.length
+          };
+        });
+        
+        if (statsRef.current) {
+          (statsRef.current as any).minCharacters = currentInput.length;
         }
       }
 
