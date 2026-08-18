@@ -2097,6 +2097,7 @@ export default function App() {
   }, []);
 
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
   
@@ -3351,15 +3352,21 @@ export default function App() {
          <div className="flex items-center gap-3">
             {tgUser ? (
               <div className="flex items-center gap-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 pr-3 pl-1 py-1 rounded-full shadow-sm">
-                {tgUser.photo_url ? (
-                  <img src={tgUser.photo_url} alt={tgUser.username || 'Player'} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center">
-                    <User size={16} />
-                  </div>
-                )}
+                <button 
+                  onClick={() => setIsProfileOpen(true)}
+                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-orange-500 active:scale-95 transition-transform focus:outline-none shadow-lg shadow-orange-500/10 flex-shrink-0 flex items-center justify-center cursor-pointer"
+                  title="Профиль игрока"
+                >
+                  {(tgUser.photo_url || (stats as any)?.avatarUrl) ? (
+                    <img src={tgUser.photo_url || (stats as any)?.avatarUrl} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-bold text-sm">
+                      {(tgUser.first_name || (stats as any)?.firstName) ? (tgUser.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
+                    </div>
+                  )}
+                </button>
                 <span className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[100px] sm:max-w-[150px]">
-                  {tgUser.username || t.player || 'Player'}
+                  {tgUser.username || (stats as any)?.username || t.player || 'Player'}
                 </span>
                 {playerRank !== null && (
                   <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-xs font-bold">
@@ -3915,6 +3922,52 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Profile Modal */}
+      {isProfileOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setIsProfileOpen(false)}>
+          {/* Карточка профиля (всплывает снизу) */}
+          <div 
+            className="relative w-full max-w-md bg-slate-950 rounded-t-[32px] border-t border-slate-800 p-6 pb-10 flex flex-col max-h-[90vh] overflow-y-auto animate-slide-up text-white"
+            onClick={e => e.stopPropagation()}
+            style={{
+              paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 24px)'
+            }}
+          >
+            
+            {/* Кнопка закрытия (крестик) */}
+            <button 
+              onClick={() => setIsProfileOpen(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 active:scale-90 transition-transform"
+            >
+              ✕
+            </button>
+
+            {/* Заголовок профиля с большой аватаркой */}
+            <div className="flex flex-col items-center mt-4">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-orange-500 shadow-xl shadow-orange-500/20 mb-3">
+                {(tgUser?.photo_url || (stats as any)?.avatarUrl) ? (
+                  <img src={tgUser?.photo_url || (stats as any)?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-black text-2xl">
+                    {(tgUser?.first_name || (stats as any)?.firstName) ? (tgUser?.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
+                  </div>
+                )}
+              </div>
+              <h2 className="text-xl font-black text-white">{tgUser?.first_name || (stats as any)?.firstName || 'Игрок'} {tgUser?.last_name || (stats as any)?.lastName || ''}</h2>
+              <p className="text-xs text-slate-500">@{tgUser?.username || (stats as any)?.username || 'user'}</p>
+            </div>
+
+            {/* Контейнер для будущей статистики (пока пустой каркас) */}
+            <div className="mt-6 flex-1 space-y-4">
+              <p className="text-center text-slate-500 text-sm italic py-10">
+                Здесь скоро появится статистика ваших побед и рефералы...
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
