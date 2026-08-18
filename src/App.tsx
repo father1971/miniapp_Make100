@@ -2705,21 +2705,24 @@ export default function App() {
   }, [isAuthReady, user, solvedCount]);
 
   const handleInviteFriend = () => {
-    const myId = tgUser?.id;
-    if (!myId) return;
-
-    const botUsername = import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'; 
-    const inviteLink = `https://t.me/${botUsername}/app?startapp=${myId}`;
-
-    navigator.clipboard.writeText(inviteLink);
+    const userId = tgUser?.id || (stats as any)?.id;
+    if (!userId) return;
     
-    const shareText = `Привет! Попробуй решить примеры на скорость в Make100! По этой ссылке ты получишь 250 монет на старт! 🪙`;
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+    // Наша рабочая реферальная ссылка на бота Test_Make100_bot
+    const referralLink = `https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}/app?startapp=${userId}`;
     
+    // Красивый пригласительный текст для друзей
+    const shareText = `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
+    
+    // Ссылка для вызова нативного Telegram Share Dialog
+    const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
+    
+    // Открываем Telegram-шеринг
     if ((window as any).Telegram?.WebApp) {
-      (window as any).Telegram.WebApp.openTelegramLink(shareUrl);
+      (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
     } else {
-      window.open(shareUrl, '_blank');
+      // Резервный вариант для тестирования в обычном браузере
+      window.open(telegramShareUrl, '_blank');
     }
   };
 
@@ -3508,21 +3511,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Invite Friend */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Пригласи друга</span>
-                  <button 
-                    onClick={() => { 
-                      handleInviteFriend(); 
-                      playSound('click'); 
-                      playVibration('light'); 
-                    }}
-                    className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md"
-                  >
-                    <User size={18} /> Пригласить друга
-                  </button>
-                </div>
-
                 {/* Game Mode */}
                 <div className="flex flex-col gap-3">
                   <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.gameMode}</span>
@@ -4087,6 +4075,44 @@ export default function App() {
                   </span>
                 </div>
 
+              </div>
+            </div>
+
+            {/* Блок «Реферальная программа» */}
+            <div className="mt-5">
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                👥 Пригласи друга
+              </h3>
+              <div className="p-4 bg-gradient-to-br from-slate-50 to-orange-50/20 dark:from-slate-900/40 dark:to-orange-950/10 rounded-2xl border border-orange-100 dark:border-orange-900/30 space-y-4">
+                
+                {/* Статистика рефералов */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Приглашено друзей:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-100">
+                    {(stats as any)?.referralCount || 0} чел.
+                  </span>
+                </div>
+
+                {/* Заработанный бонус */}
+                <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
+                  <span className="text-slate-500 dark:text-slate-400">Получено бонусов:</span>
+                  <span className="font-extrabold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
+                    🪙 +{((stats as any)?.referralCount || 0) * 500} монет
+                  </span>
+                </div>
+
+                {/* Описание выгоды */}
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
+                  Позови друга в игру! Ты получишь <span className="font-bold text-orange-500">500 монет</span>, а друг — <span className="font-bold text-orange-500">250 монет</span> приветственного бонуса!
+                </p>
+
+                {/* Большая интерактивная кнопка приглашения */}
+                <button
+                  onClick={handleInviteFriend}
+                  className="w-full py-3.5 px-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white font-black text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🚀</span> Пригласить друга
+                </button>
               </div>
             </div>
 
