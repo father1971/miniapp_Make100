@@ -3107,33 +3107,34 @@ export default function App() {
 
   useEffect(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
-    if (tg && tg.initData && tg.BackButton) {
-      const shouldShowBack = gameState === 'playing' || isMenuOpen || isLeaderboardOpen;
-      
-      if (shouldShowBack) {
-        tg.BackButton.show();
-      } else {
-        tg.BackButton.hide();
-      }
+    if (!tg?.BackButton) return;
 
-      const handleBack = () => {
-        if (isMenuOpen) {
-          setIsMenuOpen(false);
-        } else if (isLeaderboardOpen) {
-          setIsLeaderboardOpen(false);
-        } else if (gameState === 'playing') {
-          setGameState('idle');
-        } else {
-          tg.close();
-        }
-      };
-      
-      tg.BackButton.onClick(handleBack);
-      return () => {
-        tg.BackButton.offClick(handleBack);
-      };
+    // Функция-обработчик для кнопки Назад
+    const handleSystemBackButtonClick = () => {
+      if (isProfileOpen) {
+        setIsProfileOpen(false);
+      } else if (isMenuOpen) {
+        setIsMenuOpen(false);
+      } else if (isLeaderboardOpen) {
+        setIsLeaderboardOpen(false);
+      }
+    };
+
+    // Если открыто либо Меню, либо Профиль — показываем нативную кнопку
+    if (isMenuOpen || isProfileOpen || isLeaderboardOpen) {
+      tg.BackButton.show();
+      tg.BackButton.onClick(handleSystemBackButtonClick);
+    } else {
+      // Если всё закрыто — прячем кнопку
+      tg.BackButton.hide();
     }
-  }, [gameState, isMenuOpen, isLeaderboardOpen, tgUser]);
+
+    // Обязательная очистка при размонтировании эффекта
+    return () => {
+      tg.BackButton.offClick(handleSystemBackButtonClick);
+      tg.BackButton.hide();
+    };
+  }, [isMenuOpen, isProfileOpen, isLeaderboardOpen]);
 
   useEffect(() => {
     initGame(true);
@@ -3541,148 +3542,152 @@ export default function App() {
         </div>
       </div>
 
-      {/* Menu Overlay */}
+      {/* Menu Overlay (Full-Screen) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-zinc-950/80 backdrop-blur-sm flex justify-end"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <motion.div 
-              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full max-w-sm h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-2xl flex flex-col"
-              onClick={e => e.stopPropagation()}
+          <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-y-auto animate-fade-in select-none">
+            
+            {/* Нативная верхняя панель Меню (идентичная Профилю) */}
+            <div 
+              className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md"
               style={{
-                paddingTop: 'var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px))',
-                paddingBottom: 'var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))'
+                paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 16px)'
               }}
             >
-              <div className="flex justify-between items-center p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800">
-                <h2 className="text-xl font-bold">{t.menu}</h2>
-                <button onClick={() => setIsMenuOpen(false)} className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                  <X size={24} />
+              {/* Кнопка назад */}
+              <button 
+                onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
+                className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+              >
+                ⬅️ Назад
+              </button>
+              <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
+                Настройки игры
+              </h1>
+              <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
+            </div>
+
+            {/* Содержимое меню */}
+            <div 
+              className="flex-1 w-full max-w-md mx-auto px-4 pb-12 pt-6 overflow-y-auto space-y-6"
+              style={{
+                paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
+              }}
+            >
+              {/* Leaderboard */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.leaderboard}</span>
+                <button 
+                  onClick={() => { 
+                    setIsMenuOpen(false); 
+                    setIsLeaderboardOpen(true); 
+                    fetchLeaderboard();
+                    playSound('click'); 
+                    playVibration('light'); 
+                  }}
+                  className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-95 cursor-pointer"
+                >
+                  <Trophy size={18} /> {t.topPlayers}
                 </button>
               </div>
-              
-              <div className="p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto">
-                {/* Leaderboard */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.leaderboard}</span>
+
+              {/* Game Mode */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.gameMode}</span>
+                <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
                   <button 
-                    onClick={() => { 
-                      setIsMenuOpen(false); 
-                      setIsLeaderboardOpen(true); 
-                      fetchLeaderboard();
-                      playSound('click'); 
-                      playVibration('light'); 
-                    }}
-                    className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md"
+                    onClick={() => { setGameMode('ticket'); playSound('click'); playVibration('light'); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${gameMode === 'ticket' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
                   >
-                    <Trophy size={18} /> {t.topPlayers}
+                    {t.ticket}
+                  </button>
+                  <button 
+                    onClick={() => { setGameMode('car'); playSound('click'); playVibration('light'); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${gameMode === 'car' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    {t.car}
                   </button>
                 </div>
+              </div>
 
-                {/* Game Mode */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.gameMode}</span>
-                  <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
-                    <button 
-                      onClick={() => { setGameMode('ticket'); playSound('click'); playVibration('light'); }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${gameMode === 'ticket' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      {t.ticket}
-                    </button>
-                    <button 
-                      onClick={() => { setGameMode('car'); playSound('click'); playVibration('light'); }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${gameMode === 'car' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      {t.car}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Theme */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.theme}</span>
-                  <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
-                    <button 
-                      onClick={() => { setThemePreference('auto'); playSound('click'); playVibration('light'); }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${themePreference === 'auto' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      <Smartphone size={16} /> {t.auto}
-                    </button>
-                    <button 
-                      onClick={() => { setThemePreference('light'); playSound('click'); playVibration('light'); }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${themePreference === 'light' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      <Sun size={16} /> {t.light}
-                    </button>
-                    <button 
-                      onClick={() => { setThemePreference('dark'); playSound('click'); playVibration('light'); }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${themePreference === 'dark' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      <Moon size={16} /> {t.dark}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sound & Vibration */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.soundAndVibration}</span>
-                  <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
-                    <button 
-                      onClick={() => { 
-                        setSoundEnabled(!soundEnabled); 
-                        if (!soundEnabled) {
-                          // Play sound immediately after enabling
-                          setTimeout(() => playSound('click'), 50);
-                        }
-                        playVibration('light'); 
-                      }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${soundEnabled ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />} {t.sound}
-                    </button>
-                    <button 
-                      onClick={() => { 
-                        setVibrationEnabled(!vibrationEnabled); 
-                        playSound('click');
-                        if (!vibrationEnabled) {
-                          // Play vibration immediately after enabling
-                          setTimeout(() => playVibration('light'), 50);
-                        }
-                      }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${vibrationEnabled ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 dark:text-zinc-400'}`}
-                    >
-                      {vibrationEnabled ? <Vibrate size={16} /> : <VibrateOff size={16} />} {t.vibration}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Language */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.language}</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {LANGUAGES.map(({ code, label }) => (
-                      <button
-                        key={code}
-                        onClick={() => { setLanguage(code); playSound('click'); playVibration('light'); }}
-                        className={`py-2 px-3 rounded-lg text-sm font-bold transition-all text-left ${language === code ? 'bg-orange-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4 text-center text-xs text-zinc-400 dark:text-zinc-600 font-mono">
-                  v1.91
+              {/* Theme */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.theme}</span>
+                <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
+                  <button 
+                    onClick={() => { setThemePreference('auto'); playSound('click'); playVibration('light'); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${themePreference === 'auto' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    <Smartphone size={16} /> {t.auto}
+                  </button>
+                  <button 
+                    onClick={() => { setThemePreference('light'); playSound('click'); playVibration('light'); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${themePreference === 'light' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    <Sun size={16} /> {t.light}
+                  </button>
+                  <button 
+                    onClick={() => { setThemePreference('dark'); playSound('click'); playVibration('light'); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${themePreference === 'dark' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    <Moon size={16} /> {t.dark}
+                  </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+
+              {/* Sound & Vibration */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.soundAndVibration}</span>
+                <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
+                  <button 
+                    onClick={() => { 
+                      setSoundEnabled(!soundEnabled); 
+                      if (!soundEnabled) {
+                        setTimeout(() => playSound('click'), 50);
+                      }
+                      playVibration('light'); 
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${soundEnabled ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />} {t.sound}
+                  </button>
+                  <button 
+                    onClick={() => { 
+                      setVibrationEnabled(!vibrationEnabled); 
+                      playSound('click');
+                      if (!vibrationEnabled) {
+                        setTimeout(() => playVibration('light'), 50);
+                      }
+                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${vibrationEnabled ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+                  >
+                    {vibrationEnabled ? <Vibrate size={16} /> : <VibrateOff size={16} />} {t.vibration}
+                  </button>
+                </div>
+              </div>
+
+              {/* Language */}
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.language}</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {LANGUAGES.map(({ code, label }) => (
+                    <button
+                      key={code}
+                      onClick={() => { setLanguage(code); playSound('click'); playVibration('light'); }}
+                      className={`py-2.5 px-3.5 rounded-xl text-sm font-bold transition-all text-left cursor-pointer ${language === code ? 'bg-orange-500 text-white shadow-md' : 'bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300/50 dark:hover:bg-slate-800'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
+                v1.91
+              </div>
+            </div>
+
+          </div>
         )}
       </AnimatePresence>
 
