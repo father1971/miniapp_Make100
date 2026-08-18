@@ -2067,9 +2067,35 @@ export default function App() {
 
   const [ticketStyleId, setTicketStyleId] = useState('flight');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const timerIntervalRef = useRef<NodeJS.Timeout | number | null>(null);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
+  const puzzleStartTimeRef = roundStartTimeRef;
+
+  const startTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current as any);
+      timerIntervalRef.current = null;
+    }
+    
+    setElapsedTime(0);
+    
+    timerIntervalRef.current = setInterval(() => {
+      if (roundStartTimeRef.current) {
+        const diffMs = Date.now() - roundStartTimeRef.current;
+        setElapsedTime(diffMs / 1000);
+      }
+    }, 100);
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current as any);
+      timerIntervalRef.current = null;
+    }
+  }, []);
+
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
@@ -2793,7 +2819,12 @@ export default function App() {
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
-  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime]);
+    if (startAsIdle !== true) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime, startTimer, stopTimer]);
 
   useEffect(() => {
     let attempts = 0;
@@ -3031,12 +3062,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (gameState !== 'playing' || won) return;
-    const interval = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [gameState, won]);
+    if (gameState === 'playing' && !won) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+    return () => stopTimer();
+  }, [gameState, won, startTimer, stopTimer]);
 
   const handleOp = useCallback((op: string) => {
     if (selectedSlot === null || won) return;
@@ -3086,10 +3118,12 @@ export default function App() {
   }, [selectedSlot, handleOp, won, initGame, gameState, playSound, playVibration]);
 
   const currentResult = digits.length ? calculateResult(digits, gaps) : 0;
+  const currentInput = gaps.join('');
   const isWin = currentResult === 100;
 
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
+      stopTimer();
       setWon(true);
       setGameState('idle');
       playSound('success');
@@ -3129,7 +3163,7 @@ export default function App() {
       
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs]);
+  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs, stopTimer]);
 
   // Защитный экран загрузки (Предохранитель)
   if (!stats || !statsLoaded || !digits.length) {
@@ -3717,6 +3751,28 @@ export default function App() {
           </div>
           
           <p className="text-center text-zinc-400 dark:text-zinc-500 text-xs sm:text-sm md:text-base mt-2 md:mt-3 font-bold">{t.tapGaps}</p>
+        </div>
+
+        {/* Live Stopwatch & Character Counter */}
+        <div className="flex justify-center items-center gap-6 my-2 sm:my-3 text-sm text-slate-400 font-mono bg-slate-900/30 dark:bg-slate-900/50 py-1.5 sm:py-2 px-4 rounded-full max-w-xs mx-auto border border-slate-800/50 backdrop-blur-sm">
+          {/* Секундомер с точностью до десятых долей секунды */}
+          <div className="flex items-center gap-1.5">
+            <span className="animate-pulse text-base">⏱️</span>
+            <span className="text-zinc-800 dark:text-white font-bold text-sm sm:text-base">
+              {elapsedTime.toFixed(1)} <span className="text-xs text-slate-500">сек</span>
+            </span>
+          </div>
+          
+          {/* Вертикальный разделитель */}
+          <div className="h-4 w-[1px] bg-slate-700/50 dark:bg-slate-800"></div>
+
+          {/* Счётчик символов в текущем вводе */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">✍️</span>
+            <span className="text-zinc-800 dark:text-white font-bold text-sm sm:text-base">
+              {currentInput.length} <span className="text-xs text-slate-500">симв.</span>
+            </span>
+          </div>
         </div>
 
         {/* Keypad */}
