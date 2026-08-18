@@ -2330,22 +2330,8 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
-  const [stats, setStats] = useState<{
-    coins: number;
-    hintsCount: number;
-    createdAt?: number;
-    referralCount?: number;
-  }>({ coins: 0, hintsCount: 0, referralCount: 0 });
+  const [stats, setStats] = useState({ coins: 0, hintsCount: 0 });
   const statsRef = useRef(stats);
-
-  const formatRegistrationDate = (timestamp?: number) => {
-    if (!timestamp) return 'Неизвестно';
-    return new Date(timestamp).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
 
   useEffect(() => {
     statsRef.current = stats;
@@ -2448,12 +2434,7 @@ export default function App() {
         if (data.settings?.vibrationEnabled !== undefined) setVibrationEnabled(data.settings.vibrationEnabled);
         if (data.settings?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(data.settings.hasSeenOnboarding);
         if (data.modeStats) setModeStats(data.modeStats);
-        setStats({
-          coins: data.coins !== undefined ? data.coins : 100,
-          hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3,
-          createdAt: data.createdAt,
-          referralCount: data.referralCount || 0
-        });
+        setStats({ coins: data.coins !== undefined ? data.coins : 100, hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3 });
       };
 
       if (isPreviewEnv) {
@@ -2605,8 +2586,7 @@ export default function App() {
       solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, 
       bestTimeMs, minCharacters, 
       settings: { themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding }, 
-      modeStats, coins: stats.coins, hintsCount: stats.hintsCount,
-      createdAt: stats.createdAt, referralCount: stats.referralCount
+      modeStats, coins: stats.coins, hintsCount: stats.hintsCount 
     };
     const statsStr = JSON.stringify(dataToSave);
     
@@ -3481,32 +3461,6 @@ export default function App() {
                   >
                     <User size={18} /> Пригласить друга
                   </button>
-
-                  {/* Отображение даты регистрации и статистики рефералов */}
-                  <div className="mt-2 p-4 bg-slate-900/50 rounded-2xl border border-slate-800 space-y-2">
-                    {/* Отображение даты регистрации */}
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">📅 В игре с:</span>
-                      <span className="font-semibold text-white">
-                        {formatRegistrationDate(stats.createdAt)}
-                      </span>
-                    </div>
-
-                    {/* Отображение количества рефералов */}
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-400">👥 Приглашено друзей:</span>
-                      <span className="font-bold text-orange-500">
-                        {stats.referralCount || 0}
-                      </span>
-                    </div>
-
-                    {/* Расчет заработанных бонусов за рефералов */}
-                    {(stats.referralCount || 0) > 0 && (
-                      <div className="text-xs text-emerald-400 text-right animate-pulse">
-                        🪙 Бонус за друзей: +{(stats.referralCount || 0) * 500} монет получен!
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Game Mode */}

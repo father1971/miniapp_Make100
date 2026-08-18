@@ -23,7 +23,6 @@ export interface UserStats {
   hintsCount?: number;
   referredBy?: number | null;
   referralCount?: number;
-  createdAt?: number;
   settings: {
     currentMode?: 'tickets' | 'car';
     [key: string]: any;
