@@ -3354,13 +3354,13 @@ export default function App() {
               <div className="flex items-center gap-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 pr-3 pl-1 py-1 rounded-full shadow-sm">
                 <button 
                   onClick={() => setIsProfileOpen(true)}
-                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-orange-500 active:scale-95 transition-transform focus:outline-none shadow-lg shadow-orange-500/10 flex-shrink-0 flex items-center justify-center cursor-pointer"
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500 active:scale-95 transition-transform focus:outline-none shadow-lg shadow-orange-500/10 flex-shrink-0 flex items-center justify-center cursor-pointer"
                   title="Профиль игрока"
                 >
                   {(tgUser.photo_url || (stats as any)?.avatarUrl) ? (
                     <img src={tgUser.photo_url || (stats as any)?.avatarUrl} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-bold text-sm">
                       {(tgUser.first_name || (stats as any)?.firstName) ? (tgUser.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
                     </div>
                   )}
@@ -3925,20 +3925,20 @@ export default function App() {
 
       {/* Profile Modal */}
       {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setIsProfileOpen(false)}>
-          {/* Карточка профиля (всплывает снизу) */}
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 dark:bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setIsProfileOpen(false)}>
+          {/* Карточка профиля (всплывает снизу, цвет фона адаптируется!) */}
           <div 
-            className="relative w-full max-w-md bg-slate-950 rounded-t-[32px] border-t border-slate-800 p-6 pb-10 flex flex-col max-h-[90vh] overflow-y-auto animate-slide-up text-white"
+            className="relative w-full max-w-md bg-white dark:bg-slate-950 rounded-t-[32px] border-t border-slate-100 dark:border-slate-800 p-6 pb-10 flex flex-col max-h-[90vh] overflow-y-auto animate-slide-up text-slate-900 dark:text-white"
             onClick={e => e.stopPropagation()}
             style={{
               paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 24px)'
             }}
           >
             
-            {/* Кнопка закрытия (крестик) */}
+            {/* Кнопка закрытия (крестик с адаптивными цветами) */}
             <button 
               onClick={() => setIsProfileOpen(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 active:scale-90 transition-transform"
+              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 active:scale-90 transition-transform"
             >
               ✕
             </button>
@@ -3949,18 +3949,22 @@ export default function App() {
                 {(tgUser?.photo_url || (stats as any)?.avatarUrl) ? (
                   <img src={tgUser?.photo_url || (stats as any)?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-black text-2xl">
+                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-2xl">
                     {(tgUser?.first_name || (stats as any)?.firstName) ? (tgUser?.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
                   </div>
                 )}
               </div>
-              <h2 className="text-xl font-black text-white">{tgUser?.first_name || (stats as any)?.firstName || 'Игрок'} {tgUser?.last_name || (stats as any)?.lastName || ''}</h2>
-              <p className="text-xs text-slate-500">@{tgUser?.username || (stats as any)?.username || 'user'}</p>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                {tgUser?.first_name || (stats as any)?.firstName || 'Игрок'} {tgUser?.last_name || (stats as any)?.lastName || ''}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                @{tgUser?.username || (stats as any)?.username || 'user'}
+              </p>
             </div>
 
-            {/* Контейнер для будущей статистики (пока пустой каркас) */}
+            {/* Контейнер для будущей статистики (адаптивная заглушка) */}
             <div className="mt-6 flex-1 space-y-4">
-              <p className="text-center text-slate-500 text-sm italic py-10">
+              <p className="text-center text-slate-400 dark:text-slate-500 text-sm italic py-10 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-100 dark:border-slate-900">
                 Здесь скоро появится статистика ваших побед и рефералы...
               </p>
             </div>
