@@ -3388,61 +3388,61 @@ export default function App() {
       {statsLoaded && (
         <>
           {/* Header */}
-          <header className="w-full max-w-4xl flex justify-between items-center mb-1 sm:mb-2 z-10 flex-shrink-0">
-         <div className="flex items-center gap-3">
-            {tgUser ? (
-              <div className="flex items-center gap-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 pr-3 pl-1 py-1 rounded-full shadow-sm">
-                <button 
-                  onClick={() => setIsProfileOpen(true)}
-                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500 active:scale-95 transition-transform focus:outline-none shadow-lg shadow-orange-500/10 flex-shrink-0 flex items-center justify-center cursor-pointer"
-                  title="Профиль игрока"
-                >
-                  {(tgUser.photo_url || (stats as any)?.avatarUrl) ? (
-                    <img src={tgUser.photo_url || (stats as any)?.avatarUrl} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-bold text-sm">
-                      {(tgUser.first_name || (stats as any)?.firstName) ? (tgUser.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
-                    </div>
-                  )}
-                </button>
-                <span className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[100px] sm:max-w-[150px]">
-                  {tgUser.username || (stats as any)?.username || t.player || 'Player'}
-                </span>
-                {playerRank !== null && (
-                  <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-xs font-bold">
-                    <Trophy size={10} />
-                    <span>#{playerRank}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-bold shadow-sm border border-yellow-200 dark:border-yellow-800/50 ml-1" title="Баланс монет">
-                  <span>🪙 {stats.coins}</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-bold shadow-sm border border-blue-200 dark:border-blue-800/50" title="Количество подсказок">
-                  <span>💡 {stats.hintsCount}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-baseline gap-2">
-                <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white drop-shadow-md">Make100</h1>
-                {playerRank !== null && (
-                  <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-xs font-bold">
-                    <Trophy size={10} />
-                    <span>#{playerRank}</span>
+          <header className="w-full max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+            {/* Кликабельная аватарка с индикатором кликабельности */}
+            <button 
+              onClick={() => setIsProfileOpen(true)}
+              className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
+              title="Открыть профиль"
+            >
+              {/* Пульсирующая внешняя рамка */}
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
+              
+              {/* Сама аватарка */}
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
+                  <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base">
+                    {((stats as any)?.firstName || tgUser?.first_name) ? ((stats as any)?.firstName || tgUser?.first_name).toUpperCase().charAt(0) : 'U'}
                   </div>
                 )}
               </div>
-            )}
-         </div>
 
-         <div className="flex items-center gap-2">
-           <button 
-             onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-             className="p-2 rounded-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
-           >
-             <Menu size={24} />
-           </button>
-         </div>
-      </header>
+              {/* Маленький индикатор-шестеренка в углу */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                <span className="text-[10px] text-white leading-none">⚙️</span>
+              </div>
+            </button>
+
+            {/* Блок баланса монет, подсказок и меню */}
+            <div className="flex items-center gap-2 flex-1 justify-end font-mono">
+              {/* Плашка монет */}
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title="Монеты">
+                <span className="text-lg">🪙</span>
+                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+                  {stats.coins}
+                </span>
+              </div>
+
+              {/* Плашка подсказок */}
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title="Подсказки">
+                <span className="text-lg">💡</span>
+                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+                  {stats.hintsCount}
+                </span>
+              </div>
+
+              {/* Кнопка открытия бокового меню */}
+              <button 
+                onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
+                className="p-2.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shadow-sm active:scale-95 transition-all cursor-pointer"
+                title="Меню настроек"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
+          </header>
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
       <div className="w-full max-w-4xl flex justify-center items-center mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
@@ -3934,42 +3934,54 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Profile Modal */}
+      {/* Profile Modal (Full-Screen Overlay) */}
       {isProfileOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 dark:bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setIsProfileOpen(false)}>
-          {/* Карточка профиля (всплывает снизу, цвет фона адаптируется!) */}
+        <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-y-auto animate-fade-in select-none">
+          
+          {/* Нативная верхняя панель Профиля */}
           <div 
-            className="relative w-full max-w-md bg-white dark:bg-slate-950 rounded-t-[32px] border-t border-slate-100 dark:border-slate-800 p-6 pb-10 flex flex-col max-h-[90vh] overflow-y-auto animate-slide-up text-slate-900 dark:text-white"
-            onClick={e => e.stopPropagation()}
+            className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md"
             style={{
-              paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 24px)'
+              paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 12px)'
+            }}
+          >
+            {/* Кнопка назад */}
+            <button 
+              onClick={() => setIsProfileOpen(false)}
+              className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+            >
+              ⬅️ Назад
+            </button>
+            <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
+              Профиль игрока
+            </h1>
+            <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
+          </div>
+
+          {/* Основное содержимое профиля */}
+          <div 
+            className="flex-1 w-full max-w-md mx-auto px-4 pb-12 pt-6 overflow-y-auto space-y-6"
+            style={{
+              paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
             }}
           >
             
-            {/* Кнопка закрытия (крестик с адаптивными цветами) */}
-            <button 
-              onClick={() => setIsProfileOpen(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 active:scale-90 transition-transform"
-            >
-              ✕
-            </button>
-
-            {/* Заголовок профиля с большой аватаркой */}
-            <div className="flex flex-col items-center mt-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-orange-500 shadow-xl shadow-orange-500/20 mb-3">
-                {(tgUser?.photo_url || (stats as any)?.avatarUrl) ? (
-                  <img src={tgUser?.photo_url || (stats as any)?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            {/* Карточка пользователя */}
+            <div className="flex flex-col items-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-orange-500 shadow-xl shadow-orange-500/20 mb-3">
+                {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
+                  <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-2xl">
-                    {(tgUser?.first_name || (stats as any)?.firstName) ? (tgUser?.first_name || (stats as any)?.firstName).toUpperCase().charAt(0) : 'U'}
+                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-3xl">
+                    {((stats as any)?.firstName || tgUser?.first_name) ? ((stats as any)?.firstName || tgUser?.first_name).toUpperCase().charAt(0) : 'U'}
                   </div>
                 )}
               </div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">
-                {tgUser?.first_name || (stats as any)?.firstName || 'Игрок'} {tgUser?.last_name || (stats as any)?.lastName || ''}
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+                {(stats as any)?.firstName || tgUser?.first_name || 'Игрок'} {(stats as any)?.lastName || tgUser?.last_name || ''}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                @{tgUser?.username || (stats as any)?.username || 'user'}
+                @{ (stats as any)?.username || tgUser?.username || 'user' }
               </p>
             </div>
 
