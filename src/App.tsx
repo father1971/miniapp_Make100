@@ -44,6 +44,32 @@ const getLevelInfo = (solved: number) => {
   return { level, prevMilestone, nextMilestone, progress };
 };
 
+const formatRegistrationDate = (timestamp: number | null | undefined) => {
+  if (!timestamp) return 'Неизвестно';
+  return new Date(timestamp).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
+const formatBestTime = (timeMs: number | null | undefined) => {
+  if (!timeMs) return 'Нет рекорда';
+  return `${(timeMs / 1000).toFixed(2)} сек`;
+};
+
+const formatTotalPlayTime = (timeMs: number | null | undefined) => {
+  if (!timeMs) return '0 сек';
+  const totalSeconds = Math.floor(timeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  
+  if (minutes > 0) {
+    return `${minutes} мин. ${seconds} сек.`;
+  }
+  return `${seconds} сек.`;
+};
+
 interface TelegramUser {
   id: number;
   first_name: string;
@@ -2461,7 +2487,16 @@ export default function App() {
         if (data.settings?.vibrationEnabled !== undefined) setVibrationEnabled(data.settings.vibrationEnabled);
         if (data.settings?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(data.settings.hasSeenOnboarding);
         if (data.modeStats) setModeStats(data.modeStats);
-        setStats({ coins: data.coins !== undefined ? data.coins : 100, hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3 });
+        setStats({ 
+          coins: data.coins !== undefined ? data.coins : 100, 
+          hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3,
+          createdAt: data.createdAt || data.created_at || (stats as any)?.createdAt || Date.now(),
+          solvedCount: data.solvedCount || 0,
+          skippedCount: data.skippedCount || data.unsolvedCount || 0,
+          totalTimeMs: data.totalTimeMs || data.totalSolveTime || 0,
+          bestTimeMs: data.bestTimeMs ?? null,
+          minCharacters: data.minCharacters ?? null
+        });
       };
 
       if (isPreviewEnv) {
@@ -3991,6 +4026,68 @@ export default function App() {
                   👑 Достигнут максимальный уровень! Вы легенда математики!
                 </p>
               )}
+            </div>
+
+            {/* Блок «Личные рекорды» */}
+            <div className="mt-4">
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                🏆 Личные рекорды
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Рекорд скорости */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold block mb-1">
+                    Молния (Время)
+                  </span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                    ⏱️ {formatBestTime((stats as any)?.bestTimeMs ?? bestTimeMs)}
+                  </span>
+                </div>
+
+                {/* Рекорд минимальных символов */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold block mb-1">
+                    Краткость (Символы)
+                  </span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                    ✍️ {((stats as any)?.minCharacters ?? minCharacters) ? `${(stats as any)?.minCharacters ?? minCharacters} симв.` : 'Нет рекорда'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Блок «Общая статистика» */}
+            <div className="mt-4">
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                📊 Игровая аналитика
+              </h3>
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 space-y-3">
+                
+                {/* Решено / Пропущено */}
+                <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400">Решено / Пропущено:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    ✅ {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> ❌ {(stats as any)?.skippedCount ?? (stats as any)?.unsolvedCount ?? unsolvedCount ?? 0}
+                  </span>
+                </div>
+
+                {/* Всего времени в игре */}
+                <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400">Время размышлений:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    {formatTotalPlayTime((stats as any)?.totalTimeMs ?? totalSolveTime)}
+                  </span>
+                </div>
+
+                {/* Дата регистрации */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Дата первой игры:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    📅 {formatRegistrationDate((stats as any)?.createdAt)}
+                  </span>
+                </div>
+
+              </div>
             </div>
 
           </div>
