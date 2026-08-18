@@ -3456,20 +3456,6 @@ export default function App() {
               </div>
               
               <div className="p-4 sm:p-6 flex flex-col gap-6 overflow-y-auto">
-                {/* Progress */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-end">
-                    <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.level} {getLevelInfo(solvedCount).level}</span>
-                    <span className="text-xs font-bold text-zinc-400">{solvedCount} / {getLevelInfo(solvedCount).nextMilestone}</span>
-                  </div>
-                  <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${getLevelInfo(solvedCount).progress}%` }}
-                    />
-                  </div>
-                </div>
-
                 {/* Leaderboard */}
                 <div className="flex flex-col gap-3">
                   <span className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{t.leaderboard}</span>
