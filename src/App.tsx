@@ -3397,32 +3397,28 @@ export default function App() {
          </div>
       </header>
 
-      {/* Stats Row */}
-      <div className="w-full max-w-4xl flex overflow-x-auto justify-start sm:justify-center gap-2 sm:gap-3 mb-2 sm:mb-4 z-10 flex-shrink-0 px-1 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
-            <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.solved}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-green-500 dark:text-green-400">{solvedCount}</span>
-         </div>
-         
-         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
-            <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.skipped}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-red-500 dark:text-red-400">{unsolvedCount}</span>
-         </div>
+      {/* Live Stopwatch & Character Counter (Top Bar) */}
+      <div className="w-full max-w-4xl flex justify-center items-center mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
+        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-slate-900/40 dark:bg-slate-900/70 border border-slate-800/60 backdrop-blur-md shadow-md">
+          {/* Секундомер с точностью до десятых долей секунды */}
+          <div className="flex items-center gap-2.5">
+            <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
+            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
+              {elapsedTime.toFixed(1)} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">сек</span>
+            </span>
+          </div>
+          
+          {/* Вертикальный разделитель */}
+          <div className="h-6 sm:h-7 w-[1.5px] bg-slate-700/60 dark:bg-slate-800"></div>
 
-         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
-            <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.operators}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-blue-500 dark:text-blue-400">{totalOperatorsUsed}</span>
-         </div>
-
-         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
-            <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.current}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-zinc-700 dark:text-zinc-200">{Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}</span>
-         </div>
-
-         <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/50 px-3 sm:px-4 py-2 rounded-2xl flex flex-col items-center justify-center shadow-sm min-w-[4rem] flex-shrink-0">
-            <span className="text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">{t.total}</span>
-            <span className="font-mono text-base sm:text-lg font-bold text-zinc-700 dark:text-zinc-200">{Math.floor(totalSolveTime / 60000)}:{(Math.floor((totalSolveTime % 60000) / 1000)).toString().padStart(2, '0')}</span>
-         </div>
+          {/* Счётчик символов в текущем вводе */}
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl sm:text-2xl">✍️</span>
+            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
+              {currentInput.length} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">симв.</span>
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Menu Overlay */}
@@ -3751,28 +3747,6 @@ export default function App() {
           </div>
           
           <p className="text-center text-zinc-400 dark:text-zinc-500 text-xs sm:text-sm md:text-base mt-2 md:mt-3 font-bold">{t.tapGaps}</p>
-        </div>
-
-        {/* Live Stopwatch & Character Counter */}
-        <div className="flex justify-center items-center gap-6 my-2 sm:my-3 text-sm text-slate-400 font-mono bg-slate-900/30 dark:bg-slate-900/50 py-1.5 sm:py-2 px-4 rounded-full max-w-xs mx-auto border border-slate-800/50 backdrop-blur-sm">
-          {/* Секундомер с точностью до десятых долей секунды */}
-          <div className="flex items-center gap-1.5">
-            <span className="animate-pulse text-base">⏱️</span>
-            <span className="text-zinc-800 dark:text-white font-bold text-sm sm:text-base">
-              {elapsedTime.toFixed(1)} <span className="text-xs text-slate-500">сек</span>
-            </span>
-          </div>
-          
-          {/* Вертикальный разделитель */}
-          <div className="h-4 w-[1px] bg-slate-700/50 dark:bg-slate-800"></div>
-
-          {/* Счётчик символов в текущем вводе */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">✍️</span>
-            <span className="text-zinc-800 dark:text-white font-bold text-sm sm:text-base">
-              {currentInput.length} <span className="text-xs text-slate-500">симв.</span>
-            </span>
-          </div>
         </div>
 
         {/* Keypad */}
