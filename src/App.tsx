@@ -3410,7 +3410,7 @@ export default function App() {
       {statsLoaded && (
         <>
           {/* Header */}
-          <header className="w-full max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+          <header className="w-full max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3 select-none mb-2 sm:mb-3 z-10 flex-shrink-0">
             {/* Кликабельная аватарка с индикатором кликабельности */}
             <button 
               onClick={() => setIsProfileOpen(true)}
@@ -3467,7 +3467,7 @@ export default function App() {
           </header>
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
-      <div className="w-full max-w-4xl flex justify-center items-center mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
+      <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
         <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-slate-900/40 dark:bg-slate-900/70 border border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер с точностью до десятых долей секунды */}
           <div className="flex items-center gap-2.5">
