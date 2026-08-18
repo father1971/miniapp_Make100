@@ -2122,6 +2122,28 @@ export default function App() {
     }
   }, []);
 
+  const formatSolveTime = (timeMs: number) => {
+    if (!timeMs) return '0.0 сек.';
+    const totalSeconds = timeMs / 1000;
+    
+    if (totalSeconds < 60) {
+      // Если меньше минуты — просто выводим секунды с одной цифрой после запятой
+      return `${totalSeconds.toFixed(1)} сек.`;
+    }
+    
+    // Если больше минуты — рассчитываем минуты и секунды
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Форматируем секунды, чтобы всегда была одна цифра после запятой
+    const formattedSeconds = seconds.toFixed(1);
+    
+    // Добавляем лидирующий ноль, если секунд меньше 10 (например, "09.3" вместо "9.3")
+    const paddedSeconds = seconds < 10 ? `0${formattedSeconds}` : formattedSeconds;
+    
+    return `${minutes} мин. ${paddedSeconds} сек.`;
+  };
+
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
@@ -3918,7 +3940,7 @@ export default function App() {
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-1 mb-8">
-                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}</span></p>
+                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTime * 1000))}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
               </div>
               <div className="flex flex-col gap-3">
