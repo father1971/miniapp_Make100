@@ -3185,19 +3185,21 @@ export default function App() {
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
       stopTimer();
+
+      const exactSolveTimeMs = Date.now() - puzzleStartTimeRef.current;
+      const exactSolveTimeSec = exactSolveTimeMs / 1000;
+      setElapsedTime(exactSolveTimeSec);
+
       setWon(true);
       setGameState('idle');
       playSound('success');
       playVibration('success');
       
-      const now = Date.now();
-      const calculatedMs = now - roundStartTimeRef.current;
-      const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
-      setLastRoundTimeMs(timeSpentMs);
+      setLastRoundTimeMs(exactSolveTimeMs);
 
       // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
       const previousGlobalBest = bestTimeMs || Infinity;
-      const isNewGlobalRecord = timeSpentMs < previousGlobalBest;
+      const isNewGlobalRecord = exactSolveTimeMs < previousGlobalBest;
 
       if (isNewGlobalRecord) {
         setIsNewRecord(true);
@@ -3220,11 +3222,11 @@ export default function App() {
 
       // Update statistics via handleGameUpdate
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
-      handleGameUpdate(true, operatorsUsed, timeSpentMs, isNewGlobalRecord);
+      handleGameUpdate(true, operatorsUsed, exactSolveTimeMs, isNewGlobalRecord);
       
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, elapsedTime, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs, stopTimer]);
+  }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs, stopTimer]);
 
   // Защитный экран загрузки (Предохранитель)
   if (!stats || !statsLoaded || !digits.length) {
