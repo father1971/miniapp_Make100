@@ -2405,7 +2405,7 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
-  const [stats, setStats] = useState<any>({ coins: 0, hintsCount: 0 });
+  const [stats, setStats] = useState<any>({ coins: 0, hintsCount: 0, referralCount: 0 });
   const statsRef = useRef(stats);
 
   useEffect(() => {
@@ -2509,16 +2509,20 @@ export default function App() {
         if (data.settings?.vibrationEnabled !== undefined) setVibrationEnabled(data.settings.vibrationEnabled);
         if (data.settings?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(data.settings.hasSeenOnboarding);
         if (data.modeStats) setModeStats(data.modeStats);
-        setStats({ 
+        setStats((prev: any) => ({ 
+          ...prev,
+          ...data,
           coins: data.coins !== undefined ? data.coins : 100, 
           hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3,
-          createdAt: data.createdAt || data.created_at || (stats as any)?.createdAt || Date.now(),
+          referralCount: data.referralCount ?? data.referralsCount ?? prev?.referralCount ?? 0,
+          referredBy: data.referredBy ?? prev?.referredBy ?? null,
+          createdAt: data.createdAt || data.created_at || prev?.createdAt || Date.now(),
           solvedCount: data.solvedCount || 0,
           skippedCount: data.skippedCount || data.unsolvedCount || 0,
           totalTimeMs: data.totalTimeMs || data.totalSolveTime || 0,
           bestTimeMs: data.bestTimeMs ?? null,
           minCharacters: data.minCharacters ?? null
-        });
+        }));
       };
 
       if (isPreviewEnv) {
@@ -2670,7 +2674,10 @@ export default function App() {
       solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, 
       bestTimeMs, minCharacters, 
       settings: { themePreference, language, gameMode, soundEnabled, vibrationEnabled, hasSeenOnboarding }, 
-      modeStats, coins: stats.coins, hintsCount: stats.hintsCount 
+      modeStats, coins: stats.coins, hintsCount: stats.hintsCount,
+      referralCount: (stats as any)?.referralCount ?? 0,
+      referredBy: (stats as any)?.referredBy ?? null,
+      createdAt: (stats as any)?.createdAt
     };
     const statsStr = JSON.stringify(dataToSave);
     
@@ -2699,6 +2706,9 @@ export default function App() {
         minCharacters: minCharacters ?? undefined,
         coins: stats.coins,
         hintsCount: stats.hintsCount,
+        referralCount: (stats as any)?.referralCount ?? 0,
+        referredBy: (stats as any)?.referredBy ?? undefined,
+        createdAt: (stats as any)?.createdAt,
         settings: {
           themePreference,
           language,
@@ -2720,7 +2730,7 @@ export default function App() {
         console.error("CloudStorage save error", e);
       }
     }
-  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount]);
+  }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount, (stats as any)?.referralCount]);
 
   useEffect(() => {
     setPlayerRank(null);
