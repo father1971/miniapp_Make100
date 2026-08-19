@@ -825,18 +825,27 @@ export default function App() {
     return systemPrefersDark ? 'dark' : 'light';
   });
   const [language, setLanguage] = useState<Language>(() => {
+    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('make100_language') : null;
+    if (savedLang && savedLang in TRANSLATIONS) {
+      return savedLang as Language;
+    }
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
     const tgLang = tg?.initDataUnsafe?.user?.language_code;
-    const browserLang = navigator.language.split('-')[0];
+    const browserLang = typeof navigator !== 'undefined' ? navigator.language.split('-')[0] : 'en';
     const detectedLang = tgLang || browserLang;
 
     if (detectedLang && detectedLang in TRANSLATIONS) {
       return detectedLang as Language;
     }
     
-    console.log(`[Language Detection] Detected language "${detectedLang}" is not supported. Falling back to "en".`);
     return 'en';
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('make100_language', language);
+    } catch (e) {}
+  }, [language]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
@@ -1980,16 +1989,16 @@ export default function App() {
           
           <div className="space-y-2">
             <h1 className="text-2xl font-black text-red-500 uppercase tracking-wider">
-              Доступ ограничен
+              {t.bannedTitle || 'Доступ ограничен'}
             </h1>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.
+              {t.bannedDesc || 'Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.'}
             </p>
           </div>
 
           {/* Информационная плашка */}
           <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl text-[11px] text-slate-500">
-            Если вы считаете, что блокировка произошла по ошибке, обратитесь к администратору нашего сообщества.
+            {t.bannedNote || 'Если вы считаете, что блокировка произошла по ошибке, обратитесь к администратору нашего сообщества.'}
           </div>
 
           {/* Кнопка поддержки */}
@@ -2000,7 +2009,7 @@ export default function App() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 py-3 px-6 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-lg shadow-red-600/25 active:scale-95 transition-transform"
             >
-              💬 Написать в поддержку
+              {t.bannedContactSupport || '💬 Написать в поддержку'}
             </a>
           </div>
         </div>
