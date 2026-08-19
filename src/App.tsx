@@ -812,6 +812,7 @@ export default function App() {
 
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isBanned, setIsBanned] = useState<boolean>(false);
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
   
@@ -1211,6 +1212,20 @@ export default function App() {
           isStatsLoadedRef.current = false; // Сбрасываем флаг перед загрузкой
           const res = await fetch(`${API_URL}/api/user`, { headers: getAuthHeader() });
           
+          // 🌟 ПЕРЕХВАТ БАНА:
+          if (res.status === 403) {
+            try {
+              const errorData = await res.json();
+              if (errorData.error === "banned") {
+                setIsBanned(true); // Включаем режим блокировки на фронтенде
+                return; // Прерываем дальнейшее выполнение функции
+              }
+            } catch (jsonErr) {
+              setIsBanned(true);
+              return;
+            }
+          }
+
           if (res.status === 200) {
             const data = await res.json();
             if (data && data.id) {
@@ -1952,6 +1967,46 @@ export default function App() {
       setSelectedSlot(null);
     }
   }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs, stopTimer]);
+
+  // 🌟 Полноэкранный экран блокировки (Guard Clause)
+  if (isBanned) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none h-screen w-screen">
+        <div className="max-w-xs space-y-6 animate-fade-in">
+          {/* Иконка замка с мягким красным свечением */}
+          <div className="relative w-24 h-24 mx-auto bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/30 shadow-lg shadow-red-500/10">
+            <span className="text-5xl">🚫</span>
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black text-red-500 uppercase tracking-wider">
+              Доступ ограничен
+            </h1>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.
+            </p>
+          </div>
+
+          {/* Информационная плашка */}
+          <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl text-[11px] text-slate-500">
+            Если вы считаете, что блокировка произошла по ошибке, обратитесь к администратору нашего сообщества.
+          </div>
+
+          {/* Кнопка поддержки */}
+          <div className="pt-2">
+            <a 
+              href="https://t.me/RotanovAV" // Ссылка на твой телеграм как админа проекта
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 py-3 px-6 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-lg shadow-red-600/25 active:scale-95 transition-transform"
+            >
+              💬 Написать в поддержку
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Защитный экран загрузки (Предохранитель)
   if (!stats || !statsLoaded || !digits.length) {
