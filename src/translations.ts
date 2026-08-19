@@ -102,6 +102,7 @@ export interface TranslationData {
   bannedDesc: string;
   bannedNote: string;
   bannedContactSupport: string;
+  sessionsPlayed: string;
   tickets: {
     flight: { title: string; subtitle: string; footerLeft: string; footerRight: string };
     concert: { title: string; subtitle: string; footerLeft: string; footerRight: string };
@@ -158,6 +159,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.",
     bannedNote: "Если вы считаете, что блокировка произошла по ошибке, обратитесь к администратору нашего сообщества.",
     bannedContactSupport: "💬 Написать в поддержку",
+    sessionsPlayed: "Сыграно сессий",
     tickets: {
       flight: { title: 'ПОСАДОЧНЫЙ ТАЛОН', subtitle: 'ПЕРВЫЙ КЛАСС', footerLeft: 'ГЕЙТ 14', footerRight: 'МЕСТО 2А' },
       concert: { title: 'LIVE КОНЦЕРТ', subtitle: 'VIP ДОСТУП', footerLeft: 'МИРОВОЙ ТУР', footerRight: 'РЯД 1' },
@@ -212,6 +214,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Your gaming account has been temporarily or permanently suspended for violating fair play rules and Make100 community guidelines.",
     bannedNote: "If you believe this restriction was made in error, please contact our community administrator.",
     bannedContactSupport: "💬 Contact Support",
+    sessionsPlayed: "Sessions played",
     tickets: {
       flight: { title: 'BOARDING PASS', subtitle: 'FIRST CLASS', footerLeft: 'GATE 14', footerRight: 'SEAT 2A' },
       concert: { title: 'LIVE CONCERT', subtitle: 'VIP ACCESS', footerLeft: 'WORLD TOUR', footerRight: 'ROW 1' },
@@ -266,6 +269,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Ihr Spielkonto wurde wegen Verstoßes gegen die Fairplay-Regeln und Community-Richtlinien von Make100 vorübergehend oder dauerhaft gesperrt.",
     bannedNote: "Wenn Sie glauben, dass diese Sperre irrtümlich erfolgt ist, wenden Sie sich bitte an unseren Community-Administrator.",
     bannedContactSupport: "💬 Support kontaktieren",
+    sessionsPlayed: "Gespielte Sitzungen",
     tickets: {
       flight: { title: 'BORDKARTE', subtitle: 'ERSTE KLASSE', footerLeft: 'GATE 14', footerRight: 'SITZ 2A' },
       concert: { title: 'LIVE-KONZERT', subtitle: 'VIP-ZUGANG', footerLeft: 'WELTTOURNEE', footerRight: 'REIHE 1' },
@@ -320,6 +324,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Votre compte de jeu a été suspendu temporairement ou définitivement pour non-respect des règles du fair-play et de la communauté Make100.",
     bannedNote: "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur de notre communauté.",
     bannedContactSupport: "💬 Contacter le support",
+    sessionsPlayed: "Sessions jouées",
     tickets: {
       flight: { title: 'CARTE D\'EMBARQUEMENT', subtitle: 'PREMIÈRE CLASSE', footerLeft: 'PORTE 14', footerRight: 'SIÈGE 2A' },
       concert: { title: 'CONCERT LIVE', subtitle: 'ACCÈS VIP', footerLeft: 'TOURNÉE MONDIALE', footerRight: 'RANG 1' },
@@ -374,6 +379,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Sua conta de jogo foi suspensa temporariamente ou permanentemente por violar as regras de fair play e da comunidade Make100.",
     bannedNote: "Se você acredita que esta restrição foi um erro, entre em contato com o administrador da nossa comunidade.",
     bannedContactSupport: "💬 Falar com o suporte",
+    sessionsPlayed: "Sessões jogadas",
     tickets: {
       flight: { title: 'CARTÃO DE EMBARQUE', subtitle: 'PRIMEIRA CLASSE', footerLeft: 'PORTÃO 14', footerRight: 'ASSENTO 2A' },
       concert: { title: 'CONCERTO AO VIVO', subtitle: 'ACESSO VIP', footerLeft: 'TURNÊ MUNDIAL', footerRight: 'FILA 1' },
@@ -428,6 +434,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Tu cuenta de juego ha sido suspendida temporal o permanentemente por violar las reglas de juego limpio y de la comunidad Make100.",
     bannedNote: "Si crees que este bloqueo ocurrió por error, comunícate con el administrador de nuestra comunidad.",
     bannedContactSupport: "💬 Contactar con soporte",
+    sessionsPlayed: "Sesiones jugadas",
     tickets: {
       flight: { title: 'TARJETA DE EMBARQUE', subtitle: 'PRIMERA CLASSE', footerLeft: 'PUERTA 14', footerRight: 'ASIENTO 2A' },
       concert: { title: 'CONCIERTO EN VIVO', subtitle: 'ACCESO VIP', footerLeft: 'GIRA MUNDIAL', footerRight: 'FILA 1' },
@@ -482,6 +489,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "由于违反公平游戏规则和 Make100 社区准则，您的游戏帐户已被暂时或永久封禁。",
     bannedNote: "如果您认为这是误封，请联系我们的社区管理员。",
     bannedContactSupport: "💬 联系客服支持",
+    sessionsPlayed: "已玩游戏次数",
     tickets: {
       flight: { title: '登机牌', subtitle: '头等舱', footerLeft: '登机口 14', footerRight: '座位 2A' },
       concert: { title: '现场演唱会', subtitle: 'VIP 通道', footerLeft: '世界巡演', footerRight: '第 1 排' },
@@ -536,6 +544,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "フェアプレイルールおよびMake100コミュニティガイドラインへの違反により、あなたのアカウントは一時的または永久に停止されました。",
     bannedNote: "誤認による制限と思われる場合は、コミュニティ管理者までお問い合わせください。",
     bannedContactSupport: "💬 サポートに問い合わせる",
+    sessionsPlayed: "プレイセッション数",
     tickets: {
       flight: { title: '搭乗券', subtitle: 'ファーストクラス', footerLeft: 'ゲート 14', footerRight: '座席 2A' },
       concert: { title: 'ライブコンサート', subtitle: 'VIPアクセス', footerLeft: 'ワールドツアー', footerRight: '1列目' },
@@ -590,6 +599,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Il tuo account di gioco è stato sospeso temporaneamente o permanentemente per violazione delle regole del fair play e della community Make100.",
     bannedNote: "Se ritieni che il blocco sia avvenuto per errore, contatta l'amministratore della nostra community.",
     bannedContactSupport: "💬 Contatta l'assistenza",
+    sessionsPlayed: "Sessioni giocate",
     tickets: {
       flight: { title: 'CARTA D\'IMBARCO', subtitle: 'PRIMA CLASSE', footerLeft: 'GATE 14', footerRight: 'POSTO 2A' },
       concert: { title: 'CONCERTO LIVE', subtitle: 'ACCESSO VIP', footerLeft: 'TOUR MONDIALE', footerRight: 'FILA 1' },
@@ -644,6 +654,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "공정 플레이 규칙 및 Make100 커뮤니티 가이드라인 위반으로 인해 게임 계정이 일시적 또는 영구적으로 정지되었습니다.",
     bannedNote: "오류로 인한 제한이라고 생각되시면 커뮤니티 관리자에게 문의해 주세요.",
     bannedContactSupport: "💬 고객지원 문의하기",
+    sessionsPlayed: "플레이 세션 수",
     tickets: {
       flight: { title: '탑승권', subtitle: '일등석', footerLeft: '게이트 14', footerRight: '좌석 2A' },
       concert: { title: '라이브 콘서트', subtitle: 'VIP 입장', footerLeft: '월드 투어', footerRight: '1열' },
@@ -698,6 +709,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Oyun hesabınız, adil oyun kurallarını ve Make100 topluluk kurallarını ihlal ettiği gerekçesiyle geçici veya kalıcı olarak askıya alındı.",
     bannedNote: "Bu kısıtlamanın bir hata sonucu olduğunu düşünüyorsanız lütfen topluluk yöneticimizle iletişime geçin.",
     bannedContactSupport: "💬 Desteğe Yazın",
+    sessionsPlayed: "Oynanan Oturumlar",
     tickets: {
       flight: { title: 'BİNİŞ KARTI', subtitle: 'BİRİNCİ SINIF', footerLeft: 'KAPI 14', footerRight: 'KOLTUK 2A' },
       concert: { title: 'CANLI KONSER', subtitle: 'VIP GİRİŞ', footerLeft: 'DÜNYA TURU', footerRight: 'SIRA 1' },
@@ -752,6 +764,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "חשבון המשחק שלך הושעה באופן זמני או לצמיתות עקב הפרת כללי המשחק ההוגן ותקנון קהילת Make100.",
     bannedNote: "אם לדעתך החסימה בוצעה בטעות, אנא צור קשר עם מנהל הקהילה שלנו.",
     bannedContactSupport: "💬 פנה לתמיכה",
+    sessionsPlayed: "סשנים ששוחקו",
     tickets: {
       flight: { title: 'כרטיס עלייה למטוס', subtitle: 'מחלקה ראשונה', footerLeft: 'שער 14', footerRight: 'מושב 2A' },
       concert: { title: 'הופעה חיה', subtitle: 'גישת VIP', footerLeft: 'סיבוב הופעות עולמי', footerRight: 'שורה 1' },
@@ -806,6 +819,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "تم تعليق حساب اللعبة الخاص بك مؤقتًا أو دائمًا لانتهاك قواعد اللعب النظيف وإرشادات مجتمع Make100.",
     bannedNote: "إذا كنت تعتقد أن هذا الحظر حدث عن طريق الخطأ، يرجى التواصل مع مسؤول المجتمع.",
     bannedContactSupport: "💬 التواصل مع الدعم",
+    sessionsPlayed: "الجلسات الملعوبة",
     tickets: {
       flight: { title: 'بطاقة صعود', subtitle: 'الدرجة الأولى', footerLeft: 'بوابة 14', footerRight: 'مقعد 2A' },
       concert: { title: 'حفل مباشر', subtitle: 'دخول VIP', footerLeft: 'جولة عالمية', footerRight: 'صف 1' },
@@ -860,6 +874,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "फेयर प्ले नियमों और Make100 समुदाय दिशानिर्देशों का उल्लंघन करने के कारण आपका गेमिंग खाता अस्थायी या स्थायी रूप से निलंबित कर दिया गया है।",
     bannedNote: "यदि आपको लगता है कि यह प्रतिबंध गलती से हुआ है, तो कृपया हमारे समुदाय व्यवस्थापक से संपर्क करें।",
     bannedContactSupport: "💬 सहायता से संपर्क करें",
+    sessionsPlayed: "खेले गए सत्र",
     tickets: {
       flight: { title: 'बोर्डिंग पास', subtitle: 'प्रथम श्रेणी', footerLeft: 'गेट 14', footerRight: 'सीट 2A' },
       concert: { title: 'लाइव कॉन्सर्ट', subtitle: 'वीआईपी एक्सेस', footerLeft: 'वर्ल्ड टूर', footerRight: 'पंक्ति 1' },
@@ -914,6 +929,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Ratio tua lusoria ad tempus vel in perpetuum interdicta est propter leges aequi ludi et communitatis Make100 violatas.",
     bannedNote: "Si hoc per errorem factum esse censes, quaeso administratorem communitatis nostrae adeas.",
     bannedContactSupport: "💬 Auxilium Petere",
+    sessionsPlayed: "Sessiones actae",
     tickets: {
       flight: { title: 'TESSERA CONSCENDENDI', subtitle: 'PRIMA CLASSIS', footerLeft: 'PORTA 14', footerRight: 'SEDES 2A' },
       concert: { title: 'CONCENTUS VIVUS', subtitle: 'ADITUS VIP', footerLeft: 'ITER MUNDANUM', footerRight: 'ORDO 1' },
@@ -968,6 +984,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Via ludkonto estis provizore aŭ konstante blokita pro malobservo de justludaj reguloj kaj komunumo Make100.",
     bannedNote: "Se vi opinias, ke la blokado okazis erare, bonvolu kontakti la administranton de nia komunumo.",
     bannedContactSupport: "💬 Skribi al Subteno",
+    sessionsPlayed: "Luditaj sesioj",
     tickets: {
       flight: { title: 'ENIRBILETO', subtitle: 'UNUA KLASO', footerLeft: 'PORDEGO 14', footerRight: 'SEĜO 2A' },
       concert: { title: 'VIVA KONCERTO', subtitle: 'VIP-ALIRO', footerLeft: 'MONDA TURNEO', footerRight: 'VICO 1' },
@@ -1022,6 +1039,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "I-faron gin gwanno am lû 'ell ah chîr Make100.",
     bannedNote: "Ae no gwerian, tiro a chanon mîn.",
     bannedContactSupport: "💬 Pedo a Thol",
+    sessionsPlayed: "I-leithian dangen",
     tickets: {
       flight: { title: 'TARMA', subtitle: 'MINYA', footerLeft: 'ANDO 14', footerRight: 'HAMA 2A' },
       concert: { title: 'LINDIË', subtitle: 'VIP', footerLeft: 'AMBAR', footerRight: 'TÉMA 1' },
@@ -1076,6 +1094,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Make100 mabmey DaquvHa'mo' Quj potlhvam botlu'pu'.",
     bannedNote: "Qagh 'oH 'e' DaHarchugh, ra'wI'vaD yIjatlh.",
     bannedContactSupport: "💬 QaH yIpoQ",
+    sessionsPlayed: "Quj qeS",
     tickets: {
       flight: { title: 'chaw\'', subtitle: 'wa\'DIch', footerLeft: 'lojmIt 14', footerRight: 'quS 2A' },
       concert: { title: 'bom', subtitle: 'VIP', footerLeft: 'qo\'', footerRight: 'tlhegh 1' },
@@ -1130,6 +1149,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Vikea anni astolat Make100 yeri nem dothrak.",
     bannedNote: "Kishi laz fichat k'athjilari, kash athchomar chomakea.",
     bannedContactSupport: "💬 Astilat Vitiherat",
+    sessionsPlayed: "Athdrivar kishi",
     tickets: {
       flight: { title: 'TIM', subtitle: 'KHAL', footerLeft: '14', footerRight: '2A' },
       concert: { title: 'KHALASAR', subtitle: 'VIP', footerLeft: 'RHAESH', footerRight: '1' },
@@ -1184,6 +1204,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     bannedDesc: "Aōha Make100 pryjatan dōren se zālagon gaomagon.",
     bannedNote: "Skorion mirre zūgagon, Dāro oressagon.",
     bannedContactSupport: "💬 Menty vestretis",
+    sessionsPlayed: "Gaomagon temby",
     tickets: {
       flight: { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: '14', footerRight: '2A' },
       concert: { title: 'ZALDRĪZES', subtitle: 'VIP', footerLeft: 'ZALDRĪZES', footerRight: '1' },

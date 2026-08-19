@@ -1188,6 +1188,7 @@ export default function App() {
         setStats((prev: any) => ({ 
           ...prev,
           ...data,
+          gamesStarted: data.gamesStarted !== undefined ? data.gamesStarted : (data.games_started !== undefined ? data.games_started : (prev?.gamesStarted ?? 0)),
           coins: data.coins !== undefined ? data.coins : 100, 
           hintsCount: data.hintsCount !== undefined ? data.hintsCount : 3,
           referralCount: data.referralCount ?? data.referralsCount ?? prev?.referralCount ?? 0,
@@ -2880,6 +2881,19 @@ export default function App() {
               </h3>
               <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 space-y-3">
                 
+                {/* Количество сессий */}
+                <div className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/40 dark:border-slate-800/60">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">🎮</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {t.sessionsPlayed || 'Сыграно сессий'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-black text-slate-800 dark:text-white">
+                    {stats?.gamesStarted !== undefined ? stats.gamesStarted : 0}
+                  </span>
+                </div>
+
                 {/* Решено / Пропущено */}
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
                   <span className="text-slate-500 dark:text-slate-400">{t.solvedSkipped || 'Решено / Пропущено:'}</span>
