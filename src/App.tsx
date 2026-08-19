@@ -3,6 +3,7 @@ import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone,
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader } from './api';
+import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -44,30 +45,40 @@ const getLevelInfo = (solved: number) => {
   return { level, prevMilestone, nextMilestone, progress };
 };
 
-const formatRegistrationDate = (timestamp: number | null | undefined) => {
-  if (!timestamp) return 'Неизвестно';
-  return new Date(timestamp).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
+const formatRegistrationDate = (timestamp: number | null | undefined, lang: string = 'ru', t?: TranslationData) => {
+  if (!timestamp) return t?.unknownDate || 'Неизвестно';
+  try {
+    const localeMap: Record<string, string> = {
+      ru: 'ru-RU', en: 'en-US', de: 'de-DE', fr: 'fr-FR', pt: 'pt-BR', es: 'es-ES',
+      zh: 'zh-CN', ja: 'ja-JP', it: 'it-IT', ko: 'ko-KR', tr: 'tr-TR', he: 'he-IL',
+      ar: 'ar-SA', hi: 'hi-IN', la: 'la', eo: 'eo', elvish: 'en-GB', klingon: 'en-GB',
+      dothraki: 'en-GB', valyrian: 'en-GB'
+    };
+    return new Date(timestamp).toLocaleDateString(localeMap[lang] || 'ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return new Date(timestamp).toLocaleDateString();
+  }
 };
 
-const formatBestTime = (timeMs: number | null | undefined) => {
-  if (!timeMs) return 'Нет рекорда';
-  return `${(timeMs / 1000).toFixed(2)} сек`;
+const formatBestTime = (timeMs: number | null | undefined, t?: TranslationData) => {
+  if (!timeMs) return t?.noRecord || 'Нет рекорда';
+  return `${(timeMs / 1000).toFixed(2)} ${t?.secondsShort || 'сек'}`;
 };
 
-const formatTotalPlayTime = (timeMs: number | null | undefined) => {
-  if (!timeMs) return '0 сек';
+const formatTotalPlayTime = (timeMs: number | null | undefined, t?: TranslationData) => {
+  if (!timeMs) return `0 ${t?.secondsShort || 'сек'}`;
   const totalSeconds = Math.floor(timeMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   
   if (minutes > 0) {
-    return `${minutes} мин. ${seconds} сек.`;
+    return `${minutes} ${t?.minutesShort || 'мин.'} ${seconds} ${t?.secondsShort || 'сек.'}`;
   }
-  return `${seconds} сек.`;
+  return `${seconds} ${t?.secondsShort || 'сек.'}`;
 };
 
 interface TelegramUser {
@@ -108,1353 +119,6 @@ interface TelegramWebApp {
   offEvent?: (eventType: string, eventHandler: () => void) => void;
 }
 
-const TRANSLATIONS = {
-  ru: {
-    title: "Make100",
-    player: "Игрок",
-    gameMode: "Режим",
-    car: "Автомобиль",
-    ticket: "Билет",
-    solved: "Решено",
-    skipped: "Пропущено",
-    operators: "Знаков",
-    current: "Текущее",
-    total: "Общее",
-    theme: "Тема",
-    language: "Язык",
-    auto: "Авто",
-    light: "Светлая",
-    dark: "Темная",
-    menu: "Меню",
-    play: "Играть!",
-    skipDemo: "Пропустить демо",
-    demoTitle: "Как играть?",
-    demo1: "Вам даны 6 случайных цифр",
-    demo2: "Пустой промежуток объединяет их в числа",
-    demo3: "Нажимайте на квадраты и выбирайте знаки",
-    demo4: "Используйте +, -, *, / и скобки",
-    demo5: "Соберите ровно 100!",
-    soundAndVibration: "Звук и вибрация",
-    sound: "Звук",
-    vibration: "Вибро",
-    tapGaps: "Нажимайте на промежутки и вставляйте знаки",
-    skipTicket: "Пропустить билет",
-    skipCar: "Пропустить номер",
-    hint: "Подсказка",
-    noSolution: "У этой комбинации нет решения",
-    introText: "Соберите 100 из цифр на билете, используя математические знаки.",
-    start: "Старт",
-    perfect: "Идеально!",
-    solvedIn: "Решено за:",
-    operatorsUsed: "Использовано знаков:",
-    nextTicket: "Следующий билет",
-    nextCar: "Следующий номер",
-    close: "Закрыть",
-    leaderboard: "Рейтинг",
-    topPlayers: "Лучшие игроки",
-    loadingLeaderboard: "Загрузка рейтинга...",
-    noData: "Пока нет данных",
-    time: "Время",
-    shareScore: "Поделиться",
-    playAsGuest: "Играть как гость",
-    authorizing: "Авторизация...",
-    authorizingTg: "Авторизация в Telegram...",
-    loading: "Загрузка...",
-    level: "Уровень",
-    imageLoadError: "Ошибка загрузки изображения",
-    tickets: {
-      flight: { title: 'ПОСАДОЧНЫЙ ТАЛОН', subtitle: 'ПЕРВЫЙ КЛАСС', footerLeft: 'ГЕЙТ 14', footerRight: 'МЕСТО 2А' },
-      concert: { title: 'LIVE КОНЦЕРТ', subtitle: 'VIP ДОСТУП', footerLeft: 'МИРОВОЙ ТУР', footerRight: 'РЯД 1' },
-      cinema: { title: 'БИЛЕТ В КИНО', subtitle: 'НА ОДНОГО', footerLeft: 'РЯД F', footerRight: 'МЕСТО 12' },
-      train: { title: 'ЭКСПРЕСС ПОЕЗД', subtitle: 'В ОДНУ СТОРОНУ', footerLeft: 'ПЛАТФОРМА 9', footerRight: 'ВАГОН 4' },
-      'vintage-bus': { title: 'АВТОБУСНЫЙ БИЛЕТ', subtitle: 'СЕРИЯ АВ', footerLeft: 'КОНТРОЛЬНЫЙ', footerRight: 'БИЛЕТ' },
-      'vintage-tram': { title: 'ТРАМВАЙ', subtitle: 'РАЗОВЫЙ', footerLeft: 'БЕЗ КОМПОСТЕРА', footerRight: 'НЕДЕЙСТВИТЕЛЕН' },
-      'soviet-trolleybus': { title: 'ТРОЛЛЕЙБУС', subtitle: 'ГОРТРАНС', footerLeft: 'СОХРАНЯТЬ ДО', footerRight: 'КОНЦА ПОЕЗДКИ' },
-      'golden-ticket': { title: 'ЗОЛОТОЙ БИЛЕТ', subtitle: 'СЧАСТЛИВЧИК', footerLeft: 'ПРОПУСК 1', footerRight: 'ТУР НА ФАБРИКУ' },
-      'metro-pass': { title: 'ПРОЕЗДНОЙ', subtitle: 'НА МЕСЯЦ', footerLeft: 'ЗОНА 1-3', footerRight: 'БЕЗЛИМИТ' },
-      lottery: { title: 'ЛОТЕРЕЙНЫЙ БИЛЕТ', subtitle: 'ДЖЕКПОТ', footerLeft: 'ДАТА РОЗЫГРЫША', footerRight: 'СЕГОДНЯ' }
-    }
-  },
-  en: {
-    title: "Make100",
-    player: "Player",
-    gameMode: "Mode",
-    car: "Car",
-    ticket: "Ticket",
-    solved: "Solved",
-    skipped: "Skipped",
-    operators: "Operators",
-    current: "Current",
-    total: "Total",
-    theme: "Theme",
-    language: "Language",
-    auto: "Auto",
-    light: "Light",
-    dark: "Dark",
-    menu: "Menu",
-    play: "Play!",
-    skipDemo: "Skip demo",
-    demoTitle: "How to play?",
-    demo1: "You are given 6 random digits",
-    demo2: "An empty gap combines them into numbers",
-    demo3: "Tap the squares and choose operators",
-    demo4: "Use +, -, *, / and brackets",
-    demo5: "Make exactly 100!",
-    soundAndVibration: "Sound & Vibration",
-    sound: "Sound",
-    vibration: "Vibration",
-    tapGaps: "Tap the gaps and insert operators",
-    skipTicket: "Skip ticket",
-    skipCar: "Skip car",
-    hint: "Hint",
-    noSolution: "No solution exists for this combination",
-    introText: "Make 100 from the digits on the ticket using mathematical operators.",
-    start: "Start",
-    perfect: "Perfect!",
-    solvedIn: "Solved in:",
-    operatorsUsed: "Operators used:",
-    nextTicket: "Next ticket",
-    nextCar: "Next car",
-    close: "Close",
-    leaderboard: "Leaderboard",
-    topPlayers: "Top Players",
-    loadingLeaderboard: "Loading leaderboard...",
-    noData: "No data yet",
-    time: "Time",
-    shareScore: "Share",
-    playAsGuest: "Play as guest",
-    authorizing: "Authorizing...",
-    authorizingTg: "Authorizing with Telegram...",
-    loading: "Loading...",
-    level: "Level",
-    imageLoadError: "Image load error",
-    tickets: {
-      flight: { title: 'BOARDING PASS', subtitle: 'FIRST CLASS', footerLeft: 'GATE 14', footerRight: 'SEAT 2A' },
-      concert: { title: 'LIVE CONCERT', subtitle: 'VIP ACCESS', footerLeft: 'WORLD TOUR', footerRight: 'ROW 1' },
-      cinema: { title: 'CINEMA TICKET', subtitle: 'ADMIT ONE', footerLeft: 'ROW F', footerRight: 'SEAT 12' },
-      train: { title: 'EXPRESS TRAIN', subtitle: 'ONE WAY', footerLeft: 'PLATFORM 9', footerRight: 'CARRIAGE 4' },
-      'vintage-bus': { title: 'BUS TICKET', subtitle: 'SERIES AB', footerLeft: 'CONTROL', footerRight: 'TICKET' },
-      'vintage-tram': { title: 'TRAM', subtitle: 'SINGLE', footerLeft: 'WITHOUT PUNCH', footerRight: 'INVALID' },
-      'soviet-trolleybus': { title: 'TROLLEYBUS', subtitle: 'CITY TRANSIT', footerLeft: 'KEEP UNTIL', footerRight: 'END OF TRIP' },
-      'golden-ticket': { title: 'GOLDEN TICKET', subtitle: 'LUCKY WINNER', footerLeft: 'ADMIT 1', footerRight: 'FACTORY TOUR' },
-      'metro-pass': { title: 'METRO PASS', subtitle: 'MONTHLY', footerLeft: 'ZONE 1-3', footerRight: 'UNLIMITED' },
-      lottery: { title: 'LOTTERY TICKET', subtitle: 'JACKPOT', footerLeft: 'DRAW DATE', footerRight: 'TODAY' }
-    }
-  },
-  de: {
-    title: "Make100",
-    player: "Spieler",
-    gameMode: "Modus",
-    car: "Auto",
-    ticket: "Ticket",
-    solved: "Gelöst",
-    skipped: "Übersprungen",
-    operators: "Zeichen",
-    current: "Aktuell",
-    total: "Gesamt",
-    theme: "Thema",
-    language: "Sprache",
-    auto: "Auto",
-    light: "Hell",
-    dark: "Dunkel",
-    menu: "Menü",
-    play: "Spielen!",
-    skipDemo: "Demo überspringen",
-    demoTitle: "Spielanleitung?",
-    demo1: "Sie erhalten 6 zufällige Ziffern",
-    demo2: "Eine Lücke verbindet sie zu Zahlen",
-    demo3: "Tippen Sie auf Quadrate und wählen Sie Zeichen",
-    demo4: "Verwenden Sie +, -, *, / und Klammern",
-    demo5: "Erreichen Sie genau 100!",
-    soundAndVibration: "Ton & Vibration",
-    sound: "Ton",
-    vibration: "Vibration",
-    tapGaps: "Tippen Sie auf die Lücken und fügen Sie Zeichen ein",
-    skipTicket: "Ticket überspringen",
-    skipCar: "Auto überspringen",
-    hint: "Tipp",
-    noSolution: "Für diese Kombination gibt es keine Lösung",
-    introText: "Erreichen Sie 100 aus den Ziffern auf dem Ticket mit mathematischen Zeichen.",
-    start: "Start",
-    perfect: "Perfekt!",
-    solvedIn: "Gelöst in:",
-    operatorsUsed: "Verwendete Zeichen:",
-    nextTicket: "Nächstes Ticket",
-    nextCar: "Nächstes Auto",
-    close: "Schließen",
-    leaderboard: "Rangliste",
-    topPlayers: "Beste Spieler",
-    loadingLeaderboard: "Rangliste wird geladen...",
-    noData: "Noch keine Daten",
-    time: "Zeit",
-    shareScore: "Teilen",
-    playAsGuest: "Als Gast spielen",
-    authorizing: "Autorisierung...",
-    authorizingTg: "Autorisierung mit Telegram...",
-    loading: "Wird geladen...",
-    level: "Level",
-    imageLoadError: "Bildladefehler",
-    tickets: {
-      flight: { title: 'BORDKARTE', subtitle: 'ERSTE KLASSE', footerLeft: 'GATE 14', footerRight: 'SITZ 2A' },
-      concert: { title: 'LIVE-KONZERT', subtitle: 'VIP-ZUGANG', footerLeft: 'WELTTOURNEE', footerRight: 'REIHE 1' },
-      cinema: { title: 'KINOKARTE', subtitle: 'EINTRITT EINS', footerLeft: 'REIHE F', footerRight: 'SITZ 12' },
-      train: { title: 'EXPRESSZUG', subtitle: 'EINFACHE FAHRT', footerLeft: 'GLEIS 9', footerRight: 'WAGEN 4' },
-      'vintage-bus': { title: 'BUSFAHRKARTE', subtitle: 'SERIE AB', footerLeft: 'KONTROLLE', footerRight: 'TICKET' },
-      'vintage-tram': { title: 'STRASSENBAHN', subtitle: 'EINZELFAHRT', footerLeft: 'OHNE ENTWERTUNG', footerRight: 'UNGÜLTIG' },
-      'soviet-trolleybus': { title: 'OBUS', subtitle: 'STADTVERKEHR', footerLeft: 'BEHALTEN BIS', footerRight: 'FAHRTENDE' },
-      'golden-ticket': { title: 'GOLDENES TICKET', subtitle: 'GLÜCKLICHER GEWINNER', footerLeft: 'EINTRITT 1', footerRight: 'FABRIKTOUR' },
-      'metro-pass': { title: 'U-BAHN-PASS', subtitle: 'MONATLICH', footerLeft: 'ZONE 1-3', footerRight: 'UNBEGRENZT' },
-      lottery: { title: 'LOTTERIELOS', subtitle: 'JACKPOT', footerLeft: 'ZIEHUNGSDATUM', footerRight: 'HEUTE' }
-    }
-  },
-  fr: {
-    title: "Make100",
-    player: "Joueur",
-    gameMode: "Mode",
-    car: "Voiture",
-    ticket: "Billet",
-    solved: "Résolu",
-    skipped: "Passé",
-    operators: "Signes",
-    current: "Actuel",
-    total: "Total",
-    theme: "Thème",
-    language: "Langue",
-    auto: "Auto",
-    light: "Clair",
-    dark: "Sombre",
-    menu: "Menu",
-    play: "Jouer!",
-    skipDemo: "Passer la démo",
-    demoTitle: "Comment jouer?",
-    demo1: "Vous avez 6 chiffres aléatoires",
-    demo2: "Un espace vide les combine en nombres",
-    demo3: "Appuyez sur les carrés et choisissez les signes",
-    demo4: "Utilisez +, -, *, / et les parenthèses",
-    demo5: "Faites exactement 100!",
-    soundAndVibration: "Son et vibration",
-    sound: "Son",
-    vibration: "Vibration",
-    tapGaps: "Appuyez sur les espaces et insérez des signes",
-    skipTicket: "Passer le billet",
-    skipCar: "Passer la voiture",
-    hint: "Indice",
-    noSolution: "Aucune solution n'existe pour cette combinaison",
-    introText: "Faites 100 à partir des chiffres sur le billet en utilisant des signes mathématiques.",
-    start: "Démarrer",
-    perfect: "Parfait!",
-    solvedIn: "Résolu en:",
-    operatorsUsed: "Signes utilisés:",
-    nextTicket: "Billet suivant",
-    nextCar: "Voiture suivante",
-    close: "Fermer",
-    leaderboard: "Classement",
-    topPlayers: "Meilleurs joueurs",
-    loadingLeaderboard: "Chargement du classement...",
-    noData: "Pas encore de données",
-    time: "Temps",
-    shareScore: "Partager",
-    playAsGuest: "Jouer en tant qu'invité",
-    authorizing: "Autorisation...",
-    authorizingTg: "Autorisation avec Telegram...",
-    loading: "Chargement...",
-    level: "Niveau",
-    imageLoadError: "Erreur de chargement d'image",
-    tickets: {
-      flight: { title: 'CARTE D\'EMBARQUEMENT', subtitle: 'PREMIÈRE CLASSE', footerLeft: 'PORTE 14', footerRight: 'SIÈGE 2A' },
-      concert: { title: 'CONCERT LIVE', subtitle: 'ACCÈS VIP', footerLeft: 'TOURNÉE MONDIALE', footerRight: 'RANG 1' },
-      cinema: { title: 'BILLET DE CINÉMA', subtitle: 'UNE ENTRÉE', footerLeft: 'RANG F', footerRight: 'SIÈGE 12' },
-      train: { title: 'TRAIN EXPRESS', subtitle: 'ALLER SIMPLE', footerLeft: 'QUAI 9', footerRight: 'VOITURE 4' },
-      'vintage-bus': { title: 'BILLET DE BUS', subtitle: 'SÉRIE AB', footerLeft: 'CONTRÔLE', footerRight: 'BILLET' },
-      'vintage-tram': { title: 'TRAMWAY', subtitle: 'ALLER SIMPLE', footerLeft: 'SANS COMPOSTAGE', footerRight: 'INVALIDE' },
-      'soviet-trolleybus': { title: 'TROLLEYBUS', subtitle: 'TRANSIT URBAIN', footerLeft: 'GARDER JUSQU\'À', footerRight: 'FIN DU TRAJET' },
-      'golden-ticket': { title: 'TICKET D\'OR', subtitle: 'HEUREUX GAGNANT', footerLeft: 'ENTRÉE 1', footerRight: 'VISITE D\'USINE' },
-      'metro-pass': { title: 'PASS MÉTRO', subtitle: 'MENSUEL', footerLeft: 'ZONE 1-3', footerRight: 'ILLIMITÉ' },
-      lottery: { title: 'BILLET DE LOTERIE', subtitle: 'JACKPOT', footerLeft: 'DATE DE TIRAGE', footerRight: 'AUJOURD\'HUI' }
-    }
-  },
-  pt: {
-    title: "Make100",
-    player: "Jogador",
-    gameMode: "Modo",
-    car: "Carro",
-    ticket: "Bilhete",
-    solved: "Resolvido",
-    skipped: "Pulado",
-    operators: "Sinais",
-    current: "Atual",
-    total: "Total",
-    theme: "Tema",
-    language: "Idioma",
-    auto: "Auto",
-    light: "Claro",
-    dark: "Escuro",
-    menu: "Menu",
-    play: "Jogar!",
-    skipDemo: "Pular demo",
-    demoTitle: "Como jogar?",
-    demo1: "Você recebe 6 dígitos aleatórios",
-    demo2: "Um espaço vazio os combina em números",
-    demo3: "Toque nos quadrados e escolha os sinais",
-    demo4: "Use +, -, *, / e parênteses",
-    demo5: "Faça exatamente 100!",
-    soundAndVibration: "Som e Vibração",
-    sound: "Som",
-    vibration: "Vibração",
-    tapGaps: "Toque nos espaços e insira os sinais",
-    skipTicket: "Pular bilhete",
-    skipCar: "Pular carro",
-    hint: "Dica",
-    noSolution: "Nenhuma solução existe para esta combinação",
-    introText: "Faça 100 a partir dos dígitos no bilhete usando sinais matemáticos.",
-    start: "Iniciar",
-    perfect: "Perfeito!",
-    solvedIn: "Resolvido em:",
-    operatorsUsed: "Sinais usados:",
-    nextTicket: "Próximo bilhete",
-    nextCar: "Próximo carro",
-    close: "Fechar",
-    leaderboard: "Classificação",
-    topPlayers: "Melhores jogadores",
-    loadingLeaderboard: "Carregando classificação...",
-    noData: "Ainda sem dados",
-    time: "Tempo",
-    shareScore: "Compartilhar",
-    playAsGuest: "Jogar como convidado",
-    authorizing: "Autorizando...",
-    authorizingTg: "Autorizando com Telegram...",
-    loading: "Carregando...",
-    level: "Nível",
-    imageLoadError: "Erro ao carregar imagem",
-    tickets: {
-      flight: { title: 'CARTÃO DE EMBARQUE', subtitle: 'PRIMEIRA CLASSE', footerLeft: 'PORTÃO 14', footerRight: 'ASSENTO 2A' },
-      concert: { title: 'CONCERTO AO VIVO', subtitle: 'ACESSO VIP', footerLeft: 'TURNÊ MUNDIAL', footerRight: 'FILA 1' },
-      cinema: { title: 'BILHETE DE CINEMA', subtitle: 'UMA ENTRADA', footerLeft: 'FILA F', footerRight: 'ASSENTO 12' },
-      train: { title: 'TREM EXPRESSO', subtitle: 'SÓ IDA', footerLeft: 'PLATAFORMA 9', footerRight: 'VAGÃO 4' },
-      'vintage-bus': { title: 'BILHETE DE ÔNIBUS', subtitle: 'SÉRIE AB', footerLeft: 'CONTROLE', footerRight: 'BILHETE' },
-      'vintage-tram': { title: 'BONDE', subtitle: 'VIAGEM ÚNICA', footerLeft: 'SEM PICOTAR', footerRight: 'INVÁLIDO' },
-      'soviet-trolleybus': { title: 'TRÓLEBUS', subtitle: 'TRÂNSITO URBANO', footerLeft: 'GUARDAR ATÉ', footerRight: 'FIM DA VIAGEM' },
-      'golden-ticket': { title: 'BILHETE DOURADO', subtitle: 'VENCEDOR SORTUDO', footerLeft: 'ENTRADA 1', footerRight: 'TOUR NA FÁBRICA' },
-      'metro-pass': { title: 'PASSE DE METRÔ', subtitle: 'MENSAL', footerLeft: 'ZONA 1-3', footerRight: 'ILIMITADO' },
-      lottery: { title: 'BILHETE DE LOTERIA', subtitle: 'JACKPOT', footerLeft: 'DATA DO SORTEIO', footerRight: 'HOJE' }
-    }
-  },
-  es: {
-    title: "Make100",
-    player: "Jugador",
-    gameMode: "Modo",
-    car: "Coche",
-    ticket: "Boleto",
-    solved: "Resuelto",
-    skipped: "Saltado",
-    operators: "Signos",
-    current: "Actual",
-    total: "Total",
-    theme: "Tema",
-    language: "Idioma",
-    auto: "Auto",
-    light: "Claro",
-    dark: "Oscuro",
-    menu: "Menú",
-    play: "¡Jugar!",
-    skipDemo: "Saltar demo",
-    demoTitle: "¿Cómo jugar?",
-    demo1: "Tienes 6 dígitos aleatorios",
-    demo2: "Un espacio vacío los combina en números",
-    demo3: "Toca los cuadrados y elige los signos",
-    demo4: "Usa +, -, *, / y paréntesis",
-    demo5: "¡Haz exactamente 100!",
-    soundAndVibration: "Sonido y Vibración",
-    sound: "Sonido",
-    vibration: "Vibración",
-    tapGaps: "Toca los espacios e inserta los signos",
-    skipTicket: "Saltar boleto",
-    skipCar: "Saltar coche",
-    hint: "Pista",
-    noSolution: "No existe solución para esta combinación",
-    introText: "Haz 100 a partir de los dígitos en el boleto usando signos matemáticos.",
-    start: "Empezar",
-    perfect: "¡Perfecto!",
-    solvedIn: "Resuelto en:",
-    operatorsUsed: "Signos usados:",
-    nextTicket: "Siguiente boleto",
-    nextCar: "Siguiente coche",
-    close: "Cerrar",
-    leaderboard: "Clasificación",
-    topPlayers: "Mejores jugadores",
-    loadingLeaderboard: "Cargando clasificación...",
-    noData: "Aún no hay datos",
-    time: "Tiempo",
-    shareScore: "Compartir",
-    playAsGuest: "Jugar como invitado",
-    authorizing: "Autorizando...",
-    authorizingTg: "Autorizando con Telegram...",
-    loading: "Cargando...",
-    level: "Nivel",
-    imageLoadError: "Error al cargar la imagen",
-    tickets: {
-      flight: { title: 'TARJETA DE EMBARQUE', subtitle: 'PRIMERA CLASSE', footerLeft: 'PUERTA 14', footerRight: 'ASIENTO 2A' },
-      concert: { title: 'CONCIERTO EN VIVO', subtitle: 'ACCESO VIP', footerLeft: 'GIRA MUNDIAL', footerRight: 'FILA 1' },
-      cinema: { title: 'BOLETO DE CINE', subtitle: 'UNA ENTRADA', footerLeft: 'FILA F', footerRight: 'ASIENTO 12' },
-      train: { title: 'TREN EXPRESO', subtitle: 'SOLO IDA', footerLeft: 'ANDÉN 9', footerRight: 'VAGÓN 4' },
-      'vintage-bus': { title: 'BOLETO DE AUTOBÚS', subtitle: 'SERIE AB', footerLeft: 'CONTROL', footerRight: 'BOLETO' },
-      'vintage-tram': { title: 'TRANVÍA', subtitle: 'VIAJE ÚNICO', footerLeft: 'SIN PICAR', footerRight: 'INVÁLIDO' },
-      'soviet-trolleybus': { title: 'TROLEBÚS', subtitle: 'TRÁNSITO URBANO', footerLeft: 'GUARDAR HASTA', footerRight: 'FIN DEL VIAJE' },
-      'golden-ticket': { title: 'BOLETO DORADO', subtitle: 'GANADOR AFORTUNADO', footerLeft: 'ENTRADA 1', footerRight: 'TOUR DE FÁBRICA' },
-      'metro-pass': { title: 'PASE DE METRO', subtitle: 'MENSUAL', footerLeft: 'ZONA 1-3', footerRight: 'ILIMITADO' },
-      lottery: { title: 'BOLETO DE LOTERÍA', subtitle: 'PREMIO MAYOR', footerLeft: 'FECHA DE SORTEO', footerRight: 'HOY' }
-    }
-  },
-  zh: {
-    title: "Make100",
-    player: "玩家",
-    gameMode: "模式",
-    car: "汽车",
-    ticket: "门票",
-    solved: "已解决",
-    skipped: "已跳过",
-    operators: "符号",
-    current: "当前",
-    total: "总计",
-    theme: "主题",
-    language: "语言",
-    auto: "自动",
-    light: "浅色",
-    dark: "深色",
-    menu: "菜单",
-    play: "开始!",
-    skipDemo: "跳过演示",
-    demoTitle: "怎么玩？",
-    demo1: "给你6个随机数字",
-    demo2: "空白处将它们组合成数字",
-    demo3: "点击方块并选择符号",
-    demo4: "使用 +, -, *, / 和括号",
-    demo5: "正好凑成100！",
-    soundAndVibration: "声音和震动",
-    sound: "声音",
-    vibration: "震动",
-    tapGaps: "点击空白处并插入符号",
-    skipTicket: "跳过门票",
-    skipCar: "跳过汽车",
-    hint: "提示",
-    noSolution: "此组合无解",
-    introText: "使用数学符号将门票上的数字凑成100。",
-    start: "开始",
-    perfect: "完美！",
-    solvedIn: "解决时间:",
-    operatorsUsed: "使用符号:",
-    nextTicket: "下一张门票",
-    nextCar: "下一辆汽车",
-    close: "关闭",
-    leaderboard: "排行榜",
-    topPlayers: "顶尖玩家",
-    loadingLeaderboard: "正在加载排行榜...",
-    noData: "暂无数据",
-    time: "时间",
-    shareScore: "分享",
-    playAsGuest: "以访客身份游玩",
-    authorizing: "授权中...",
-    authorizingTg: "正在通过 Telegram 授权...",
-    loading: "加载中...",
-    level: "等级",
-    imageLoadError: "图片加载错误",
-    tickets: {
-      flight: { title: '登机牌', subtitle: '头等舱', footerLeft: '登机口 14', footerRight: '座位 2A' },
-      concert: { title: '现场演唱会', subtitle: 'VIP 通道', footerLeft: '世界巡演', footerRight: '第 1 排' },
-      cinema: { title: '电影票', subtitle: '单人票', footerLeft: 'F 排', footerRight: '座位 12' },
-      train: { title: '特快列车', subtitle: '单程', footerLeft: '站台 9', footerRight: '车厢 4' },
-      'vintage-bus': { title: '公交车票', subtitle: 'AB 系列', footerLeft: '检票', footerRight: '车票' },
-      'vintage-tram': { title: '有轨电车', subtitle: '单程', footerLeft: '未打孔', footerRight: '无效' },
-      'soviet-trolleybus': { title: '无轨电车', subtitle: '城市交通', footerLeft: '保留至', footerRight: '行程结束' },
-      'golden-ticket': { title: '金奖券', subtitle: '幸运赢家', footerLeft: '入场 1', footerRight: '工厂参观' },
-      'metro-pass': { title: '地铁通行证', subtitle: '月票', footerLeft: '区域 1-3', footerRight: '无限次' },
-      lottery: { title: '彩票', subtitle: '头奖', footerLeft: '开奖日期', footerRight: '今天' }
-    }
-  },
-  ja: {
-    title: "Make100",
-    player: "プレイヤー",
-    gameMode: "モード",
-    car: "車",
-    ticket: "チケット",
-    solved: "解決済み",
-    skipped: "スキップ",
-    operators: "記号",
-    current: "現在",
-    total: "合計",
-    theme: "テーマ",
-    language: "言語",
-    auto: "自動",
-    light: "ライト",
-    dark: "ダーク",
-    menu: "メニュー",
-    play: "プレイ！",
-    skipDemo: "デモをスキップ",
-    demoTitle: "遊び方",
-    demo1: "6つのランダムな数字が与えられます",
-    demo2: "空白はそれらを数字に結合します",
-    demo3: "四角をタップして記号を選びます",
-    demo4: "+, -, *, /, 括弧を使用します",
-    demo5: "ちょうど100を作ってください！",
-    soundAndVibration: "音と振動",
-    sound: "音",
-    vibration: "振動",
-    tapGaps: "空白をタップして記号を挿入",
-    skipTicket: "チケットをスキップ",
-    skipCar: "車をスキップ",
-    hint: "ヒント",
-    noSolution: "この組み合わせには解決策がありません",
-    introText: "数学記号を使用して、チケットの数字から100を作ります。",
-    start: "スタート",
-    perfect: "完璧！",
-    solvedIn: "解決時間:",
-    operatorsUsed: "使用した記号:",
-    nextTicket: "次のチケット",
-    nextCar: "次の車",
-    close: "閉じる",
-    leaderboard: "ランキング",
-    topPlayers: "トッププレイヤー",
-    loadingLeaderboard: "ランキングを読み込み中...",
-    noData: "まだデータがありません",
-    time: "時間",
-    shareScore: "シェア",
-    playAsGuest: "ゲストとしてプレイ",
-    authorizing: "認証中...",
-    authorizingTg: "Telegramで認証中...",
-    loading: "読み込み中...",
-    level: "レベル",
-    imageLoadError: "画像の読み込みエラー",
-    tickets: {
-      flight: { title: '搭乗券', subtitle: 'ファーストクラス', footerLeft: 'ゲート 14', footerRight: '座席 2A' },
-      concert: { title: 'ライブコンサート', subtitle: 'VIPアクセス', footerLeft: 'ワールドツアー', footerRight: '1列目' },
-      cinema: { title: '映画のチケット', subtitle: '1名入場', footerLeft: 'F列', footerRight: '座席 12' },
-      train: { title: '特急列車', subtitle: '片道', footerLeft: 'プラットフォーム 9', footerRight: '4号車' },
-      'vintage-bus': { title: 'バスのチケット', subtitle: 'ABシリーズ', footerLeft: 'コントロール', footerRight: 'チケット' },
-      'vintage-tram': { title: '路面電車', subtitle: '片道', footerLeft: 'パンチなし', footerRight: '無効' },
-      'soviet-trolleybus': { title: 'トロリーバス', subtitle: '市内交通', footerLeft: '最後まで', footerRight: '保管してください' },
-      'golden-ticket': { title: 'ゴールデンチケット', subtitle: '幸運な勝者', footerLeft: '入場 1', footerRight: '工場見学' },
-      'metro-pass': { title: '地下鉄パス', subtitle: '月間', footerLeft: 'ゾーン 1-3', footerRight: '無制限' },
-      lottery: { title: '宝くじ', subtitle: 'ジャックポット', footerLeft: '抽選日', footerRight: '今日' }
-    }
-  },
-  it: {
-    title: "Make100",
-    player: "Giocatore",
-    gameMode: "Modalità",
-    car: "Auto",
-    ticket: "Biglietto",
-    solved: "Risolti",
-    skipped: "Saltati",
-    operators: "Operatori",
-    current: "Attuale",
-    total: "Totale",
-    theme: "Tema",
-    language: "Lingua",
-    auto: "Auto",
-    light: "Chiaro",
-    dark: "Scuro",
-    menu: "Menu",
-    play: "Gioca!",
-    skipDemo: "Salta demo",
-    demoTitle: "Come si gioca?",
-    demo1: "Ti vengono date 6 cifre casuali",
-    demo2: "Uno spazio vuoto le unisce in numeri",
-    demo3: "Tocca i quadrati e scegli gli operatori",
-    demo4: "Usa +, -, *, / e le parentesi",
-    demo5: "Ottieni esattamente 100!",
-    soundAndVibration: "Suono e Vibrazione",
-    sound: "Suono",
-    vibration: "Vibrazione",
-    tapGaps: "Tocca gli spazi e inserisci gli operatori",
-    skipTicket: "Salta biglietto",
-    skipCar: "Salta auto",
-    hint: "Suggerimento",
-    noSolution: "Non esiste soluzione per questa combinazione",
-    introText: "Ottieni 100 dalle cifre sul biglietto usando gli operatori matematici.",
-    start: "Inizia",
-    perfect: "Perfetto!",
-    solvedIn: "Risolto in:",
-    operatorsUsed: "Operatori usati:",
-    nextTicket: "Prossimo biglietto",
-    nextCar: "Prossima auto",
-    close: "Chiudi",
-    leaderboard: "Classifica",
-    topPlayers: "Migliori Giocatori",
-    loadingLeaderboard: "Caricamento classifica...",
-    noData: "Nessun dato ancora",
-    time: "Tempo",
-    shareScore: "Condividi",
-    playAsGuest: "Gioca come ospite",
-    authorizing: "Autorizzazione...",
-    authorizingTg: "Autorizzazione con Telegram...",
-    loading: "Caricamento...",
-    level: "Livello",
-    imageLoadError: "Errore di caricamento immagine",
-    tickets: {
-      flight: { title: 'CARTA D\'IMBARCO', subtitle: 'PRIMA CLASSE', footerLeft: 'GATE 14', footerRight: 'POSTO 2A' },
-      concert: { title: 'CONCERTO LIVE', subtitle: 'ACCESSO VIP', footerLeft: 'TOUR MONDIALE', footerRight: 'FILA 1' },
-      cinema: { title: 'BIGLIETTO CINEMA', subtitle: 'INGRESSO SINGOLO', footerLeft: 'FILA F', footerRight: 'POSTO 12' },
-      train: { title: 'TRENO ESPRESSO', subtitle: 'SOLA ANDATA', footerLeft: 'BINARIO 9', footerRight: 'CARROZZA 4' },
-      'vintage-bus': { title: 'BIGLIETTO AUTOBUS', subtitle: 'SERIE AB', footerLeft: 'CONTROLLO', footerRight: 'BIGLIETTO' },
-      'vintage-tram': { title: 'TRAM', subtitle: 'CORSA SINGOLA', footerLeft: 'SENZA TIMBRO', footerRight: 'NON VALIDO' },
-      'soviet-trolleybus': { title: 'FILOBUS', subtitle: 'TRASPORTO URBANO', footerLeft: 'CONSERVARE FINO', footerRight: 'A FINE CORSA' },
-      'golden-ticket': { title: 'BIGLIETTO D\'ORO', subtitle: 'VINCITORE FORTUNATO', footerLeft: 'INGRESSO 1', footerRight: 'TOUR FABBRICA' },
-      'metro-pass': { title: 'ABBONAMENTO METRO', subtitle: 'MENSILE', footerLeft: 'ZONA 1-3', footerRight: 'ILLIMITATO' },
-      lottery: { title: 'BIGLIETTO LOTTERIA', subtitle: 'JACKPOT', footerLeft: 'DATA ESTRAZIONE', footerRight: 'OGGI' }
-    }
-  },
-  ko: {
-    title: "Make100",
-    player: "플레이어",
-    gameMode: "모드",
-    car: "자동차",
-    ticket: "티켓",
-    solved: "해결됨",
-    skipped: "건너뜀",
-    operators: "기호",
-    current: "현재",
-    total: "총",
-    theme: "테마",
-    language: "언어",
-    auto: "자동",
-    light: "라이트",
-    dark: "다크",
-    menu: "메뉴",
-    play: "플레이!",
-    skipDemo: "데모 건너뛰기",
-    demoTitle: "게임 방법",
-    demo1: "6개의 무작위 숫자가 주어집니다",
-    demo2: "빈칸은 숫자를 결합합니다",
-    demo3: "사각형을 탭하고 기호를 선택하세요",
-    demo4: "+, -, *, /, 괄호를 사용하세요",
-    demo5: "정확히 100을 만드세요!",
-    soundAndVibration: "소리 및 진동",
-    sound: "소리",
-    vibration: "진동",
-    tapGaps: "빈칸을 탭하고 기호 삽입",
-    skipTicket: "티켓 건너뛰기",
-    skipCar: "자동차 건너뛰기",
-    hint: "힌트",
-    noSolution: "이 조합에 대한 해결책이 없습니다",
-    introText: "수학 기호를 사용하여 티켓의 숫자로 100을 만드세요.",
-    start: "시작",
-    perfect: "완벽해요!",
-    solvedIn: "해결 시간:",
-    operatorsUsed: "사용된 기호:",
-    nextTicket: "다음 티켓",
-    nextCar: "다음 자동차",
-    close: "닫기",
-    leaderboard: "순위표",
-    topPlayers: "최고의 플레이어",
-    loadingLeaderboard: "순위표 로드 중...",
-    noData: "아직 데이터가 없습니다",
-    time: "시간",
-    shareScore: "공유하기",
-    playAsGuest: "게스트로 플레이",
-    authorizing: "인증 중...",
-    authorizingTg: "Telegram으로 인증 중...",
-    loading: "로딩 중...",
-    level: "레벨",
-    imageLoadError: "이미지 로드 오류",
-    tickets: {
-      flight: { title: '탑승권', subtitle: '일등석', footerLeft: '게이트 14', footerRight: '좌석 2A' },
-      concert: { title: '라이브 콘서트', subtitle: 'VIP 입장', footerLeft: '월드 투어', footerRight: '1열' },
-      cinema: { title: '영화 티켓', subtitle: '1인 입장', footerLeft: 'F열', footerRight: '좌석 12' },
-      train: { title: '급행 열차', subtitle: '편도', footerLeft: '플랫폼 9', footerRight: '4호차' },
-      'vintage-bus': { title: '버스 티켓', subtitle: 'AB 시리즈', footerLeft: '검표', footerRight: '티켓' },
-      'vintage-tram': { title: '트램', subtitle: '편도', footerLeft: '펀치 없음', footerRight: '무효' },
-      'soviet-trolleybus': { title: '트롤리버스', subtitle: '도시 교통', footerLeft: '보관 기한', footerRight: '여행 종료' },
-      'golden-ticket': { title: '골든 티켓', subtitle: '행운의 당첨자', footerLeft: '입장 1', footerRight: '공장 투어' },
-      'metro-pass': { title: '지하철 패스', subtitle: '월간', footerLeft: '구역 1-3', footerRight: '무제한' },
-      lottery: { title: '복권', subtitle: '잭팟', footerLeft: '추첨일', footerRight: '오늘' }
-    }
-  },
-  tr: {
-    title: "Make100",
-    player: "Oyuncu",
-    gameMode: "Mod",
-    car: "Araba",
-    ticket: "Bilet",
-    solved: "Çözüldü",
-    skipped: "Atlandı",
-    operators: "İşaretler",
-    current: "Mevcut",
-    total: "Toplam",
-    theme: "Tema",
-    language: "Dil",
-    auto: "Otomatik",
-    light: "Açık",
-    dark: "Koyu",
-    menu: "Menü",
-    play: "Oyna!",
-    skipDemo: "Demoyu geç",
-    demoTitle: "Nasıl oynanır?",
-    demo1: "Size rastgele 6 rakam verilir",
-    demo2: "Boşluk onları sayılara dönüştürür",
-    demo3: "Karelere dokunun ve işaretleri seçin",
-    demo4: "+, -, *, / ve parantezleri kullanın",
-    demo5: "Tam olarak 100 yapın!",
-    soundAndVibration: "Ses ve Titreşim",
-    sound: "Ses",
-    vibration: "Titreşim",
-    tapGaps: "Boşluklara dokunun ve işaret ekleyin",
-    skipTicket: "Bileti geç",
-    skipCar: "Arabayı geç",
-    hint: "İpucu",
-    noSolution: "Bu kombinasyon için çözüm yok",
-    introText: "Matematiksel işaretleri kullanarak biletteki rakamlardan 100 yapın.",
-    start: "Başla",
-    perfect: "Mükemmel!",
-    solvedIn: "Çözüm süresi:",
-    operatorsUsed: "Kullanılan işaretler:",
-    nextTicket: "Sonraki bilet",
-    nextCar: "Sonraki araba",
-    close: "Kapat",
-    leaderboard: "Liderlik Tablosu",
-    topPlayers: "En İyi Oyuncular",
-    loadingLeaderboard: "Liderlik tablosu yükleniyor...",
-    noData: "Henüz veri yok",
-    time: "Zaman",
-    shareScore: "Paylaş",
-    playAsGuest: "Misafir olarak oyna",
-    authorizing: "Yetkilendiriliyor...",
-    authorizingTg: "Telegram ile yetkilendiriliyor...",
-    loading: "Yükleniyor...",
-    level: "Seviye",
-    imageLoadError: "Görüntü yükleme hatası",
-    tickets: {
-      flight: { title: 'BİNİŞ KARTI', subtitle: 'BİRİNCİ SINIF', footerLeft: 'KAPI 14', footerRight: 'KOLTUK 2A' },
-      concert: { title: 'CANLI KONSER', subtitle: 'VIP GİRİŞ', footerLeft: 'DÜNYA TURU', footerRight: 'SIRA 1' },
-      cinema: { title: 'SİNEMA BİLETİ', subtitle: 'TEK KİŞİLİK', footerLeft: 'SIRA F', footerRight: 'KOLTUK 12' },
-      train: { title: 'EKSPRES TREN', subtitle: 'TEK YÖN', footerLeft: 'PERON 9', footerRight: 'VAGON 4' },
-      'vintage-bus': { title: 'OTOBÜS BİLETİ', subtitle: 'SERİ AB', footerLeft: 'KONTROL', footerRight: 'BİLET' },
-      'vintage-tram': { title: 'TRAMVAY', subtitle: 'TEK YÖN', footerLeft: 'DELİKSİZ', footerRight: 'GEÇERSİZ' },
-      'soviet-trolleybus': { title: 'TROLLEYBÜS', subtitle: 'ŞEHİR İÇİ', footerLeft: 'SAKLAYIN', footerRight: 'YOLCULUK SONUNA' },
-      'golden-ticket': { title: 'ALTIN BİLET', subtitle: 'ŞANSLI KAZANAN', footerLeft: 'GİRİŞ 1', footerRight: 'FABRİKA TURU' },
-      'metro-pass': { title: 'METRO KARTI', subtitle: 'AYLIK', footerLeft: 'BÖLGE 1-3', footerRight: 'SINIRSIZ' },
-      lottery: { title: 'PİYANGO BİLETİ', subtitle: 'BÜYÜK İKRAMİYE', footerLeft: 'ÇEKİLİŞ TARİHİ', footerRight: 'BUGÜN' }
-    }
-  },
-  he: {
-    title: "Make100",
-    player: "שחקן",
-    gameMode: "מצב",
-    car: "מכונית",
-    ticket: "כרטיס",
-    solved: "נפתר",
-    skipped: "דולג",
-    operators: "סימנים",
-    current: "נוכחי",
-    total: "סה\"כ",
-    theme: "ערכת נושא",
-    language: "שפה",
-    auto: "אוטומטי",
-    light: "בהיר",
-    dark: "כהה",
-    menu: "תפריט",
-    play: "שחק!",
-    skipDemo: "דלג על הדגמה",
-    demoTitle: "איך לשחק?",
-    demo1: "ניתנות לך 6 ספרות אקראיות",
-    demo2: "רווח ריק מחבר אותן למספרים",
-    demo3: "הקש על הריבועים ובחר סימנים",
-    demo4: "השתמש ב- +, -, *, / וסוגריים",
-    demo5: "הגע בדיוק ל-100!",
-    soundAndVibration: "צליל ורטט",
-    sound: "צליל",
-    vibration: "רטט",
-    tapGaps: "הקש על הרווחים והכנס סימנים",
-    skipTicket: "דלג על כרטיס",
-    skipCar: "דלג על מכונית",
-    hint: "רמז",
-    noSolution: "אין פתרון לשילוב זה",
-    introText: "הגע ל-100 מהספרות שעל הכרטיס בעזרת סימנים מתמטיים.",
-    start: "התחל",
-    perfect: "מושלם!",
-    solvedIn: "נפתר ב:",
-    operatorsUsed: "סימנים בשימוש:",
-    nextTicket: "כרטיס הבא",
-    nextCar: "מכונית הבאה",
-    close: "סגור",
-    leaderboard: "טבלת מובילים",
-    topPlayers: "השחקנים הטובים ביותר",
-    loadingLeaderboard: "טוען טבלת מובילים...",
-    noData: "אין נתונים עדיין",
-    time: "זמן",
-    shareScore: "שיתוף",
-    playAsGuest: "שחק כאורח",
-    authorizing: "מאשר...",
-    authorizingTg: "מאשר מול טלגרם...",
-    loading: "טוען...",
-    level: "רמה",
-    imageLoadError: "שגיאת טעינת תמונה",
-    tickets: {
-      flight: { title: 'כרטיס עלייה למטוס', subtitle: 'מחלקה ראשונה', footerLeft: 'שער 14', footerRight: 'מושב 2A' },
-      concert: { title: 'הופעה חיה', subtitle: 'גישת VIP', footerLeft: 'סיבוב הופעות עולמי', footerRight: 'שורה 1' },
-      cinema: { title: 'כרטיס קולנוע', subtitle: 'כניסה ליחיד', footerLeft: 'שורה F', footerRight: 'מושב 12' },
-      train: { title: 'רכבת אקספרס', subtitle: 'כיוון אחד', footerLeft: 'רציף 9', footerRight: 'קרון 4' },
-      'vintage-bus': { title: 'כרטיס אוטובוס', subtitle: 'סדרה AB', footerLeft: 'ביקורת', footerRight: 'כרטיס' },
-      'vintage-tram': { title: 'חשמלית', subtitle: 'נסיעה בודדת', footerLeft: 'ללא ניקוב', footerRight: 'לא תקף' },
-      'soviet-trolleybus': { title: 'טרוליבוס', subtitle: 'תחבורה עירונית', footerLeft: 'שמור עד', footerRight: 'סוף הנסיעה' },
-      'golden-ticket': { title: 'כרטיס זהב', subtitle: 'זוכה מאושר', footerLeft: 'כניסה 1', footerRight: 'סיור במפעל' },
-      'metro-pass': { title: 'כרטיס מטרו', subtitle: 'חודשי', footerLeft: 'אזור 1-3', footerRight: 'ללא הגבלה' },
-      lottery: { title: 'כרטיס הגרלה', subtitle: 'קופה', footerLeft: 'תאריך הגרלה', footerRight: 'היום' }
-    }
-  },
-  ar: {
-    title: "Make100",
-    player: "اللاعب",
-    gameMode: "الوضع",
-    car: "سيارة",
-    ticket: "تذكرة",
-    solved: "تم الحل",
-    skipped: "تم التخطي",
-    operators: "العلامات",
-    current: "الحالي",
-    total: "المجموع",
-    theme: "المظهر",
-    language: "اللغة",
-    auto: "تلقائي",
-    light: "فاتح",
-    dark: "داكن",
-    menu: "القائمة",
-    play: "العب!",
-    skipDemo: "تخطي العرض",
-    demoTitle: "كيف تلعب؟",
-    demo1: "يتم إعطاؤك 6 أرقام عشوائية",
-    demo2: "الفراغ يجمعها في أرقام",
-    demo3: "اضغط على المربعات واختر العلامات",
-    demo4: "استخدم +، -، *، / والأقواس",
-    demo5: "اجعلها 100 بالضبط!",
-    soundAndVibration: "الصوت والاهتزاز",
-    sound: "الصوت",
-    vibration: "الاهتزاز",
-    tapGaps: "اضغط على الفراغات وأدخل العلامات",
-    skipTicket: "تخطي التذكرة",
-    skipCar: "تخطي السيارة",
-    hint: "تلميح",
-    noSolution: "لا يوجد حل لهذه المجموعة",
-    introText: "اجعل 100 من الأرقام الموجودة على التذكرة باستخدام العلامات الرياضية.",
-    start: "ابدأ",
-    perfect: "ممتاز!",
-    solvedIn: "تم الحل في:",
-    operatorsUsed: "العلامات المستخدمة:",
-    nextTicket: "التذكرة التالية",
-    nextCar: "السيارة التالية",
-    close: "إغلاق",
-    leaderboard: "لوحة المتصدرين",
-    topPlayers: "أفضل اللاعبين",
-    loadingLeaderboard: "جاري تحميل لوحة المتصدرين...",
-    noData: "لا توجد بيانات بعد",
-    time: "الوقت",
-    shareScore: "مشاركة",
-    playAsGuest: "العب كضيف",
-    authorizing: "جاري التفويض...",
-    authorizingTg: "جاري التفويض عبر تيليجرام...",
-    loading: "جاري التحميل...",
-    level: "مستوى",
-    imageLoadError: "خطأ في تحميل الصورة",
-    tickets: {
-      flight: { title: 'بطاقة صعود', subtitle: 'الدرجة الأولى', footerLeft: 'بوابة 14', footerRight: 'مقعد 2A' },
-      concert: { title: 'حفل مباشر', subtitle: 'دخول VIP', footerLeft: 'جولة عالمية', footerRight: 'صف 1' },
-      cinema: { title: 'تذكرة سينما', subtitle: 'دخول شخص واحد', footerLeft: 'صف F', footerRight: 'مقعد 12' },
-      train: { title: 'قطار سريع', subtitle: 'اتجاه واحد', footerLeft: 'رصيف 9', footerRight: 'عربة 4' },
-      'vintage-bus': { title: 'تذكرة حافلة', subtitle: 'سلسلة AB', footerLeft: 'مراقبة', footerRight: 'تذكرة' },
-      'vintage-tram': { title: 'ترام', subtitle: 'رحلة واحدة', footerLeft: 'بدون ثقب', footerRight: 'غير صالح' },
-      'soviet-trolleybus': { title: 'حافلة كهربائية', subtitle: 'نقل حضري', footerLeft: 'احتفظ بها حتى', footerRight: 'نهاية الرحلة' },
-      'golden-ticket': { title: 'التذكرة الذهبية', subtitle: 'فائز محظوظ', footerLeft: 'دخول 1', footerRight: 'جولة في المصنع' },
-      'metro-pass': { title: 'بطاقة مترو', subtitle: 'شهري', footerLeft: 'منطقة 1-3', footerRight: 'غير محدود' },
-      lottery: { title: 'تذكرة يانصيب', subtitle: 'الجائزة الكبرى', footerLeft: 'تاريخ السحب', footerRight: 'اليوم' }
-    }
-  },
-  hi: {
-    title: "Make100",
-    player: "खिलाड़ी",
-    gameMode: "मोड",
-    car: "कार",
-    ticket: "टिकट",
-    solved: "हल किया",
-    skipped: "छोड़ दिया",
-    operators: "चिह्न",
-    current: "वर्तमान",
-    total: "कुल",
-    theme: "थीम",
-    language: "भाषा",
-    auto: "ऑटो",
-    light: "लाइट",
-    dark: "डार्क",
-    menu: "मेनू",
-    play: "खेलें!",
-    skipDemo: "डेमो छोड़ें",
-    demoTitle: "कैसे खेलें?",
-    demo1: "आपको 6 यादृच्छिक अंक दिए गए हैं",
-    demo2: "एक खाली जगह उन्हें संख्याओं में मिलाती है",
-    demo3: "वर्गों पर टैप करें और चिह्न चुनें",
-    demo4: "+, -, *, / और कोष्ठक का उपयोग करें",
-    demo5: "बिल्कुल 100 बनाएं!",
-    soundAndVibration: "ध्वनि और कंपन",
-    sound: "ध्वनि",
-    vibration: "कंपन",
-    tapGaps: "रिक्त स्थान पर टैप करें और चिह्न डालें",
-    skipTicket: "टिकट छोड़ें",
-    skipCar: "कार छोड़ें",
-    hint: "संकेत",
-    noSolution: "इस संयोजन का कोई समाधान नहीं है",
-    introText: "गणितीय चिह्नों का उपयोग करके टिकट पर अंकों से 100 बनाएं।",
-    start: "शुरू करें",
-    perfect: "बिल्कुल सही!",
-    solvedIn: "में हल किया:",
-    operatorsUsed: "उपयोग किए गए चिह्न:",
-    nextTicket: "अगला टिकट",
-    nextCar: "अगली कार",
-    close: "बंद करें",
-    leaderboard: "लीडरबोर्ड",
-    topPlayers: "शीर्ष खिलाड़ी",
-    loadingLeaderboard: "लीडरबोर्ड लोड हो रहा है...",
-    noData: "अभी तक कोई डेटा नहीं",
-    time: "समय",
-    shareScore: "साझा करें",
-    playAsGuest: "अतिथि के रूप में खेलें",
-    authorizing: "प्राधिकृत कर रहा है...",
-    authorizingTg: "टेलीग्राम के साथ प्राधिकृत कर रहा है...",
-    loading: "लोड हो रहा है...",
-    level: "स्तर",
-    imageLoadError: "छवि लोड करने में त्रुटि",
-    tickets: {
-      flight: { title: 'बोर्डिंग पास', subtitle: 'प्रथम श्रेणी', footerLeft: 'गेट 14', footerRight: 'सीट 2A' },
-      concert: { title: 'लाइव कॉन्सर्ट', subtitle: 'वीआईपी एक्सेस', footerLeft: 'वर्ल्ड टूर', footerRight: 'पंक्ति 1' },
-      cinema: { title: 'सिनेमा टिकट', subtitle: 'एक प्रवेश', footerLeft: 'पंक्ति F', footerRight: 'सीट 12' },
-      train: { title: 'एक्सप्रेस ट्रेन', subtitle: 'एक तरफा', footerLeft: 'प्लेटफॉर्म 9', footerRight: 'डिब्बा 4' },
-      'vintage-bus': { title: 'बस टिकट', subtitle: 'सीरीज़ AB', footerLeft: 'नियंत्रण', footerRight: 'टिकट' },
-      'vintage-tram': { title: 'ट्राम', subtitle: 'सिंगल', footerLeft: 'बिना पंच के', footerRight: 'अमान्य' },
-      'soviet-trolleybus': { title: 'ट्रॉलीबस', subtitle: 'सिटी ट्रांजिट', footerLeft: 'तक रखें', footerRight: 'यात्रा के अंत' },
-      'golden-ticket': { title: 'गोल्डन टिकट', subtitle: 'भाग्यशाली विजेता', footerLeft: 'प्रवेश 1', footerRight: 'फैक्ट्री टूर' },
-      'metro-pass': { title: 'मेट्रो पास', subtitle: 'मासिक', footerLeft: 'ज़ोन 1-3', footerRight: 'असीमित' },
-      lottery: { title: 'लॉटरी टिकट', subtitle: 'जैकपॉट', footerLeft: 'ड्रा तिथि', footerRight: 'आज' }
-    }
-  },
-  la: {
-    title: "Make100",
-    player: "Lusor",
-    gameMode: "Modus",
-    car: "Currus",
-    ticket: "Tessera",
-    solved: "Solutum",
-    skipped: "Omissum",
-    operators: "Signa",
-    current: "Praesens",
-    total: "Summa",
-    theme: "Thema",
-    language: "Lingua",
-    auto: "Auto",
-    light: "Clarum",
-    dark: "Obscurum",
-    menu: "Tabula",
-    play: "Lude!",
-    skipDemo: "Omitte demo",
-    demoTitle: "Quomodo ludere?",
-    demo1: "Dantur tibi 6 numeri fortuiti",
-    demo2: "Spatium vacuum eos in numeros iungit",
-    demo3: "Tange quadra et elige signa",
-    demo4: "Utere +, -, *, / et uncis",
-    demo5: "Fac prorsus 100!",
-    soundAndVibration: "Sonus et Vibratio",
-    sound: "Sonus",
-    vibration: "Vibratio",
-    tapGaps: "Tange spatia et inscribe signa",
-    skipTicket: "Omitte tesseram",
-    skipCar: "Omitte currum",
-    hint: "Indiciolum",
-    noSolution: "Nulla solutio huic compositioni est",
-    introText: "Fac 100 ex numeris in tessera utens signis mathematicis.",
-    start: "Incipe",
-    perfect: "Perfectum!",
-    solvedIn: "Solutum in:",
-    operatorsUsed: "Signa adhibita:",
-    nextTicket: "Proxima tessera",
-    nextCar: "Proximus currus",
-    close: "Claude",
-    leaderboard: "Tabula principum",
-    topPlayers: "Optimi lusores",
-    loadingLeaderboard: "Onerans tabulam principum...",
-    noData: "Nulla data adhuc",
-    time: "Tempus",
-    shareScore: "Communicare",
-    playAsGuest: "Lude ut hospes",
-    authorizing: "Auctorizans...",
-    authorizingTg: "Auctorizans cum Telegram...",
-    loading: "Onerans...",
-    level: "Gradus",
-    imageLoadError: "Error loading imago",
-    tickets: {
-      flight: { title: 'TESSERA CONSCENDENDI', subtitle: 'PRIMA CLASSIS', footerLeft: 'PORTA 14', footerRight: 'SEDES 2A' },
-      concert: { title: 'CONCENTUS VIVUS', subtitle: 'ADITUS VIP', footerLeft: 'ITER MUNDANUM', footerRight: 'ORDO 1' },
-      cinema: { title: 'TESSERA CINEMATOGRAPHICA', subtitle: 'ADMITTE UNUM', footerLeft: 'ORDO F', footerRight: 'SEDES 12' },
-      train: { title: 'TRAMEN EXPRESSUM', subtitle: 'UNA VIA', footerLeft: 'CREPIDO 9', footerRight: 'CURRUS 4' },
-      'vintage-bus': { title: 'TESSERA LAOPHORII', subtitle: 'SERIES AB', footerLeft: 'INSPECTIO', footerRight: 'TESSERA' },
-      'vintage-tram': { title: 'TRAMEN URBANUM', subtitle: 'SIMPLEX', footerLeft: 'SINE PERFORATIONE', footerRight: 'IRRITA' },
-      'soviet-trolleybus': { title: 'TROLLEYBUS', subtitle: 'TRANSITUS URBANUS', footerLeft: 'SERVA USQUE AD', footerRight: 'FINEM ITINERIS' },
-      'golden-ticket': { title: 'TESSERA AUREA', subtitle: 'VICTOR FELIX', footerLeft: 'ADMITTE 1', footerRight: 'ITER OFFICINAE' },
-      'metro-pass': { title: 'TESSERA METROPOLITANA', subtitle: 'MENSTRUA', footerLeft: 'ZONA 1-3', footerRight: 'INFINITA' },
-      lottery: { title: 'TESSERA SORTITIONIS', subtitle: 'PRAEMIUM MAXIMUM', footerLeft: 'DIES SORTITIONIS', footerRight: 'HODIE' }
-    }
-  },
-  eo: {
-    title: "Make100",
-    player: "Ludanto",
-    gameMode: "Reĝimo",
-    car: "Aŭto",
-    ticket: "Bileto",
-    solved: "Solvita",
-    skipped: "Preterlasita",
-    operators: "Signoj",
-    current: "Nuna",
-    total: "Entute",
-    theme: "Etoso",
-    language: "Lingvo",
-    auto: "Aŭto",
-    light: "Hela",
-    dark: "Malhela",
-    menu: "Menuo",
-    play: "Ludu!",
-    skipDemo: "Preterlasi demon",
-    demoTitle: "Kiel ludi?",
-    demo1: "Vi ricevas 6 hazardajn ciferojn",
-    demo2: "Malplena spaco kunigas ilin en nombrojn",
-    demo3: "Tuŝu la kvadratojn kaj elektu signojn",
-    demo4: "Uzu +, -, *, / kaj krampojn",
-    demo5: "Faru precize 100!",
-    soundAndVibration: "Sono kaj Vibrado",
-    sound: "Sono",
-    vibration: "Vibrado",
-    tapGaps: "Tuŝu la spacojn kaj enmetu signojn",
-    skipTicket: "Preterlasi bileton",
-    skipCar: "Preterlasi aŭton",
-    hint: "Indiko",
-    noSolution: "Ne ekzistas solvo por ĉi tiu kombinaĵo",
-    introText: "Faru 100 el la ciferoj sur la bileto uzante matematikajn signojn.",
-    start: "Komenci",
-    perfect: "Perfekte!",
-    solvedIn: "Solvita en:",
-    operatorsUsed: "Signoj uzitaj:",
-    nextTicket: "Sekva bileto",
-    nextCar: "Sekva aŭto",
-    close: "Fermi",
-    leaderboard: "Gvidtabulo",
-    topPlayers: "Plej bonaj ludantoj",
-    loadingLeaderboard: "Ŝargante gvidtabulon...",
-    noData: "Ankoraŭ neniuj datumoj",
-    time: "Tempo",
-    shareScore: "Dividi",
-    playAsGuest: "Ludi kiel gasto",
-    authorizing: "Aŭtorizante...",
-    authorizingTg: "Aŭtorizante kun Telegram...",
-    loading: "Ŝargante...",
-    level: "Nivelo",
-    imageLoadError: "Eraro dum ŝargado de bildo",
-    tickets: {
-      flight: { title: 'ENIRBILETO', subtitle: 'UNUA KLASO', footerLeft: 'PORDEGO 14', footerRight: 'SEĜO 2A' },
-      concert: { title: 'VIVA KONCERTO', subtitle: 'VIP-ALIRO', footerLeft: 'MONDA TURNEO', footerRight: 'VICO 1' },
-      cinema: { title: 'KINEJA BILETO', subtitle: 'UNU PERSONO', footerLeft: 'VICO F', footerRight: 'SEĜO 12' },
-      train: { title: 'EKSPRESA TRAJNO', subtitle: 'UNUDIREKTA', footerLeft: 'KAJO 9', footerRight: 'VAGONO 4' },
-      'vintage-bus': { title: 'BUSA BILETO', subtitle: 'SERIO AB', footerLeft: 'KONTROLO', footerRight: 'BILETO' },
-      'vintage-tram': { title: 'TRAMO', subtitle: 'UNUOPA', footerLeft: 'SEN TRUO', footerRight: 'NEVALIFA' },
-      'soviet-trolleybus': { title: 'TROLEBUSO', subtitle: 'URBA TRANSITO', footerLeft: 'KONSERVU ĜIS', footerRight: 'FINO DE VOJAĜO' },
-      'golden-ticket': { title: 'ORA BILETO', subtitle: 'FELIĈA GAJNINTO', footerLeft: 'ENIRO 1', footerRight: 'FABRIKA TURNEO' },
-      'metro-pass': { title: 'METROA BILETO', subtitle: 'MONATA', footerLeft: 'ZONO 1-3', footerRight: 'SENLIMA' },
-      lottery: { title: 'LOTERIA BILETO', subtitle: 'ĈEFPREMIO', footerLeft: 'TIRA DATO', footerRight: 'HODIAŬ' }
-    }
-  },
-  elvish: {
-    title: "Make100",
-    player: "Tyalo",
-    gameMode: "Tárië",
-    car: "Racar",
-    ticket: "Tarma",
-    solved: "Sinyar",
-    skipped: "Lelyar",
-    operators: "Tengwar",
-    current: "Sina",
-    total: "Ilya",
-    theme: "Cala",
-    language: "Lambë",
-    auto: "Auto",
-    light: "Calina",
-    dark: "Morna",
-    menu: "Tengwa",
-    play: "Tyalië!",
-    skipDemo: "Lelya demo",
-    demoTitle: "Manen tyalië?",
-    demo1: "Natyar 6 onti",
-    demo2: "Lusta yanta te",
-    demo3: "Palpa cantali ar cil tengwar",
-    demo4: "Yuhta +, -, *, / ar quingi",
-    demo5: "Carië 100!",
-    soundAndVibration: "Lamma ar Palpa",
-    sound: "Lamma",
-    vibration: "Palpa",
-    tapGaps: "Palpa lusta ar panya tengwar",
-    skipTicket: "Lelya tarma",
-    skipCar: "Lelya racar",
-    hint: "Tengwë",
-    noSolution: "Lá sinya",
-    introText: "Carië 100 onti tarma yuhta tengwar.",
-    start: "Yesta",
-    perfect: "Mára!",
-    solvedIn: "Sinyar mi:",
-    operatorsUsed: "Tengwar yuhta:",
-    nextTicket: "Enta tarma",
-    nextCar: "Enta racar",
-    close: "Holya",
-    leaderboard: "Tárië",
-    topPlayers: "Mára tyalië",
-    loadingLeaderboard: "Tulta tárië...",
-    noData: "Lá quenta",
-    time: "Lúmë",
-    shareScore: "Gweria",
-    playAsGuest: "Tyala ve nér",
-    authorizing: "Lestan...",
-    authorizingTg: "Lestan as Telegram...",
-    loading: "Tultan...",
-    level: "Tyellë",
-    imageLoadError: "Emiel cantë",
-    tickets: {
-      flight: { title: 'TARMA', subtitle: 'MINYA', footerLeft: 'ANDO 14', footerRight: 'HAMA 2A' },
-      concert: { title: 'LINDIË', subtitle: 'VIP', footerLeft: 'AMBAR', footerRight: 'TÉMA 1' },
-      cinema: { title: 'TARMA', subtitle: 'MIN', footerLeft: 'TÉMA F', footerRight: 'HAMA 12' },
-      train: { title: 'RACAR', subtitle: 'MINYA', footerLeft: 'ANDO 9', footerRight: 'RACAR 4' },
-      'vintage-bus': { title: 'TARMA', subtitle: 'AB', footerLeft: 'TIR', footerRight: 'TARMA' },
-      'vintage-tram': { title: 'RACAR', subtitle: 'MIN', footerLeft: 'LÁ', footerRight: 'LÁ' },
-      'soviet-trolleybus': { title: 'RACAR', subtitle: 'OSTO', footerLeft: 'HARYA', footerRight: 'METTA' },
-      'golden-ticket': { title: 'LAURË TARMA', subtitle: 'MÁRA', footerLeft: 'MIN', footerRight: 'TIR' },
-      'metro-pass': { title: 'TARMA', subtitle: 'ASTA', footerLeft: 'ZONA 1-3', footerRight: 'ILYA' },
-      lottery: { title: 'TARMA', subtitle: 'MÁRA', footerLeft: 'AURI', footerRight: 'SÍ' }
-    }
-  },
-  klingon: {
-    title: "Make100",
-    player: "Qujwl'",
-    gameMode: "mIw",
-    car: "Duj",
-    ticket: "chaw'",
-    solved: "ta'",
-    skipped: "buS",
-    operators: "Degh",
-    current: "DaH",
-    total: "Hoch",
-    theme: "Segh",
-    language: "Hol",
-    auto: "Auto",
-    light: "wov",
-    dark: "hurgh",
-    menu: "HIDjolev",
-    play: "Quj!",
-    skipDemo: "buS demo",
-    demoTitle: "chay' Quj?",
-    demo1: "jav mI' nob",
-    demo2: "mI' tay' chIm",
-    demo3: "Degh wIv",
-    demo4: "+, -, *, / lo'",
-    demo5: "wa'vatlh chenmoH!",
-    soundAndVibration: "wab je mup",
-    sound: "wab",
-    vibration: "mup",
-    tapGaps: "Degh chel",
-    skipTicket: "buS chaw'",
-    skipCar: "buS Duj",
-    hint: "chov",
-    noSolution: "ta' ghobe'",
-    introText: "wa'vatlh chenmoH lo' Degh.",
-    start: "tagh",
-    perfect: "majQa'!",
-    solvedIn: "ta' poH:",
-    operatorsUsed: "Degh lo':",
-    nextTicket: "veb chaw'",
-    nextCar: "veb Duj",
-    close: "SoQ",
-    leaderboard: "laSvargh",
-    topPlayers: "Quj nIv",
-    loadingLeaderboard: "laSvargh lIgh...",
-    noData: "De' ghobe'",
-    time: "poH",
-    shareScore: "Quv",
-    playAsGuest: "Quj qorDu'",
-    authorizing: "chaw' jaw...",
-    authorizingTg: "Telegram tlhej chaw' jaw...",
-    loading: "lIgh...",
-    level: "patlh",
-    imageLoadError: "nagh mI'",
-    tickets: {
-      flight: { title: 'chaw\'', subtitle: 'wa\'DIch', footerLeft: 'lojmIt 14', footerRight: 'quS 2A' },
-      concert: { title: 'bom', subtitle: 'VIP', footerLeft: 'qo\'', footerRight: 'tlhegh 1' },
-      cinema: { title: 'chaw\'', subtitle: 'wa\'', footerLeft: 'tlhegh F', footerRight: 'quS 12' },
-      train: { title: 'Duj', subtitle: 'wa\'', footerLeft: 'lojmIt 9', footerRight: 'Duj 4' },
-      'vintage-bus': { title: 'chaw\'', subtitle: 'AB', footerLeft: 'chov', footerRight: 'chaw\'' },
-      'vintage-tram': { title: 'Duj', subtitle: 'wa\'', footerLeft: 'ghobe\'', footerRight: 'ghobe\'' },
-      'soviet-trolleybus': { title: 'Duj', subtitle: 'veng', footerLeft: 'pol', footerRight: 'van' },
-      'golden-ticket': { title: 'SuD chaw\'', subtitle: 'Qap', footerLeft: 'wa\'', footerRight: 'legh' },
-      'metro-pass': { title: 'chaw\'', subtitle: 'jar', footerLeft: '1-3', footerRight: 'Hoch' },
-      lottery: { title: 'chaw\'', subtitle: 'Qap', footerLeft: 'jaj', footerRight: 'DaHjaj' }
-    }
-  },
-  dothraki: {
-    title: "Make100",
-    player: "Dothrak",
-    gameMode: "Fich",
-    car: "Hrakkar",
-    ticket: "Tim",
-    solved: "Azzis",
-    skipped: "Dothras",
-    operators: "Vezh",
-    current: "Jin",
-    total: "Eyel",
-    theme: "Zhalia",
-    language: "Lekh",
-    auto: "Auto",
-    light: "Shekh",
-    dark: "Qoy",
-    menu: "Vezh",
-    play: "Dothras!",
-    skipDemo: "Dothras demo",
-    demoTitle: "Kifinosi dothras?",
-    demo1: "Sen 6 tikh",
-    demo2: "Tikh ezok",
-    demo3: "Vezh ziger",
-    demo4: "+, -, *, / ziger",
-    demo5: "100 azzis!",
-    soundAndVibration: "Qoy ar Shekh",
-    sound: "Qoy",
-    vibration: "Shekh",
-    tapGaps: "Vezh ziger",
-    skipTicket: "Dothras tim",
-    skipCar: "Dothras hrakkar",
-    hint: "Vezh",
-    noSolution: "Vos azzis",
-    introText: "100 azzis vezh.",
-    start: "Dothras",
-    perfect: "Zhey!",
-    solvedIn: "Azzis:",
-    operatorsUsed: "Vezh:",
-    nextTicket: "Tim",
-    nextCar: "Hrakkar",
-    close: "Fich",
-    leaderboard: "Khalasar",
-    topPlayers: "Khal",
-    loadingLeaderboard: "Khalasar...",
-    noData: "Vos",
-    time: "Atea",
-    shareScore: "Share",
-    playAsGuest: "Lajat kisa",
-    authorizing: "Ase...",
-    authorizingTg: "Ase mra Telegram...",
-    loading: "Nakhaan...",
-    level: "Zheana",
-    imageLoadError: "Khaleesi",
-    tickets: {
-      flight: { title: 'TIM', subtitle: 'KHAL', footerLeft: '14', footerRight: '2A' },
-      concert: { title: 'KHALASAR', subtitle: 'VIP', footerLeft: 'RHAESH', footerRight: '1' },
-      cinema: { title: 'TIM', subtitle: '1', footerLeft: 'F', footerRight: '12' },
-      train: { title: 'HRAKKAR', subtitle: '1', footerLeft: '9', footerRight: '4' },
-      'vintage-bus': { title: 'TIM', subtitle: 'AB', footerLeft: 'KHAL', footerRight: 'TIM' },
-      'vintage-tram': { title: 'HRAKKAR', subtitle: '1', footerLeft: 'VOS', footerRight: 'VOS' },
-      'soviet-trolleybus': { title: 'HRAKKAR', subtitle: 'RHAESH', footerLeft: 'KHAL', footerRight: 'KHAL' },
-      'golden-ticket': { title: 'TIM', subtitle: 'KHAL', footerLeft: '1', footerRight: 'KHAL' },
-      'metro-pass': { title: 'TIM', subtitle: 'KHAL', footerLeft: '1-3', footerRight: 'KHAL' },
-      lottery: { title: 'TIM', subtitle: 'KHAL', footerLeft: 'ATEA', footerRight: 'JIN' }
-    }
-  },
-  valyrian: {
-    title: "Make100",
-    player: "Tyalas",
-    gameMode: "Kasta",
-    car: "Zaldrīzes",
-    ticket: "Tēmi",
-    solved: "Keligon",
-    skipped: "Sōvegon",
-    operators: "Tegun",
-    current: "Sīr",
-    total: "Iōr",
-    theme: "Bantis",
-    language: "Tīkun",
-    auto: "Auto",
-    light: "Ānogar",
-    dark: "Bantis",
-    menu: "Tegun",
-    play: "Sōvegon!",
-    skipDemo: "Sōvegon demo",
-    demoTitle: "Skoros sōvegon?",
-    demo1: "6 tēmi",
-    demo2: "Tēmi keligon",
-    demo3: "Tegun sōvegon",
-    demo4: "+, -, *, / sōvegon",
-    demo5: "100 keligon!",
-    soundAndVibration: "Ānogar ar Bantis",
-    sound: "Ānogar",
-    vibration: "Bantis",
-    tapGaps: "Tegun sōvegon",
-    skipTicket: "Sōvegon tēmi",
-    skipCar: "Sōvegon zaldrīzes",
-    hint: "Tegun",
-    noSolution: "Daor keligon",
-    introText: "100 keligon tegun.",
-    start: "Sōvegon",
-    perfect: "Keligon!",
-    solvedIn: "Keligon:",
-    operatorsUsed: "Tegun:",
-    nextTicket: "Tēmi",
-    nextCar: "Zaldrīzes",
-    close: "Keligon",
-    leaderboard: "Zaldrīzes",
-    topPlayers: "Zaldrīzes",
-    loadingLeaderboard: "Zaldrīzes...",
-    noData: "Daor",
-    time: "Sīr",
-    shareScore: "Share",
-    playAsGuest: "Tyvās jentys",
-    authorizing: "Mīso...",
-    authorizingTg: "Mīso isse Telegram...",
-    loading: "Zaldrīzes...",
-    level: "Tēmi",
-    imageLoadError: "Sīkudarys",
-    tickets: {
-      flight: { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: '14', footerRight: '2A' },
-      concert: { title: 'ZALDRĪZES', subtitle: 'VIP', footerLeft: 'ZALDRĪZES', footerRight: '1' },
-      cinema: { title: 'TĒMI', subtitle: '1', footerLeft: 'F', footerRight: '12' },
-      train: { title: 'ZALDRĪZES', subtitle: '1', footerLeft: '9', footerRight: '4' },
-      'vintage-bus': { title: 'TĒMI', subtitle: 'AB', footerLeft: 'ZALDRĪZES', footerRight: 'TĒMI' },
-      'vintage-tram': { title: 'ZALDRĪZES', subtitle: '1', footerLeft: 'DAOR', footerRight: 'DAOR' },
-      'soviet-trolleybus': { title: 'ZALDRĪZES', subtitle: 'ZALDRĪZES', footerLeft: 'ZALDRĪZES', footerRight: 'ZALDRĪZES' },
-      'golden-ticket': { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: '1', footerRight: 'ZALDRĪZES' },
-      'metro-pass': { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: '1-3', footerRight: 'ZALDRĪZES' },
-      lottery: { title: 'TĒMI', subtitle: 'ZALDRĪZES', footerLeft: 'SĪR', footerRight: 'SĪR' }
-    }
-  }
-};
-
-type Language = keyof typeof TRANSLATIONS;
-
-const LANGUAGES: { code: Language; label: string }[] = [
-  { code: 'en', label: 'English' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'fr', label: 'Français' },
-  { code: 'es', label: 'Español' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'pt', label: 'Português' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'he', label: 'עברית' },
-  { code: 'hi', label: 'हिन्दी' },
-  { code: 'zh', label: '中文' },
-  { code: 'ja', label: '日本語' },
-  { code: 'ko', label: '한국어' },
-  { code: 'la', label: 'Latina' },
-  { code: 'eo', label: 'Esperanto' },
-  { code: 'elvish', label: 'Quenya' },
-  { code: 'klingon', label: 'tlhIngan Hol' },
-  { code: 'dothraki', label: 'Dothraki' },
-  { code: 'valyrian', label: 'Valyrio' }
-];
 
 function gcd(a: number, b: number): number {
     a = Math.abs(a);
@@ -2123,12 +787,14 @@ export default function App() {
   }, []);
 
   const formatSolveTime = (timeMs: number) => {
-    if (!timeMs) return '0.0 сек.';
+    const secStr = t?.secondsShort || 'сек.';
+    const minStr = t?.minutesShort || 'мин.';
+    if (!timeMs) return `0.0 ${secStr}`;
     const totalSeconds = timeMs / 1000;
     
     if (totalSeconds < 60) {
       // Если меньше минуты — просто выводим секунды с одной цифрой после запятой
-      return `${totalSeconds.toFixed(1)} сек.`;
+      return `${totalSeconds.toFixed(1)} ${secStr}`;
     }
     
     // Если больше минуты — рассчитываем минуты и секунды
@@ -2141,7 +807,7 @@ export default function App() {
     // Добавляем лидирующий ноль, если секунд меньше 10 (например, "09.3" вместо "9.3")
     const paddedSeconds = seconds < 10 ? `0${formattedSeconds}` : formattedSeconds;
     
-    return `${minutes} мин. ${paddedSeconds} сек.`;
+    return `${minutes} ${minStr} ${paddedSeconds} ${secStr}`;
   };
 
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
@@ -2744,7 +1410,7 @@ export default function App() {
     const referralLink = `https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}/app?startapp=${userId}`;
     
     // Красивый пригласительный текст для друзей
-    const shareText = `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
+    const shareText = t.inviteShareText || `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
     
     // Ссылка для вызова нативного Telegram Share Dialog
     const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
@@ -3148,7 +1814,6 @@ export default function App() {
 
   useEffect(() => {
     initGame(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -3419,12 +2084,12 @@ export default function App() {
           <Smartphone size={32} className="text-blue-500" />
         </div>
         <h2 className="text-xl font-bold mb-2">
-          {language === 'ru' ? 'Доступ ограничен' : 'Telegram Only'}
+          {t.accessRestricted || (language === 'ru' ? 'Доступ ограничен' : 'Telegram Only')}
         </h2>
         <p className="text-sm opacity-70 mb-6 max-w-xs">
-          {language === 'ru' 
+          {t.tgOnlyDesc || (language === 'ru' 
             ? 'Пожалуйста, войдите в игру через официального Telegram-бота после авторизации.' 
-            : 'Please play the game through our Telegram Bot.'}
+            : 'Please play the game through our Telegram Bot.')}
         </p>
         <button 
           onClick={() => {
@@ -3441,7 +2106,7 @@ export default function App() {
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
         >
-          {language === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram'}
+          {t.openInTelegram || (language === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram')}
         </button>
 
         <button 
@@ -3451,7 +2116,7 @@ export default function App() {
           }} 
           className="px-6 py-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl font-bold transition-colors shadow mb-2 w-[240px]"
         >
-          {language === 'ru' ? 'Играть как гость' : 'Play as Guest'}
+          {t.playAsGuest || (language === 'ru' ? 'Играть как гость' : 'Play as Guest')}
         </button>
       </div>
     );
@@ -3477,7 +2142,7 @@ export default function App() {
             <button 
               onClick={() => setIsProfileOpen(true)}
               className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
-              title="Открыть профиль"
+              title={t.openProfile || "Открыть профиль"}
             >
               {/* Пульсирующая внешняя рамка */}
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
@@ -3488,7 +2153,7 @@ export default function App() {
                   <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base">
-                    {((stats as any)?.firstName || tgUser?.first_name) ? ((stats as any)?.firstName || tgUser?.first_name).toUpperCase().charAt(0) : 'U'}
+                    {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
                   </div>
                 )}
               </div>
@@ -3502,7 +2167,7 @@ export default function App() {
             {/* Блок баланса монет, подсказок и меню */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
               {/* Плашка монет */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title="Монеты">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
                 <span className="text-lg">🪙</span>
                 <span className="text-sm font-black text-slate-800 dark:text-slate-100">
                   {stats.coins}
@@ -3510,7 +2175,7 @@ export default function App() {
               </div>
 
               {/* Плашка подсказок */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title="Подсказки">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.hintsLabel || "Подсказки"}>
                 <span className="text-lg">💡</span>
                 <span className="text-sm font-black text-slate-800 dark:text-slate-100">
                   {stats.hintsCount}
@@ -3521,7 +2186,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
                 className="p-2.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shadow-sm active:scale-95 transition-all cursor-pointer"
-                title="Меню настроек"
+                title={t.settingsMenu || "Меню настроек"}
               >
                 <Menu size={20} />
               </button>
@@ -3535,7 +2200,7 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
             <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
-              {elapsedTime.toFixed(1)} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">сек</span>
+              {elapsedTime.toFixed(1)} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.secondsShort || 'сек'}</span>
             </span>
           </div>
           
@@ -3546,7 +2211,7 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             <span className="text-xl sm:text-2xl">✍️</span>
             <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
-              {currentInput.length} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">симв.</span>
+              {currentInput.length} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
             </span>
           </div>
         </div>
@@ -3569,10 +2234,10 @@ export default function App() {
                 onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
               >
-                ⬅️ Назад
+                ⬅️ {t.back || 'Назад'}
               </button>
               <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
-                Настройки игры
+                {t.gameSettings || 'Настройки игры'}
               </h1>
               <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
             </div>
@@ -3911,11 +2576,11 @@ export default function App() {
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full flex items-center justify-center mb-4">
                 <Lightbulb size={32} />
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-center mb-2">Подсказки закончились</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-center mb-2">{t.outOfHints || 'Подсказки закончились'}</h2>
               <p className="text-center text-sm sm:text-base text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-                Ваш лимит подсказок исчерпан. Вы можете приобрести 1 подсказку за 20 монет.
+                {t.outOfHintsDesc || 'Ваш лимит подсказок исчерпан. Вы можете приобрести 1 подсказку за 20 монет.'}
                 <br/><br/>
-                Баланс: <span className="font-bold text-yellow-600 dark:text-yellow-500">{stats.coins} 🪙</span>
+                {t.balance || 'Баланс:'} <span className="font-bold text-yellow-600 dark:text-yellow-500">{stats.coins} 🪙</span>
               </p>
               <div className="w-full flex flex-col gap-3">
                 <button
@@ -3928,13 +2593,13 @@ export default function App() {
                   disabled={stats.coins < 20}
                   className={`w-full py-3.5 rounded-2xl font-bold transition-all text-sm sm:text-base flex justify-center items-center gap-2 ${stats.coins >= 20 ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 cursor-not-allowed'}`}
                 >
-                  Купить за 20 🪙
+                  {t.buyForCoins ? t.buyForCoins.replace('{cost}', '20') : 'Купить за 20 🪙'}
                 </button>
                 <button
                   onClick={() => setShowBuyHintModal(false)}
                   className="w-full py-3.5 rounded-2xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm sm:text-base"
                 >
-                  Отмена
+                  {t.cancel || 'Отмена'}
                 </button>
               </div>
             </motion.div>
@@ -4002,7 +2667,7 @@ export default function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="mb-4 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-orange-500/25 flex items-center justify-center gap-1.5"
                 >
-                  <span>⚡️ НОВЫЙ РЕКОРД: {(lastRoundTimeMs / 1000).toFixed(2)} сек!</span>
+                  <span>⚡️ {t.newRecordBanner ? t.newRecordBanner.replace('{time}', (lastRoundTimeMs / 1000).toFixed(2)) : `НОВЫЙ РЕКОРД: ${(lastRoundTimeMs / 1000).toFixed(2)} сек!`}</span>
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-1 mb-8">
@@ -4038,10 +2703,10 @@ export default function App() {
               onClick={() => setIsProfileOpen(false)}
               className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
             >
-              ⬅️ Назад
+              ⬅️ {t.back || 'Назад'}
             </button>
             <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
-              Профиль игрока
+              {t.playerProfile || 'Профиль игрока'}
             </h1>
             <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
           </div>
@@ -4061,12 +2726,12 @@ export default function App() {
                   <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-3xl">
-                    {((stats as any)?.firstName || tgUser?.first_name) ? ((stats as any)?.firstName || tgUser?.first_name).toUpperCase().charAt(0) : 'U'}
+                    {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
                   </div>
                 )}
               </div>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-                {(stats as any)?.firstName || tgUser?.first_name || 'Игрок'} {(stats as any)?.lastName || tgUser?.last_name || ''}
+                {(stats as any)?.firstName || tgUser?.first_name || t.player} {(stats as any)?.lastName || tgUser?.last_name || ''}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 @{ (stats as any)?.username || tgUser?.username || 'user' }
@@ -4080,15 +2745,15 @@ export default function App() {
               <div className="flex justify-between items-end">
                 <div className="flex flex-col">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold">
-                    Ранг игрока
+                    {t.playerRank || 'Ранг игрока'}
                   </span>
                   <span className="text-xl font-black text-orange-500 dark:text-orange-400">
-                    Уровень {levelInfo.level}
+                    {t.level} {levelInfo.level}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 dark:text-slate-500">
-                    Решено примеров:
+                    {t.solvedPuzzles || 'Решено примеров:'}
                   </span>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                     {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-400 font-normal">/ {levelInfo.nextMilestone}</span>
@@ -4107,11 +2772,11 @@ export default function App() {
               {/* Мотивирующая подсказка до следующего уровня */}
               {levelInfo.level < 11 ? (
                 <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
-                  Реши ещё <span className="font-bold text-slate-600 dark:text-slate-300">{levelInfo.nextMilestone - ((stats as any)?.solvedCount ?? solvedCount)}</span> примеров до Уровня {levelInfo.level + 1}!
+                  {t.solveMorePrefix || 'Реши ещё'} <span className="font-bold text-slate-600 dark:text-slate-300">{levelInfo.nextMilestone - ((stats as any)?.solvedCount ?? solvedCount)}</span> {t.solveMoreSuffix || 'примеров до Уровня'} {levelInfo.level + 1}!
                 </p>
               ) : (
                 <p className="text-xs text-emerald-500 font-bold text-center animate-pulse">
-                  👑 Достигнут максимальный уровень! Вы легенда математики!
+                  {t.maxLevelReached || '👑 Достигнут максимальный уровень! Вы легенда математики!'}
                 </p>
               )}
             </div>
@@ -4119,26 +2784,26 @@ export default function App() {
             {/* Блок «Личные рекорды» */}
             <div className="mt-4">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                🏆 Личные рекорды
+                🏆 {t.personalRecords || 'Личные рекорды'}
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {/* Рекорд скорости */}
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80">
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold block mb-1">
-                    Молния (Время)
+                    {t.lightningSpeed || 'Молния (Время)'}
                   </span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
-                    ⏱️ {formatBestTime((stats as any)?.bestTimeMs ?? bestTimeMs)}
+                    ⏱️ {formatBestTime((stats as any)?.bestTimeMs ?? bestTimeMs, t)}
                   </span>
                 </div>
 
                 {/* Рекорд минимальных символов */}
                 <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80">
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold block mb-1">
-                    Краткость (Символы)
+                    {t.brevityChars || 'Краткость (Символы)'}
                   </span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
-                    ✍️ {((stats as any)?.minCharacters ?? minCharacters) ? `${(stats as any)?.minCharacters ?? minCharacters} симв.` : 'Нет рекорда'}
+                    ✍️ {((stats as any)?.minCharacters ?? minCharacters) ? `${(stats as any)?.minCharacters ?? minCharacters} ${t.charsShort || 'симв.'}` : (t.noRecord || 'Нет рекорда')}
                   </span>
                 </div>
               </div>
@@ -4147,13 +2812,13 @@ export default function App() {
             {/* Блок «Общая статистика» */}
             <div className="mt-4">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                📊 Игровая аналитика
+                📊 {t.gameAnalytics || 'Игровая аналитика'}
               </h3>
               <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 space-y-3">
                 
                 {/* Решено / Пропущено */}
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
-                  <span className="text-slate-500 dark:text-slate-400">Решено / Пропущено:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.solvedSkipped || 'Решено / Пропущено:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
                     ✅ {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> ❌ {(stats as any)?.skippedCount ?? (stats as any)?.unsolvedCount ?? unsolvedCount ?? 0}
                   </span>
@@ -4161,17 +2826,17 @@ export default function App() {
 
                 {/* Всего времени в игре */}
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
-                  <span className="text-slate-500 dark:text-slate-400">Время размышлений:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.thinkingTime || 'Время размышлений:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {formatTotalPlayTime((stats as any)?.totalTimeMs ?? totalSolveTime)}
+                    {formatTotalPlayTime((stats as any)?.totalTimeMs ?? totalSolveTime, t)}
                   </span>
                 </div>
 
                 {/* Дата регистрации */}
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Дата первой игры:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.firstGameDate || 'Дата первой игры:'}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    📅 {formatRegistrationDate((stats as any)?.createdAt)}
+                    📅 {formatRegistrationDate((stats as any)?.createdAt, language, t)}
                   </span>
                 </div>
 
@@ -4181,29 +2846,29 @@ export default function App() {
             {/* Блок «Реферальная программа» */}
             <div className="mt-5">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                👥 Пригласи друга
+                👥 {t.inviteFriend || 'Пригласи друга'}
               </h3>
               <div className="p-4 bg-gradient-to-br from-slate-50 to-orange-50/20 dark:from-slate-900/40 dark:to-orange-950/10 rounded-2xl border border-orange-100 dark:border-orange-900/30 space-y-4">
                 
                 {/* Статистика рефералов */}
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Приглашено друзей:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.friendsInvited || 'Приглашено друзей:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-100">
-                    {(stats as any)?.referralCount || 0} чел.
+                    {(stats as any)?.referralCount || 0} {t.peopleShort || 'чел.'}
                   </span>
                 </div>
 
                 {/* Заработанный бонус */}
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
-                  <span className="text-slate-500 dark:text-slate-400">Получено бонусов:</span>
+                  <span className="text-slate-500 dark:text-slate-400">{t.bonusesEarned || 'Получено бонусов:'}</span>
                   <span className="font-extrabold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
-                    🪙 +{((stats as any)?.referralCount || 0) * 500} монет
+                    🪙 +{((stats as any)?.referralCount || 0) * 500} {t.coinsCount || 'монет'}
                   </span>
                 </div>
 
                 {/* Описание выгоды */}
                 <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
-                  Позови друга в игру! Ты получишь <span className="font-bold text-orange-500">500 монет</span>, а друг — <span className="font-bold text-orange-500">250 монет</span> приветственного бонуса!
+                  {t.referralPromoP1 || 'Позови друга в игру! Ты получишь'} <span className="font-bold text-orange-500">500 {t.coinsCount || 'монет'}</span>{t.referralPromoP2 || ', а друг —'} <span className="font-bold text-orange-500">250 {t.coinsCount || 'монет'}</span> {t.referralPromoP3 || 'приветственного бонуса!'}
                 </p>
 
                 {/* Большая интерактивная кнопка приглашения */}
@@ -4211,7 +2876,7 @@ export default function App() {
                   onClick={handleInviteFriend}
                   className="w-full py-3.5 px-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white font-black text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>🚀</span> Пригласить друга
+                  <span>🚀</span> {t.inviteFriendBtn || 'Пригласить друга'}
                 </button>
               </div>
             </div>
