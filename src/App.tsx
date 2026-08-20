@@ -1130,8 +1130,9 @@ export default function App() {
       const res = await fetch(`/api/leaderboard?userId=${tgUser.id}`);
       if (res.ok) {
         const data = await res.json();
-        setLeaderboardData(data.leaderboard);
-        setMyRank(data.myRank);
+        console.log("Данные лидерборда:", data);
+        setLeaderboardData(data.leaderboard || []);
+        setMyRank(data.myRank !== undefined ? data.myRank : 0);
       }
     } catch (err) {
       console.error("Ошибка загрузки лидерборда:", err);
@@ -2523,58 +2524,82 @@ export default function App() {
                     {/* Podium (Top 3) */}
                     <div className="flex items-end justify-center gap-2 sm:gap-4 p-6 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-950">
                       {/* 2nd Place */}
-                      {leaderboardData[1] && (
+                      {leaderboardData.length > 1 ? (
                         <div className="flex flex-col items-center w-24">
                           <div className="relative mb-2">
-                            {leaderboardData[1].photoURL ? (
+                            {leaderboardData[1]?.photoURL ? (
                               <img src={leaderboardData[1].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-zinc-300 shadow-lg shadow-zinc-300/30" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-zinc-300 flex items-center justify-center border-4 border-zinc-200 shadow-lg"><User size={24} className="text-zinc-600" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-300 rounded-full flex items-center justify-center text-sm font-black text-zinc-700 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[1].displayName || leaderboardData[1].username || 'Игрок'}</span>
-                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1].score || 0}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[1]?.displayName || leaderboardData[1]?.username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1]?.score || 0}</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center w-24 opacity-40">
+                          <div className="relative mb-2">
+                            <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-lg"><User size={24} className="text-zinc-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-sm font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
+                          </div>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
                         </div>
                       )}
                       
                       {/* 1st Place */}
-                      {leaderboardData[0] && (
+                      {leaderboardData.length > 0 ? (
                         <div className="flex flex-col items-center w-28 -translate-y-4">
                           <div className="relative mb-2">
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md">👑</div>
-                            {leaderboardData[0].photoURL ? (
+                            {leaderboardData[0]?.photoURL ? (
                               <img src={leaderboardData[0].photoURL} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-amber-400 shadow-xl shadow-amber-400/40" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center border-4 border-amber-300 shadow-xl shadow-amber-400/40"><User size={32} className="text-amber-900" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
                           </div>
-                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{leaderboardData[0].displayName || leaderboardData[0].username || 'Игрок'}</span>
-                          <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0].score || 0}</span>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{leaderboardData[0]?.displayName || leaderboardData[0]?.username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0]?.score || 0}</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center w-28 -translate-y-4 opacity-40">
+                          <div className="relative mb-2">
+                            <div className="w-20 h-20 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-xl"><User size={32} className="text-zinc-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-base font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
+                          </div>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
                         </div>
                       )}
                       
                       {/* 3rd Place */}
-                      {leaderboardData[2] && (
+                      {leaderboardData.length > 2 ? (
                         <div className="flex flex-col items-center w-24">
                           <div className="relative mb-2">
-                            {leaderboardData[2].photoURL ? (
+                            {leaderboardData[2]?.photoURL ? (
                               <img src={leaderboardData[2].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-orange-400 shadow-lg shadow-orange-400/30" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-orange-400 flex items-center justify-center border-4 border-orange-300 shadow-lg"><User size={24} className="text-orange-900" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[2].displayName || leaderboardData[2].username || 'Игрок'}</span>
-                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2].score || 0}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[2]?.displayName || leaderboardData[2]?.username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2]?.score || 0}</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center w-24 opacity-40">
+                          <div className="relative mb-2">
+                            <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-lg"><User size={24} className="text-zinc-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-sm font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
+                          </div>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
                         </div>
                       )}
                     </div>
 
                     {/* List 4-100 */}
                     <div className="flex flex-col px-3 sm:px-4 space-y-2 mt-4">
-                      {leaderboardData.slice(3).map((player, index) => (
+                      {(leaderboardData?.slice(3) || []).map((player, index) => (
                         <div key={player.id} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700/50">
                           <div className="w-8 text-center text-sm font-black text-zinc-400 dark:text-zinc-500 shrink-0">
                             #{index + 4}
