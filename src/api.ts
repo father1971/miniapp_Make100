@@ -59,11 +59,11 @@ export async function fetchUserStats(): Promise<UserStats | null> {
   }
 }
 
-export async function saveUserStats(stats: UserStats): Promise<void> {
+export async function saveUserStats(stats: UserStats): Promise<any> {
   const headers = getAuthHeader();
-  if (!headers.Authorization) return;
+  if (!headers.Authorization) return null;
   try {
-    await fetch(`${API_URL}/api/user`, {
+    const res = await fetch(`${API_URL}/api/user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,8 +71,13 @@ export async function saveUserStats(stats: UserStats): Promise<void> {
       },
       body: JSON.stringify(stats)
     });
+    if (res.ok) {
+      return await res.json();
+    }
+    return null;
   } catch (e) {
     console.error("Failed to save user stats", e);
+    return null;
   }
 }
 

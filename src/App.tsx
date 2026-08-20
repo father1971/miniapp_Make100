@@ -727,6 +727,7 @@ export default function App() {
   const isStatsLoadedRef = useRef(false);
   const lastRoundExpressionRef = useRef<string>('');
   const lastRoundSolveTimeMsRef = useRef<number>(0);
+  const [lastEarnedScore, setLastEarnedScore] = useState<number>(0);
   const isPreviewEnv = (() => {
     try {
       const hostname = window.location.hostname;
@@ -1412,6 +1413,18 @@ export default function App() {
           hasSeenOnboarding
         },
         modeStats
+      }).then((updatedServerStats: any) => {
+        if (updatedServerStats) {
+          setStats((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              score: updatedServerStats.score,
+              coins: updatedServerStats.coins,
+              solvedCount: updatedServerStats.solvedCount
+            };
+          });
+        }
       });
       lastRoundExpressionRef.current = '';
       lastRoundSolveTimeMsRef.current = 0;
@@ -1495,6 +1508,34 @@ export default function App() {
     // Ensure all gaps are set at the end, even empty ones
     setGaps([...solution]);
     setIsHinting(false);
+  };
+
+  const calculateRoundScore = (expr: string, solveTimeMs: number): number => {
+    let roundScore = 10; // Базовые очки
+
+    // Бонус за Скорость
+    const sec = solveTimeMs / 1000;
+    if (sec < 10) {
+      roundScore += 10;
+    } else if (sec >= 10 && sec <= 15) {
+      roundScore += 5;
+    }
+
+    // Бонус за Краткость (все не-цифровые символы: знаки, скобки, запятые)
+    const nonDigits = expr.replace(/\d/g, '').length;
+    if (nonDigits === 1) {
+      roundScore += 1000;
+    } else if (nonDigits === 2) {
+      roundScore += 500;
+    } else if (nonDigits === 3) {
+      roundScore += 30;
+    } else if (nonDigits === 4) {
+      roundScore += 15;
+    } else if (nonDigits === 5) {
+      roundScore += 5;
+    }
+
+    return roundScore;
   };
 
   const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number, isNewGlobalRecord?: boolean) => {
@@ -1978,6 +2019,10 @@ export default function App() {
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
       lastRoundExpressionRef.current = gaps.join('');
       lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
+      
+      const earnedPoints = calculateRoundScore(currentInput, exactSolveTimeMs);
+      setLastEarnedScore(earnedPoints);
+      
       handleGameUpdate(true, operatorsUsed, exactSolveTimeMs, isNewGlobalRecord);
       
       setSelectedSlot(null);
@@ -2784,6 +2829,12 @@ export default function App() {
               <div className="flex flex-col items-center gap-1 mb-8">
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTime * 1000))}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
+                
+                <div className="text-center py-2 mt-2">
+                  <span className="inline-block px-4 py-2 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-amber-500 text-sm font-black animate-bounce">
+                    🏆 +{lastEarnedScore} очков рейтинга!
+                  </span>
+                </div>
               </div>
               <div className="flex flex-col gap-3">
                 <button 
