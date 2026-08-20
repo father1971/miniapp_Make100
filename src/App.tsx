@@ -723,6 +723,13 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
   );
 }
 
+const getPlayerDisplayName = (player: { username?: string; firstName?: string }) => {
+  if (player.username && player.username.trim() !== '') {
+    return `@${player.username}`;
+  }
+  return player.firstName || 'Игрок';
+};
+
 export default function App() {
   const isStatsLoadedRef = useRef(false);
   const lastRoundExpressionRef = useRef<string>('');
@@ -1124,18 +1131,28 @@ export default function App() {
   }, []);
 
   const fetchLeaderboard = async () => {
-    if (!tgUser?.id) return;
+    // Безопасно определяем ID активного пользователя
+    const activeUserId = tgUser?.id || (stats as any)?.id;
+    
+    if (!activeUserId) {
+      console.error("❌ Не удалось определить ID пользователя для лидерборда");
+      return;
+    }
+
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch(`/api/leaderboard?userId=${tgUser.id}`);
+      // Делаем запрос к абсолютному адресу бэкенда с использованием переменной окружения
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaderboard?userId=${activeUserId}`);
       if (res.ok) {
         const data = await res.json();
-        console.log("Данные лидерборда:", data);
+        console.log("📥 Успешно загружен лидерборд:", data);
         setLeaderboardData(data.leaderboard || []);
         setMyRank(data.myRank !== undefined ? data.myRank : 0);
+      } else {
+        console.error(`❌ Ошибка сервера при загрузке лидерборда: ${res.status}`);
       }
     } catch (err) {
-      console.error("Ошибка загрузки лидерборда:", err);
+      console.error("❌ Сетевая ошибка при загрузке лидерборда:", err);
     } finally {
       setIsLoadingLeaderboard(false);
     }
@@ -2527,14 +2544,14 @@ export default function App() {
                       {leaderboardData.length > 1 ? (
                         <div className="flex flex-col items-center w-24">
                           <div className="relative mb-2">
-                            {leaderboardData[1]?.photoURL ? (
-                              <img src={leaderboardData[1].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-zinc-300 shadow-lg shadow-zinc-300/30" referrerPolicy="no-referrer" />
+                            {leaderboardData[1]?.avatarUrl ? (
+                              <img src={leaderboardData[1].avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-zinc-300 shadow-lg shadow-zinc-300/30" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-zinc-300 flex items-center justify-center border-4 border-zinc-200 shadow-lg"><User size={24} className="text-zinc-600" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-300 rounded-full flex items-center justify-center text-sm font-black text-zinc-700 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[1]?.displayName || leaderboardData[1]?.username || 'Игрок'}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[1] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2552,14 +2569,14 @@ export default function App() {
                         <div className="flex flex-col items-center w-28 -translate-y-4">
                           <div className="relative mb-2">
                             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md">👑</div>
-                            {leaderboardData[0]?.photoURL ? (
-                              <img src={leaderboardData[0].photoURL} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-amber-400 shadow-xl shadow-amber-400/40" referrerPolicy="no-referrer" />
+                            {leaderboardData[0]?.avatarUrl ? (
+                              <img src={leaderboardData[0].avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-amber-400 shadow-xl shadow-amber-400/40" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center border-4 border-amber-300 shadow-xl shadow-amber-400/40"><User size={32} className="text-amber-900" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
                           </div>
-                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{leaderboardData[0]?.displayName || leaderboardData[0]?.username || 'Игрок'}</span>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{getPlayerDisplayName(leaderboardData[0] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2576,14 +2593,14 @@ export default function App() {
                       {leaderboardData.length > 2 ? (
                         <div className="flex flex-col items-center w-24">
                           <div className="relative mb-2">
-                            {leaderboardData[2]?.photoURL ? (
-                              <img src={leaderboardData[2].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-orange-400 shadow-lg shadow-orange-400/30" referrerPolicy="no-referrer" />
+                            {leaderboardData[2]?.avatarUrl ? (
+                              <img src={leaderboardData[2].avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-orange-400 shadow-lg shadow-orange-400/30" referrerPolicy="no-referrer" />
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-orange-400 flex items-center justify-center border-4 border-orange-300 shadow-lg"><User size={24} className="text-orange-900" /></div>
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[2]?.displayName || leaderboardData[2]?.username || 'Игрок'}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[2] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2599,14 +2616,14 @@ export default function App() {
 
                     {/* List 4-100 */}
                     <div className="flex flex-col px-3 sm:px-4 space-y-2 mt-4">
-                      {(leaderboardData?.slice(3) || []).map((player, index) => (
-                        <div key={player.id} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700/50">
+                      {(leaderboardData?.slice(3) || []).map((player: any, index: number) => (
+                        <div key={player.id || index} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700/50">
                           <div className="w-8 text-center text-sm font-black text-zinc-400 dark:text-zinc-500 shrink-0">
                             #{index + 4}
                           </div>
                           
-                          {player.photoURL ? (
-                            <img src={player.photoURL} alt={player.displayName} className="w-10 h-10 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+                          {player.avatarUrl ? (
+                            <img src={player.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
                               <User size={18} />
@@ -2615,7 +2632,7 @@ export default function App() {
                           
                           <div className="flex-1 min-w-0">
                             <span className="font-bold text-zinc-800 dark:text-zinc-200 truncate block text-sm">
-                              {player.displayName || player.username || 'Игрок'}
+                              {getPlayerDisplayName(player)}
                             </span>
                           </div>
                           
@@ -2633,7 +2650,11 @@ export default function App() {
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800 flex justify-center items-center shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
                 <div className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20">
                   <span className="font-bold text-sm sm:text-base">
-                    Вы на {myRank} месте с {(stats as any)?.score || 0} очками
+                    {myRank > 0 ? (
+                      `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`
+                    ) : (
+                      "Сыграйте раунд, чтобы войти в рейтинг!"
+                    )}
                   </span>
                   <Trophy size={20} className="opacity-80" />
                 </div>
