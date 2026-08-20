@@ -2495,61 +2495,53 @@ export default function App() {
       {/* Leaderboard Modal */}
       <AnimatePresence>
         {isLeaderboardOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-zinc-950/80 backdrop-blur-sm flex justify-center items-center p-4"
-            onClick={() => setIsLeaderboardOpen(false)}
-            style={{
-              paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 16px)',
-              paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 16px)'
-            }}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md h-[85vh] bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white rounded-[2rem] shadow-2xl flex flex-col overflow-hidden relative border border-white/20 dark:border-white/10"
-              onClick={e => e.stopPropagation()}
+          <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-hidden animate-fade-in select-none">
+            {/* Нативная верхняя панель (идентичная Профилю и Настройкам) */}
+            <div 
+              className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md shrink-0"
+              style={{
+                paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 16px)'
+              }}
             >
-              {/* Header */}
-              <div className="flex justify-between items-center p-5 border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
-                    <Trophy size={24} />
-                  </div>
-                  <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-wide">
-                    Зал славы Make100
-                  </h2>
+              {/* Кнопка назад */}
+              <button 
+                onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
+                className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+              >
+                ⬅️ Назад
+              </button>
+              <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
+                Зал славы
+              </h1>
+              <div className="w-16"></div> {/* Заглушка для идеальной центровки */}
+            </div>
+
+            {/* Внутренний контейнер скролла */}
+            <div className="w-full max-w-md mx-auto flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 pb-28">
+              {isLoadingLeaderboard ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4 text-slate-400 dark:text-slate-500">
+                  <RefreshCw size={36} className="animate-spin text-amber-500" />
+                  <span className="text-sm font-bold tracking-wider uppercase">{t.loadingLeaderboard || 'Загрузка...'}</span>
                 </div>
-                <button onClick={() => setIsLeaderboardOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors bg-zinc-100 dark:bg-zinc-800 rounded-full shadow-inner">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="p-0 overflow-y-auto flex-1 bg-zinc-100 dark:bg-zinc-900">
-                {isLoadingLeaderboard ? (
-                  <div className="flex flex-col items-center justify-center p-16 gap-4 text-zinc-400 h-full">
-                    <RefreshCw size={36} className="animate-spin text-amber-500" />
-                    <span className="text-sm font-bold tracking-wider uppercase">{t.loadingLeaderboard || 'Загрузка...'}</span>
-                  </div>
-                ) : leaderboardData.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-16 gap-4 text-zinc-400 h-full">
-                    <Trophy size={56} className="opacity-20" />
-                    <span className="text-sm font-bold tracking-wider uppercase">{t.noData || 'Нет данных'}</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col pb-24">
-                    {/* Podium (Top 3) */}
-                    <div className="flex items-end justify-center gap-2 sm:gap-4 p-6 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-950">
+              ) : leaderboardData.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4 text-slate-400 dark:text-slate-500 font-medium">
+                  <Trophy size={56} className="opacity-20" />
+                  <span className="text-sm font-bold tracking-wider uppercase">{t.noData || 'Пока нет данных'}</span>
+                </div>
+              ) : (
+                <>
+                  {/* Podium (Top 3) */}
+                    <div className="flex items-end justify-center gap-2 sm:gap-4 p-6 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">
                       {/* 2nd Place */}
                       {leaderboardData.length > 1 ? (
                         <div className="flex flex-col items-center w-24">
                           <div className="relative mb-2">
                             {leaderboardData[1]?.avatarUrl ? (
-                              <img src={leaderboardData[1].avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-zinc-300 shadow-lg shadow-zinc-300/30" referrerPolicy="no-referrer" />
+                              <img src={leaderboardData[1].avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-slate-300 shadow-lg shadow-slate-300/30" referrerPolicy="no-referrer" />
                             ) : (
-                              <div className="w-16 h-16 rounded-full bg-zinc-300 flex items-center justify-center border-4 border-zinc-200 shadow-lg"><User size={24} className="text-zinc-600" /></div>
+                              <div className="w-16 h-16 rounded-full bg-slate-300 flex items-center justify-center border-4 border-slate-200 shadow-lg"><User size={24} className="text-slate-600" /></div>
                             )}
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-300 rounded-full flex items-center justify-center text-sm font-black text-zinc-700 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center text-sm font-black text-slate-700 border-2 border-white dark:border-slate-900 shadow-md">2</div>
                           </div>
                           <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[1] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1]?.score || 0}</span>
@@ -2557,10 +2549,10 @@ export default function App() {
                       ) : (
                         <div className="flex flex-col items-center w-24 opacity-40">
                           <div className="relative mb-2">
-                            <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-lg"><User size={24} className="text-zinc-400" /></div>
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-sm font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
+                            <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-lg"><User size={24} className="text-slate-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-sm font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">2</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
                         </div>
                       )}
                       
@@ -2574,7 +2566,7 @@ export default function App() {
                             ) : (
                               <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center border-4 border-amber-300 shadow-xl shadow-amber-400/40"><User size={32} className="text-amber-900" /></div>
                             )}
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-slate-900 shadow-md">1</div>
                           </div>
                           <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{getPlayerDisplayName(leaderboardData[0] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0]?.score || 0}</span>
@@ -2582,10 +2574,10 @@ export default function App() {
                       ) : (
                         <div className="flex flex-col items-center w-28 -translate-y-4 opacity-40">
                           <div className="relative mb-2">
-                            <div className="w-20 h-20 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-xl"><User size={32} className="text-zinc-400" /></div>
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-base font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
+                            <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-xl"><User size={32} className="text-slate-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-base font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">1</div>
                           </div>
-                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
                         </div>
                       )}
                       
@@ -2598,7 +2590,7 @@ export default function App() {
                             ) : (
                               <div className="w-16 h-16 rounded-full bg-orange-400 flex items-center justify-center border-4 border-orange-300 shadow-lg"><User size={24} className="text-orange-900" /></div>
                             )}
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-slate-900 shadow-md">3</div>
                           </div>
                           <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[2] as any)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2]?.score || 0}</span>
@@ -2606,32 +2598,33 @@ export default function App() {
                       ) : (
                         <div className="flex flex-col items-center w-24 opacity-40">
                           <div className="relative mb-2">
-                            <div className="w-16 h-16 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-4 border-zinc-200 dark:border-zinc-800 shadow-lg"><User size={24} className="text-zinc-400" /></div>
-                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-sm font-black text-zinc-400 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
+                            <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-lg"><User size={24} className="text-slate-400" /></div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-sm font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">3</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-zinc-400">Пусто</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
                         </div>
                       )}
                     </div>
 
-                    {/* List 4-100 */}
+                    
+                  {/* List 4-100 */}
                     <div className="flex flex-col px-3 sm:px-4 space-y-2 mt-4">
                       {(leaderboardData?.slice(3) || []).map((player: any, index: number) => (
-                        <div key={player.id || index} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700/50">
-                          <div className="w-8 text-center text-sm font-black text-zinc-400 dark:text-zinc-500 shrink-0">
+                        <div key={player.id || index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50">
+                          <div className="w-8 text-center text-sm font-black text-slate-400 dark:text-slate-500 shrink-0">
                             #{index + 4}
                           </div>
                           
                           {player.avatarUrl ? (
                             <img src={player.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                               <User size={18} />
                             </div>
                           )}
                           
                           <div className="flex-1 min-w-0">
-                            <span className="font-bold text-zinc-800 dark:text-zinc-200 truncate block text-sm">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-sm">
                               {getPlayerDisplayName(player)}
                             </span>
                           </div>
@@ -2642,26 +2635,26 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Sticky Bottom Bar (My Result) */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800 flex justify-center items-center shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-                <div className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20">
-                  <span className="font-bold text-sm sm:text-base">
-                    {myRank > 0 ? (
-                      `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`
-                    ) : (
-                      "Сыграйте раунд, чтобы войти в рейтинг!"
-                    )}
-                  </span>
-                  <Trophy size={20} className="opacity-80" />
-                </div>
-              </div>
+                </>
+              )}
+            </div>
 
-            </motion.div>
-          </motion.div>
+            {/* Sticky Bottom Bar (My Result) */}
+            <div className="sticky bottom-0 left-0 right-0 p-4 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200/60 dark:border-slate-900/80 flex justify-center items-center shrink-0 z-10">
+              <div className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20 transition-transform active:scale-98">
+                <span className="font-bold text-sm sm:text-base">
+                  {myRank > 0 ? (
+                    `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`
+                  ) : (
+                    "Сыграйте раунд, чтобы войти в рейтинг!"
+                  )}
+                </span>
+                <Trophy size={20} className="opacity-80 animate-pulse" />
+              </div>
+            </div>
+
+          </div>
         )}
       </AnimatePresence>
 
