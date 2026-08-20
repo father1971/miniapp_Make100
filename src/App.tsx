@@ -761,7 +761,6 @@ export default function App() {
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
-  const puzzleStartTimeRef = roundStartTimeRef;
 
   const startTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -776,7 +775,7 @@ export default function App() {
         const diffMs = Date.now() - roundStartTimeRef.current;
         setElapsedTime(diffMs / 1000);
       }
-    }, 100);
+    }, 50);
   }, []);
 
   const stopTimer = useCallback(() => {
@@ -785,6 +784,14 @@ export default function App() {
       timerIntervalRef.current = null;
     }
   }, []);
+
+  const formatLiveStopwatch = (sec: number) => {
+    const totalMs = Math.max(0, Math.floor(sec * 1000));
+    const mins = Math.floor(totalMs / 60000);
+    const secs = Math.floor((totalMs % 60000) / 1000);
+    const ms = Math.floor((totalMs % 1000) / 10); // сотые доли (00..99)
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}:${String(ms).padStart(2, '0')}`;
+  };
 
   const formatSolveTime = (timeMs: number) => {
     const secStr = t?.secondsShort || 'сек.';
@@ -1905,7 +1912,7 @@ export default function App() {
     if (isWin && !won && !hintUsed) {
       stopTimer();
 
-      const exactSolveTimeMs = Date.now() - puzzleStartTimeRef.current;
+      const exactSolveTimeMs = Date.now() - roundStartTimeRef.current;
       const exactSolveTimeSec = exactSolveTimeMs / 1000;
       setElapsedTime(exactSolveTimeSec);
 
@@ -2261,11 +2268,11 @@ export default function App() {
       {/* Live Stopwatch & Character Counter (Top Bar) */}
       <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
         <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-slate-900/40 dark:bg-slate-900/70 border border-slate-800/60 backdrop-blur-md shadow-md">
-          {/* Секундомер с точностью до десятых долей секунды */}
+          {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2.5">
             <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
-              {elapsedTime.toFixed(1)} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.secondsShort || 'сек'}</span>
+            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-wider font-mono">
+              {formatLiveStopwatch(elapsedTime)}
             </span>
           </div>
           
