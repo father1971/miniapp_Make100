@@ -725,6 +725,8 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
 
 export default function App() {
   const isStatsLoadedRef = useRef(false);
+  const lastRoundExpressionRef = useRef<string>('');
+  const lastRoundSolveTimeMsRef = useRef<number>(0);
   const isPreviewEnv = (() => {
     try {
       const hostname = window.location.hostname;
@@ -761,8 +763,6 @@ export default function App() {
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
-  const lastRoundExpressionRef = useRef<string>('');
-  const lastRoundSolveTimeMsRef = useRef<number>(0);
 
   const startTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -859,6 +859,7 @@ export default function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [myRank, setMyRank] = useState<number>(0);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -1125,7 +1126,7 @@ export default function App() {
     if (!tgUser?.id) return;
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch(`${API_URL}/api/leaderboard?userId=${tgUser.id}`);
+      const res = await fetch(`/api/leaderboard?userId=${tgUser.id}`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboardData(data.leaderboard);
@@ -1426,6 +1427,9 @@ export default function App() {
     }
   }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount, (stats as any)?.referralCount]);
 
+  useEffect(() => {
+    setPlayerRank(null);
+  }, [isAuthReady, user, solvedCount]);
 
   const handleInviteFriend = () => {
     const userId = tgUser?.id || (stats as any)?.id;
@@ -1915,8 +1919,6 @@ export default function App() {
       playVibration('success');
       
       setLastRoundTimeMs(exactSolveTimeMs);
-      lastRoundExpressionRef.current = currentInput;
-      lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
 
       // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
       const previousGlobalBest = (stats as any)?.bestTimeMs || bestTimeMs || Infinity;
@@ -1974,6 +1976,8 @@ export default function App() {
 
       // Update statistics via handleGameUpdate
       const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
+      lastRoundExpressionRef.current = gaps.join('');
+      lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
       handleGameUpdate(true, operatorsUsed, exactSolveTimeMs, isNewGlobalRecord);
       
       setSelectedSlot(null);
@@ -2233,15 +2237,6 @@ export default function App() {
 
             {/* Блок баланса монет, подсказок и меню */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
-              {/* Leaderboard FAB */}
-              <button 
-                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/30 animate-pulse active:scale-90 transition-transform duration-150 cursor-pointer"
-                title={t.leaderboard || "Таблица лидеров"}
-              >
-                <Trophy size={18} fill="currentColor" />
-              </button>
-
               {/* Плашка монет */}
               <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
                 <span className="text-lg">🪙</span>
@@ -2257,6 +2252,15 @@ export default function App() {
                   {stats.hintsCount}
                 </span>
               </div>
+
+              {/* Кнопка лидерборда (Кубок) */}
+              <button 
+                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
+                title={t.leaderboard || "Зал славы"}
+              >
+                <Trophy size={18} fill="currentColor" className="text-yellow-100" />
+              </button>
 
               {/* Кнопка открытия бокового меню */}
               <button 
@@ -2440,129 +2444,130 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md max-h-[80vh] bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+              className="w-full max-w-md h-[85vh] bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white rounded-[2rem] shadow-2xl flex flex-col overflow-hidden relative border border-white/20 dark:border-white/10"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center p-4 sm:p-6 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50 dark:bg-amber-900/20">
+              {/* Header */}
+              <div className="flex justify-between items-center p-5 border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center text-amber-500">
-                    <Trophy size={20} />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+                    <Trophy size={24} />
                   </div>
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Зал славы Make100 🏆</h2>
+                  <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-wide">
+                    Зал славы Make100
+                  </h2>
                 </div>
-                <button onClick={() => setIsLeaderboardOpen(false)} className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors bg-white dark:bg-zinc-800 rounded-full shadow-sm">
+                <button onClick={() => setIsLeaderboardOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors bg-zinc-100 dark:bg-zinc-800 rounded-full shadow-inner">
                   <X size={20} />
                 </button>
               </div>
               
-              <div className="p-0 overflow-y-auto flex-1 bg-zinc-50 dark:bg-zinc-900/50">
+              <div className="p-0 overflow-y-auto flex-1 bg-zinc-100 dark:bg-zinc-900">
                 {isLoadingLeaderboard ? (
-                  <div className="flex flex-col items-center justify-center p-12 gap-4 text-zinc-400">
-                    <RefreshCw size={32} className="animate-spin text-amber-500" />
-                    <span className="text-sm font-medium">{t.loadingLeaderboard || "Загрузка..."}</span>
+                  <div className="flex flex-col items-center justify-center p-16 gap-4 text-zinc-400 h-full">
+                    <RefreshCw size={36} className="animate-spin text-amber-500" />
+                    <span className="text-sm font-bold tracking-wider uppercase">{t.loadingLeaderboard || 'Загрузка...'}</span>
                   </div>
                 ) : leaderboardData.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-12 gap-4 text-zinc-400">
-                    <Trophy size={48} className="opacity-20" />
-                    <span className="text-sm font-medium">{t.noData || "Нет данных"}</span>
+                  <div className="flex flex-col items-center justify-center p-16 gap-4 text-zinc-400 h-full">
+                    <Trophy size={56} className="opacity-20" />
+                    <span className="text-sm font-bold tracking-wider uppercase">{t.noData || 'Нет данных'}</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col">
-                    {/* Podium for Top 3 */}
-                    <div className="flex justify-center items-end gap-2 sm:gap-4 p-6 bg-gradient-to-b from-amber-50/50 to-zinc-50 dark:from-amber-900/10 dark:to-zinc-900/50 pt-8 pb-4">
+                  <div className="flex flex-col pb-24">
+                    {/* Podium (Top 3) */}
+                    <div className="flex items-end justify-center gap-2 sm:gap-4 p-6 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-950">
                       {/* 2nd Place */}
                       {leaderboardData[1] && (
-                        <div className="flex flex-col items-center gap-2 relative mt-4">
-                          <div className="absolute -top-5 text-xl">🥈</div>
-                          {leaderboardData[1].photoURL ? (
-                            <img src={leaderboardData[1].photoURL} alt={leaderboardData[1].displayName} className="w-14 h-14 rounded-full object-cover ring-4 ring-zinc-300 shadow-lg" referrerPolicy="no-referrer" />
-                          ) : (
-                            <div className="w-14 h-14 rounded-full bg-zinc-300 flex items-center justify-center text-zinc-600 font-bold text-xl ring-4 ring-zinc-300 shadow-lg">
-                              {leaderboardData[1].displayName?.charAt(0) || 'U'}
-                            </div>
-                          )}
-                          <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate w-20 text-center">{leaderboardData[1].displayName || 'Anonymous'}</div>
-                          <div className="text-xs font-black text-amber-600 dark:text-amber-500 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">{leaderboardData[1].score || 0}</div>
+                        <div className="flex flex-col items-center w-24">
+                          <div className="relative mb-2">
+                            {leaderboardData[1].photoURL ? (
+                              <img src={leaderboardData[1].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-zinc-300 shadow-lg shadow-zinc-300/30" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-zinc-300 flex items-center justify-center border-4 border-zinc-200 shadow-lg"><User size={24} className="text-zinc-600" /></div>
+                            )}
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-zinc-300 rounded-full flex items-center justify-center text-sm font-black text-zinc-700 border-2 border-white dark:border-zinc-900 shadow-md">2</div>
+                          </div>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[1].displayName || leaderboardData[1].username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1].score || 0}</span>
                         </div>
                       )}
                       
                       {/* 1st Place */}
                       {leaderboardData[0] && (
-                        <div className="flex flex-col items-center gap-2 relative z-10 -mt-4">
-                          <div className="absolute -top-6 text-3xl animate-pulse">👑</div>
-                          {leaderboardData[0].photoURL ? (
-                            <img src={leaderboardData[0].photoURL} alt={leaderboardData[0].displayName} className="w-20 h-20 rounded-full object-cover ring-4 ring-amber-400 shadow-xl shadow-amber-400/30" referrerPolicy="no-referrer" />
-                          ) : (
-                            <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center text-white font-black text-3xl ring-4 ring-amber-400 shadow-xl shadow-amber-400/30">
-                              {leaderboardData[0].displayName?.charAt(0) || 'U'}
-                            </div>
-                          )}
-                          <div className="text-sm font-black text-amber-500 truncate w-24 text-center">{leaderboardData[0].displayName || 'Anonymous'}</div>
-                          <div className="text-sm font-black text-white bg-amber-500 px-3 py-1 rounded-full shadow-md">{leaderboardData[0].score || 0}</div>
+                        <div className="flex flex-col items-center w-28 -translate-y-4">
+                          <div className="relative mb-2">
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md">👑</div>
+                            {leaderboardData[0].photoURL ? (
+                              <img src={leaderboardData[0].photoURL} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-amber-400 shadow-xl shadow-amber-400/40" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center border-4 border-amber-300 shadow-xl shadow-amber-400/40"><User size={32} className="text-amber-900" /></div>
+                            )}
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-zinc-900 shadow-md">1</div>
+                          </div>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{leaderboardData[0].displayName || leaderboardData[0].username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0].score || 0}</span>
                         </div>
                       )}
                       
                       {/* 3rd Place */}
                       {leaderboardData[2] && (
-                        <div className="flex flex-col items-center gap-2 relative mt-6">
-                          <div className="absolute -top-5 text-xl">🥉</div>
-                          {leaderboardData[2].photoURL ? (
-                            <img src={leaderboardData[2].photoURL} alt={leaderboardData[2].displayName} className="w-14 h-14 rounded-full object-cover ring-4 ring-orange-400 shadow-lg" referrerPolicy="no-referrer" />
-                          ) : (
-                            <div className="w-14 h-14 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xl ring-4 ring-orange-400 shadow-lg">
-                              {leaderboardData[2].displayName?.charAt(0) || 'U'}
-                            </div>
-                          )}
-                          <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate w-20 text-center">{leaderboardData[2].displayName || 'Anonymous'}</div>
-                          <div className="text-xs font-black text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">{leaderboardData[2].score || 0}</div>
+                        <div className="flex flex-col items-center w-24">
+                          <div className="relative mb-2">
+                            {leaderboardData[2].photoURL ? (
+                              <img src={leaderboardData[2].photoURL} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-4 border-orange-400 shadow-lg shadow-orange-400/30" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-16 h-16 rounded-full bg-orange-400 flex items-center justify-center border-4 border-orange-300 shadow-lg"><User size={24} className="text-orange-900" /></div>
+                            )}
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-zinc-900 shadow-md">3</div>
+                          </div>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{leaderboardData[2].displayName || leaderboardData[2].username || 'Игрок'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2].score || 0}</span>
                         </div>
                       )}
                     </div>
-                    
-                    {/* Places 4-100 */}
-                    <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/50 mt-2 pb-4">
-                      {leaderboardData.slice(3).map((player, idx) => {
-                        const rank = idx + 4;
-                        return (
-                          <div key={player.id} className="flex items-center gap-4 p-3 sm:p-4 transition-colors hover:bg-white dark:hover:bg-zinc-800">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                              {rank}
-                            </div>
-                            
-                            {player.photoURL ? (
-                              <img src={player.photoURL} alt={player.displayName} className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700 shadow-sm" referrerPolicy="no-referrer" />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-zinc-500 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700 shadow-sm">
-                                <User size={20} />
-                              </div>
-                            )}
-                            
-                            <div className="flex flex-col flex-1 min-w-0">
-                              <span className="font-bold text-zinc-900 dark:text-white truncate text-sm">
-                                {player.displayName || 'Anonymous'}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="font-black text-amber-500 text-sm sm:text-base">{player.score || 0}</span>
-                            </div>
+
+                    {/* List 4-100 */}
+                    <div className="flex flex-col px-3 sm:px-4 space-y-2 mt-4">
+                      {leaderboardData.slice(3).map((player, index) => (
+                        <div key={player.id} className="flex items-center gap-3 p-3 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700/50">
+                          <div className="w-8 text-center text-sm font-black text-zinc-400 dark:text-zinc-500 shrink-0">
+                            #{index + 4}
                           </div>
-                        );
-                      })}
+                          
+                          {player.photoURL ? (
+                            <img src={player.photoURL} alt={player.displayName} className="w-10 h-10 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
+                              <User size={18} />
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <span className="font-bold text-zinc-800 dark:text-zinc-200 truncate block text-sm">
+                              {player.displayName || player.username || 'Игрок'}
+                            </span>
+                          </div>
+                          
+                          <div className="font-black text-amber-500">
+                            {player.score || 0}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Sticky Footer - My Result */}
-              {!isLoadingLeaderboard && (
-                <div className="sticky bottom-0 w-full p-4 bg-zinc-900 dark:bg-zinc-950 border-t border-zinc-800 shadow-[0_-10px_20px_rgba(0,0,0,0.1)]">
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-base text-zinc-300 font-medium">
-                      Вы на <span className="font-black text-white text-lg">{myRank || '-'}</span> месте с <span className="font-black text-amber-400 text-lg">{(stats as any)?.score || 0}</span> очками
-                    </span>
-                  </div>
+              {/* Sticky Bottom Bar (My Result) */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800 flex justify-center items-center shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+                <div className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20">
+                  <span className="font-bold text-sm sm:text-base">
+                    Вы на {myRank} месте с {(stats as any)?.score || 0} очками
+                  </span>
+                  <Trophy size={20} className="opacity-80" />
                 </div>
-              )}
+              </div>
 
             </motion.div>
           </motion.div>
