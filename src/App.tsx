@@ -761,6 +761,8 @@ export default function App() {
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
+  const lastRoundExpressionRef = useRef<string>('');
+  const lastRoundSolveTimeMsRef = useRef<number>(0);
 
   const startTimer = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -857,7 +859,7 @@ export default function App() {
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
-  const [playerRank, setPlayerRank] = useState<number | null>(null);
+  const [myRank, setMyRank] = useState<number>(0);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
@@ -1119,38 +1121,28 @@ export default function App() {
     setIsAuthReady(true);
   }, []);
 
-  const fetchLeaderboardData = async () => {
-    if (isPreviewEnv) {
-      setIsLoadingLeaderboard(true);
-      setTimeout(() => {
-        setLeaderboardData([
-          { id: '1', displayName: 'Алексей Иванов', solvedCount: 142, totalOperatorsUsed: 432, unsolvedCount: 12, totalSolveTime: 2311000, totalTimeMs: 2311000 },
-          { id: '2', displayName: 'Мария Петрова', solvedCount: 115, totalOperatorsUsed: 360, unsolvedCount: 8, totalSolveTime: 1894000, totalTimeMs: 1894000 }
-        ]);
-        setIsLoadingLeaderboard(false);
-      }, 500);
-      return;
-    }
-
+  const fetchLeaderboard = async () => {
+    if (!tgUser?.id) return;
     setIsLoadingLeaderboard(true);
     try {
-      const data = await fetchLeaderboardApi();
-      setLeaderboardData(data.map((p: any) => ({
-        id: p.id,
-        displayName: p.username || 'Player',
-        photoURL: p.avatarUrl || '',
-        ...p
-      })));
-    } catch (e) {
-      console.error(e);
-      setLeaderboardData([]);
+      const res = await fetch(`${API_URL}/api/leaderboard?userId=${tgUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboardData(data.leaderboard);
+        setMyRank(data.myRank);
+      }
+    } catch (err) {
+      console.error("Ошибка загрузки лидерборда:", err);
     } finally {
       setIsLoadingLeaderboard(false);
     }
   };
 
-  // We assign it to the same name so the UI continues working
-  const fetchLeaderboard = fetchLeaderboardData;
+  useEffect(() => {
+    if (isLeaderboardOpen) {
+      fetchLeaderboard();
+    }
+  }, [isLeaderboardOpen, tgUser?.id]);
 
     useEffect(() => {
     if (!isAuthReady || isTgValidating) return;
@@ -1407,6 +1399,8 @@ export default function App() {
         referralCount: (stats as any)?.referralCount ?? 0,
         referredBy: (stats as any)?.referredBy ?? undefined,
         createdAt: (stats as any)?.createdAt,
+        lastExpression: lastRoundExpressionRef.current || undefined,
+        lastSolveTimeMs: lastRoundSolveTimeMsRef.current || undefined,
         settings: {
           themePreference,
           language,
@@ -1418,6 +1412,8 @@ export default function App() {
         },
         modeStats
       });
+      lastRoundExpressionRef.current = '';
+      lastRoundSolveTimeMsRef.current = 0;
     }
 
     const tg = (window as any).Telegram?.WebApp;
@@ -1430,9 +1426,6 @@ export default function App() {
     }
   }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount, (stats as any)?.referralCount]);
 
-  useEffect(() => {
-    setPlayerRank(null);
-  }, [isAuthReady, user, solvedCount]);
 
   const handleInviteFriend = () => {
     const userId = tgUser?.id || (stats as any)?.id;
@@ -1922,6 +1915,8 @@ export default function App() {
       playVibration('success');
       
       setLastRoundTimeMs(exactSolveTimeMs);
+      lastRoundExpressionRef.current = currentInput;
+      lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
 
       // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
       const previousGlobalBest = (stats as any)?.bestTimeMs || bestTimeMs || Infinity;
@@ -2238,6 +2233,15 @@ export default function App() {
 
             {/* Блок баланса монет, подсказок и меню */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
+              {/* Leaderboard FAB */}
+              <button 
+                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/30 animate-pulse active:scale-90 transition-transform duration-150 cursor-pointer"
+                title={t.leaderboard || "Таблица лидеров"}
+              >
+                <Trophy size={18} fill="currentColor" />
+              </button>
+
               {/* Плашка монет */}
               <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
                 <span className="text-lg">🪙</span>
@@ -2321,23 +2325,6 @@ export default function App() {
                 paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
               }}
             >
-              {/* Leaderboard */}
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.leaderboard}</span>
-                <button 
-                  onClick={() => { 
-                    setIsMenuOpen(false); 
-                    setIsLeaderboardOpen(true); 
-                    fetchLeaderboard();
-                    playSound('click'); 
-                    playVibration('light'); 
-                  }}
-                  className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-95 cursor-pointer"
-                >
-                  <Trophy size={18} /> {t.topPlayers}
-                </button>
-              </div>
-
               {/* Game Mode */}
               <div className="flex flex-col gap-3">
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.gameMode}</span>
@@ -2461,7 +2448,7 @@ export default function App() {
                   <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center text-amber-500">
                     <Trophy size={20} />
                   </div>
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{t.leaderboard}</h2>
+                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Зал славы Make100 🏆</h2>
                 </div>
                 <button onClick={() => setIsLeaderboardOpen(false)} className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors bg-white dark:bg-zinc-800 rounded-full shadow-sm">
                   <X size={20} />
@@ -2472,63 +2459,110 @@ export default function App() {
                 {isLoadingLeaderboard ? (
                   <div className="flex flex-col items-center justify-center p-12 gap-4 text-zinc-400">
                     <RefreshCw size={32} className="animate-spin text-amber-500" />
-                    <span className="text-sm font-medium">{t.loadingLeaderboard}</span>
+                    <span className="text-sm font-medium">{t.loadingLeaderboard || "Загрузка..."}</span>
                   </div>
                 ) : leaderboardData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-12 gap-4 text-zinc-400">
                     <Trophy size={48} className="opacity-20" />
-                    <span className="text-sm font-medium">{t.noData}</span>
+                    <span className="text-sm font-medium">{t.noData || "Нет данных"}</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                    {leaderboardData.map((player, index) => (
-                      <div key={player.id} className={`flex items-center gap-4 p-4 transition-colors hover:bg-white dark:hover:bg-zinc-800 ${index < 3 ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                          index === 0 ? 'bg-amber-400 text-white shadow-md shadow-amber-400/20' : 
-                          index === 1 ? 'bg-zinc-300 text-zinc-700 shadow-md shadow-zinc-300/20' : 
-                          index === 2 ? 'bg-orange-400 text-white shadow-md shadow-orange-400/20' : 
-                          'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
-                        }`}>
-                          {index + 1}
+                  <div className="flex flex-col">
+                    {/* Podium for Top 3 */}
+                    <div className="flex justify-center items-end gap-2 sm:gap-4 p-6 bg-gradient-to-b from-amber-50/50 to-zinc-50 dark:from-amber-900/10 dark:to-zinc-900/50 pt-8 pb-4">
+                      {/* 2nd Place */}
+                      {leaderboardData[1] && (
+                        <div className="flex flex-col items-center gap-2 relative mt-4">
+                          <div className="absolute -top-5 text-xl">🥈</div>
+                          {leaderboardData[1].photoURL ? (
+                            <img src={leaderboardData[1].photoURL} alt={leaderboardData[1].displayName} className="w-14 h-14 rounded-full object-cover ring-4 ring-zinc-300 shadow-lg" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full bg-zinc-300 flex items-center justify-center text-zinc-600 font-bold text-xl ring-4 ring-zinc-300 shadow-lg">
+                              {leaderboardData[1].displayName?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                          <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate w-20 text-center">{leaderboardData[1].displayName || 'Anonymous'}</div>
+                          <div className="text-xs font-black text-amber-600 dark:text-amber-500 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">{leaderboardData[1].score || 0}</div>
                         </div>
-                        
-                        {player.photoURL ? (
-                          <img src={player.photoURL} alt={player.displayName} className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-zinc-900 shadow-sm" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-zinc-500 shrink-0 ring-2 ring-white dark:ring-zinc-900 shadow-sm">
-                            <User size={20} />
-                          </div>
-                        )}
-                        
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <span className="font-bold text-zinc-900 dark:text-white truncate text-sm sm:text-base">
-                            {player.displayName === 'Player' || player.displayName === 'Test Player' ? t.player || player.displayName : (player.displayName || 'Anonymous')}
-                          </span>
-                          <div className="flex items-center gap-3 mt-1">
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title={t.solved}>
-                              <Star size={12} className="text-amber-500" />
-                              <span className="font-medium">{player.solvedCount || 0}</span>
+                      )}
+                      
+                      {/* 1st Place */}
+                      {leaderboardData[0] && (
+                        <div className="flex flex-col items-center gap-2 relative z-10 -mt-4">
+                          <div className="absolute -top-6 text-3xl animate-pulse">👑</div>
+                          {leaderboardData[0].photoURL ? (
+                            <img src={leaderboardData[0].photoURL} alt={leaderboardData[0].displayName} className="w-20 h-20 rounded-full object-cover ring-4 ring-amber-400 shadow-xl shadow-amber-400/30" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-amber-400 flex items-center justify-center text-white font-black text-3xl ring-4 ring-amber-400 shadow-xl shadow-amber-400/30">
+                              {leaderboardData[0].displayName?.charAt(0) || 'U'}
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title={t.operators}>
-                              <Hash size={12} className="text-blue-500" />
-                              <span className="font-medium">{player.totalOperatorsUsed || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title={t.skipped}>
-                              <Activity size={12} className="text-red-400" />
-                              <span className="font-medium">{player.unsolvedCount || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title={t.time}>
-                              <Clock size={12} className="text-emerald-500" />
-                              <span className="font-medium">{Math.floor(((player.totalTimeMs ?? player.totalSolveTime) || 0) / 60000)}m {Math.floor((((player.totalTimeMs ?? player.totalSolveTime) || 0) % 60000) / 1000)}s</span>
-                            </div>
-                          </div>
+                          )}
+                          <div className="text-sm font-black text-amber-500 truncate w-24 text-center">{leaderboardData[0].displayName || 'Anonymous'}</div>
+                          <div className="text-sm font-black text-white bg-amber-500 px-3 py-1 rounded-full shadow-md">{leaderboardData[0].score || 0}</div>
                         </div>
-                      </div>
-                    ))}
+                      )}
+                      
+                      {/* 3rd Place */}
+                      {leaderboardData[2] && (
+                        <div className="flex flex-col items-center gap-2 relative mt-6">
+                          <div className="absolute -top-5 text-xl">🥉</div>
+                          {leaderboardData[2].photoURL ? (
+                            <img src={leaderboardData[2].photoURL} alt={leaderboardData[2].displayName} className="w-14 h-14 rounded-full object-cover ring-4 ring-orange-400 shadow-lg" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xl ring-4 ring-orange-400 shadow-lg">
+                              {leaderboardData[2].displayName?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                          <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300 truncate w-20 text-center">{leaderboardData[2].displayName || 'Anonymous'}</div>
+                          <div className="text-xs font-black text-orange-600 dark:text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">{leaderboardData[2].score || 0}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Places 4-100 */}
+                    <div className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/50 mt-2 pb-4">
+                      {leaderboardData.slice(3).map((player, idx) => {
+                        const rank = idx + 4;
+                        return (
+                          <div key={player.id} className="flex items-center gap-4 p-3 sm:p-4 transition-colors hover:bg-white dark:hover:bg-zinc-800">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                              {rank}
+                            </div>
+                            
+                            {player.photoURL ? (
+                              <img src={player.photoURL} alt={player.displayName} className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700 shadow-sm" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-zinc-500 shrink-0 ring-1 ring-zinc-200 dark:ring-zinc-700 shadow-sm">
+                                <User size={20} />
+                              </div>
+                            )}
+                            
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <span className="font-bold text-zinc-900 dark:text-white truncate text-sm">
+                                {player.displayName || 'Anonymous'}
+                              </span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="font-black text-amber-500 text-sm sm:text-base">{player.score || 0}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
 
+              {/* Sticky Footer - My Result */}
+              {!isLoadingLeaderboard && (
+                <div className="sticky bottom-0 w-full p-4 bg-zinc-900 dark:bg-zinc-950 border-t border-zinc-800 shadow-[0_-10px_20px_rgba(0,0,0,0.1)]">
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-base text-zinc-300 font-medium">
+                      Вы на <span className="font-black text-white text-lg">{myRank || '-'}</span> месте с <span className="font-black text-amber-400 text-lg">{(stats as any)?.score || 0}</span> очками
+                    </span>
+                  </div>
+                </div>
+              )}
 
             </motion.div>
           </motion.div>
