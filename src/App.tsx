@@ -1435,11 +1435,13 @@ export default function App() {
         if (updatedServerStats) {
           setStats((prev: any) => {
             if (!prev) return prev;
+            // 🌟 БЕЗОПАСНОЕ СЛИЯНИЕ: берем серверное значение ТОЛЬКО если оно пришло и валидно!
             return {
               ...prev,
-              score: updatedServerStats.score,
-              coins: updatedServerStats.coins,
-              solvedCount: updatedServerStats.solvedCount
+              score: updatedServerStats.score !== undefined ? updatedServerStats.score : prev.score,
+              coins: updatedServerStats.coins !== undefined ? updatedServerStats.coins : prev.coins,
+              hintsCount: updatedServerStats.hintsCount !== undefined ? updatedServerStats.hintsCount : prev.hintsCount,
+              solvedCount: updatedServerStats.solvedCount !== undefined ? updatedServerStats.solvedCount : prev.solvedCount
             };
           });
         }
