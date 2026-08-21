@@ -2301,18 +2301,18 @@ export default function App() {
             {/* Блок баланса монет, подсказок и меню */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
               {/* Плашка монет */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-zinc-900/80 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
                 <span className="text-lg">🪙</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
-                  {stats?.coins ?? 0}
+                <span className="text-sm font-black text-zinc-800 dark:text-zinc-100">
+                  {stats ? stats.coins : 0}
                 </span>
               </div>
 
               {/* Плашка подсказок */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.hintsLabel || "Подсказки"}>
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-zinc-900/80 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 shadow-sm" title={t.hintsLabel || "Подсказки"}>
                 <span className="text-lg">💡</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
-                  {stats?.hintsCount ?? 0}
+                <span className="text-sm font-black text-zinc-800 dark:text-zinc-100">
+                  {stats ? stats.hintsCount : 0}
                 </span>
               </div>
 
