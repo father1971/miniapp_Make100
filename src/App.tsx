@@ -2260,6 +2260,29 @@ export default function App() {
 
   const levelInfo = getLevelInfo((stats as any)?.solvedCount ?? solvedCount);
 
+  // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
+  const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
+  
+  // Получаем оптимальное решение только когда игра выиграна, чтобы не нагружать рендер
+  let aiSignsCount = 0;
+  if (won) {
+    const solution = findSolution(digits);
+    aiSignsCount = solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
+  }
+
+  const handleWatchOptimal = () => {
+    if (stats.hintsCount > 0) {
+      setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
+      setWon(false);
+      showHintOnScreen();
+      playSound('click');
+      playVibration('light');
+    } else {
+      setShowBuyHintModal(true);
+      playSound('warning');
+    }
+  };
+
   return (
     <div 
       className={`h-[100dvh] w-full ${theme} ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
@@ -2877,6 +2900,44 @@ export default function App() {
                   </span>
                 </div>
               </div>
+
+              {/* Блок сравнения решений (Игрок vs Бот) */}
+              <div className="mb-6 p-4 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 text-center">
+                {playerSignsCount <= aiSignsCount ? (
+                  // Сценарий 1: Игрок нашел идеальное решение!
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xl">🏆</span>
+                    <h4 className="font-black text-sm text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+                      Идеальное решение!
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      Вы нашли самый лаконичный путь! Бот в шоке и снимает шляпу! 🎩🤖
+                    </p>
+                  </div>
+                ) : (
+                  // Сценарий 2: Бот может решить короче!
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-xl">🤖</span>
+                    <h4 className="font-black text-sm text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                      Бот кусает локти...
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium px-2">
+                      А ведь этот пример можно решить всего за <span className="font-bold text-amber-500 dark:text-amber-400">{aiSignsCount} знака(ов)</span>! Хотите узнать как?
+                    </p>
+                    
+                    <button
+                      onClick={handleWatchOptimal}
+                      className="mt-1 flex items-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-amber-500/10 active:scale-95 transition-transform cursor-pointer"
+                    >
+                      👁️ Посмотреть решение
+                      <span className="text-[10px] py-0.5 px-1.5 rounded-md bg-white/20 font-bold ml-1">
+                        {stats.hintsCount > 0 ? "1 🧠" : "20 🪙"}
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-col gap-3">
                 <button 
                   onClick={() => initGame(false)}
