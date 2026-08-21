@@ -1108,16 +1108,23 @@ export default function App() {
 
 
 
+  const isGameInitializedRef = useRef(false);
+
   // Demo State
   const [showDemo, setShowDemo] = useState(true);
 
   useEffect(() => {
-    if (statsLoaded) {
+    // Если статистика загружена и мы ЕЩЕ НЕ инициализировали игру
+    if (statsLoaded && stats && !isGameInitializedRef.current) {
+      // Помечаем, что первичная инициализация успешно пройдена
+      isGameInitializedRef.current = true;
+      
+      // Здесь оставляем твою стандартную логику настройки начального экрана
       if (hasSeenOnboarding || solvedCount > 0) {
         setShowDemo(false);
       }
     }
-  }, [statsLoaded, hasSeenOnboarding, solvedCount]);
+  }, [stats, statsLoaded, hasSeenOnboarding, solvedCount]);
 
 
   const [user, setUser] = useState<any>(null);
@@ -2271,13 +2278,20 @@ export default function App() {
   }
 
   const handleWatchOptimal = () => {
+    // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
+    setWon(false);
+    // Предотвращаем появление стартового экрана
+    setGameState('playing');
+
+    // Проверяем баланс подсказок
     if (stats.hintsCount > 0) {
+      // Вызываем нашу стандартную функцию использования подсказки
       setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
-      setWon(false);
       showHintOnScreen();
       playSound('click');
       playVibration('light');
     } else {
+      // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
       setShowBuyHintModal(true);
       playSound('warning');
     }
