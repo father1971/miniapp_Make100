@@ -3016,47 +3016,51 @@ export default function App() {
               </p>
             </div>
 
-            {/* Блок уровней и прогресса */}
-            <div className="mt-6 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 space-y-3">
+            {/* Блок «Основная статистика» */}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {/* Рейтинг / XP */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
+                <span className="text-2xl mb-2">🏆</span>
+                <span className="text-2xl font-black text-slate-800 dark:text-slate-100">
+                  {(stats as any)?.score || 0}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mt-1">
+                  Рейтинг (XP)
+                </span>
+              </div>
               
-              {/* Номер уровня и текстовый счетчик */}
-              <div className="flex justify-between items-end">
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold">
-                    {t.playerRank || 'Ранг игрока'}
-                  </span>
-                  <span className="text-xl font-black text-orange-500 dark:text-orange-400">
-                    {t.level} {levelInfo.level}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
-                    {t.solvedPuzzles || 'Решено примеров:'}
-                  </span>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-400 font-normal">/ {levelInfo.nextMilestone}</span>
-                  </p>
-                </div>
+              {/* Решено билетов */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
+                <span className="text-2xl mb-2">✅</span>
+                <span className="text-2xl font-black text-slate-800 dark:text-slate-100">
+                  {(stats as any)?.solvedCount ?? solvedCount}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mt-1">
+                  {t.solvedPuzzles || 'Решено билетов'}
+                </span>
               </div>
 
-              {/* Шкала прогресса (Прогресс-бар) */}
-              <div className="relative w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${levelInfo.progress}%` }}
-                ></div>
+              {/* Баланс монет */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
+                <span className="text-2xl mb-2">🪙</span>
+                <span className="text-2xl font-black text-amber-500 dark:text-amber-400">
+                  {(stats as any)?.coins || 0}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mt-1">
+                  {t.coinsLabel || 'Монеты'}
+                </span>
               </div>
 
-              {/* Мотивирующая подсказка до следующего уровня */}
-              {levelInfo.level < 11 ? (
-                <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
-                  {t.solveMorePrefix || 'Реши ещё'} <span className="font-bold text-slate-600 dark:text-slate-300">{levelInfo.nextMilestone - ((stats as any)?.solvedCount ?? solvedCount)}</span> {t.solveMoreSuffix || 'примеров до Уровня'} {levelInfo.level + 1}!
-                </p>
-              ) : (
-                <p className="text-xs text-emerald-500 font-bold text-center animate-pulse">
-                  {t.maxLevelReached || '👑 Достигнут максимальный уровень! Вы легенда математики!'}
-                </p>
-              )}
+              {/* Подсказки */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
+                <span className="text-2xl mb-2">💡</span>
+                <span className="text-2xl font-black text-blue-500 dark:text-blue-400">
+                  {(stats as any)?.hintsCount || 0}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mt-1">
+                  {t.hintsLabel || 'Подсказки'}
+                </span>
+              </div>
             </div>
 
             {/* Блок «Личные рекорды» */}
