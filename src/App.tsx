@@ -1551,9 +1551,9 @@ export default function App() {
     // Бонус за Краткость (все не-цифровые символы: знаки, скобки, запятые)
     const nonDigits = expr.replace(/\d/g, '').length;
     if (nonDigits === 1) {
-      roundScore += 1000;
+      roundScore += 150;
     } else if (nonDigits === 2) {
-      roundScore += 500;
+      roundScore += 60;
     } else if (nonDigits === 3) {
       roundScore += 30;
     } else if (nonDigits === 4) {
