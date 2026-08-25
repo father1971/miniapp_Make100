@@ -44,3 +44,34 @@
     min-height: 100%;
   }
 }
+
+/* Car Game Screen layout */
+.game-screen {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  /* Maintain roughly a 9:16 aspect ratio or at least ensure it covers the mobile view */
+  aspect-ratio: 9/16; 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+@media (min-aspect-ratio: 9/16) {
+  .game-screen {
+    /* If the screen is wider than 9:16 (like desktop), clamp the width */
+    max-width: 56.25vh; /* 9/16 * 100vh */
+    margin: 0 auto;
+  }
+}
+
+/* Glassmorphism for UI in Car Mode */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+

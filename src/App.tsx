@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader } from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
+import { useImagePreloader } from './hooks/useImagePreloader';
+import { LicensePlate } from './components/LicensePlate';
 
 // Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
 // Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
@@ -834,6 +836,10 @@ export default function App() {
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
   
   const [gameMode, setGameMode] = useState<'ticket' | 'car'>('ticket');
+  
+  // Предзагрузка изображений машин
+  const imagesLoaded = useImagePreloader(carImagesListRef.current);
+
   const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>('auto');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
@@ -2116,57 +2122,7 @@ export default function App() {
   }
 
   const renderLicensePlate = () => {
-    // A generic, clean CSS-based Russian-style license plate
-    return (
-      <div className="w-full h-full max-h-[650px] max-w-[1000px] mx-auto flex flex-col items-center justify-center gap-4">
-        <div className="w-full h-full min-h-[150px] shrink rounded-2xl overflow-hidden shadow-lg border-4 border-white dark:border-zinc-800 relative bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-          {!carImage && <span className="text-zinc-400">{t.loading}</span>}
-          {carImage && (
-            <>
-              <img 
-                src={carImage} 
-                alt="Car Exterior" 
-                className="w-full h-full object-cover absolute inset-0"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  e.currentTarget.style.opacity = '0';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    const errorMsg = document.createElement('span');
-                    errorMsg.className = 'text-red-500 font-bold absolute z-20';
-                    errorMsg.innerText = t.imageLoadError;
-                    parent.appendChild(errorMsg);
-                  }
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none"></div>
-            </>
-          )}
-
-          {/* License Plate Overlay */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[60%] max-w-[196px] bg-white rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-[2px] border-zinc-900 overflow-hidden flex flex-col">
-            <div className="flex items-stretch bg-gradient-to-b from-white to-zinc-100 h-10 sm:h-11">
-              
-              {/* Main number section */}
-              <div className="w-2/3 flex items-center justify-center gap-0.5 px-1 border-r-[2px] border-zinc-900">
-                <span className="font-sans text-xl sm:text-2xl font-black text-zinc-900 mt-0.5">{letters[0]}</span>
-                <span className="font-mono text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">{digits.slice(0, 3).join('')}</span>
-                <span className="font-sans text-xl sm:text-2xl font-black text-zinc-900 mt-0.5">{letters[1]}{letters[2]}</span>
-              </div>
-
-              {/* Region section */}
-              <div className="w-1/3 flex flex-col items-center justify-center px-1">
-                <span className="font-mono text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">{digits.slice(3).join('')}</span>
-              </div>
-            </div>
-            
-            {/* Screws for main plate (Left and Right edges) */}
-            <div className="absolute top-1/2 -translate-y-1/2 left-1 w-1 h-1 rounded-full bg-zinc-300 border border-zinc-400 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-zinc-500 rotate-12"></div></div>
-            <div className="absolute top-1/2 -translate-y-1/2 right-1 w-1 h-1 rounded-full bg-zinc-300 border border-zinc-400 shadow-inner flex items-center justify-center"><div className="w-full h-[1px] bg-zinc-500 -rotate-12"></div></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LicensePlate ticketDigits={digits} letters={letters} />;
   };
 
   const renderTicket = () => {
@@ -2297,14 +2253,21 @@ export default function App() {
     }
   };
 
+  const isCarMode = gameMode === 'car';
+  
   return (
     <div 
-      className={`h-[100dvh] w-full ${theme} ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
+      className={`h-[100dvh] w-full ${theme} ${isCarMode ? 'game-screen text-white' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
-        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
+        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)',
+        ...(isCarMode && carImage ? { backgroundImage: `url(${carImage})` } : {})
       }}
     >
+      {/* Если режим машины и картинки еще грузятся, можно показать небольшой спиннер поверх всего, но мы полагаемся на isCarMode */}
+      {isCarMode && (
+         <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
+      )}
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
@@ -2732,38 +2695,34 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder */}
-        <div className="w-full max-w-5xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-white/30 dark:border-zinc-800/60 p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden">
-          <div className="flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black text-zinc-900 dark:text-white py-1 sm:py-2 w-full">
-            <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot} />
+        <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden ${
+          isCarMode 
+            ? 'glass-panel border-white/20' 
+            : 'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-white/30 dark:border-zinc-800/60'
+        }`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full ${isCarMode ? 'text-white' : 'text-zinc-900 dark:text-white'}`}>
+                        <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot} isCarMode={isCarMode} />
             
             {digits.map((digit, idx) => (
               <React.Fragment key={idx}>
-                <span className="text-zinc-800 dark:text-zinc-200 drop-shadow-sm select-none flex-shrink-0 leading-none">{digit}</span>
-                <Gap idx={idx + 1} value={gaps[idx + 1]} selected={selectedSlot === idx + 1} onClick={setSelectedSlot} />
+                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none ${isCarMode ? 'text-white' : 'text-zinc-800 dark:text-zinc-200'}`}>{digit}</span>
+                <Gap idx={idx + 1} value={gaps[idx + 1]} selected={selectedSlot === idx + 1} onClick={setSelectedSlot} isCarMode={isCarMode} />
               </React.Fragment>
             ))}
           </div>
-
-          <div className="mt-2 sm:mt-3 md:mt-4 flex items-center justify-center text-2xl sm:text-4xl md:text-6xl font-mono font-black">
-            <span className="text-zinc-300 dark:text-zinc-600 mr-3 sm:mr-6">=</span>
-            <span className={`transition-colors duration-300 ${isWin ? 'text-green-500' : 'text-zinc-900 dark:text-white'}`}>
-              {Number.isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : Number(currentResult.toFixed(2))}
-            </span>
-          </div>
-          
           <p className="text-center text-zinc-400 dark:text-zinc-500 text-xs sm:text-sm md:text-base mt-2 md:mt-3 font-bold">{t.tapGaps}</p>
         </div>
 
         {/* Keypad */}
         <div className="flex gap-1 sm:gap-2 flex-nowrap justify-between sm:justify-center w-full max-w-3xl px-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <OperatorButton op="+" icon={<Plus size={20} strokeWidth={3} />} onClick={() => handleOp('+')} />
-          <OperatorButton op="-" icon={<Minus size={20} strokeWidth={3} />} onClick={() => handleOp('-')} />
-          <OperatorButton op="*" icon={<X size={20} strokeWidth={3} />} onClick={() => handleOp('*')} />
-          <OperatorButton op="/" icon={<Divide size={20} strokeWidth={3} />} onClick={() => handleOp('/')} />
-          <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
-          <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
-          <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
-          <OperatorButton op="Backspace" icon={<Delete size={20} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+          <OperatorButton op="+" icon={<Plus size={20} strokeWidth={3} />} onClick={() => handleOp('+')} isCarMode={isCarMode} />
+          <OperatorButton op="-" icon={<Minus size={20} strokeWidth={3} />} onClick={() => handleOp('-')} isCarMode={isCarMode} />
+          <OperatorButton op="*" icon={<X size={20} strokeWidth={3} />} onClick={() => handleOp('*')} isCarMode={isCarMode} />
+          <OperatorButton op="/" icon={<Divide size={20} strokeWidth={3} />} onClick={() => handleOp('/')} isCarMode={isCarMode} />
+          <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} isCarMode={isCarMode} />
+          <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} isCarMode={isCarMode} />
+          <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} isCarMode={isCarMode} />
+          <OperatorButton op="Backspace" icon={<Delete size={20} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" isCarMode={isCarMode} />
         </div>
 
         {/* Action Buttons */}
@@ -2771,16 +2730,25 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all font-bold tracking-wide backdrop-blur-md text-xs sm:text-base ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${
+              isCarMode 
+                ? 'glass-panel text-white hover:bg-white/20 border-white/20' 
+                : 'border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 backdrop-blur-md'
+            } ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
           </button>
-
           <button 
             onClick={() => initGame(false, true)}
             disabled={isHinting}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide backdrop-blur-md text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40' : 'border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${
+              isCarMode
+                ? 'glass-panel text-white hover:bg-white/20 border-white/20'
+                : isHinting ? 'opacity-50 cursor-not-allowed border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' 
+                : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' 
+                : 'border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 backdrop-blur-md'
+            }`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -3183,7 +3151,7 @@ export default function App() {
   );
 }
 
-function Gap({ idx, value, selected, onClick }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void }) {
+function Gap({ idx, value, selected, onClick, isCarMode = false }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void, isCarMode?: boolean }) {
   const charCount = value.length;
   // Calculate dynamic width based on character count.
   // Base width is for 0-1 chars. Add extra width for each additional char.
@@ -3207,27 +3175,33 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
         selected
           ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20'
           : value
-            ? 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-sm z-10'
-            : 'border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 z-10'
+            ? isCarMode 
+                ? 'glass-panel text-white border-white/40 shadow-sm z-10'
+                : 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-sm z-10'
+            : isCarMode
+                ? 'border-dashed border-white/30 hover:border-white/50 text-white/50 bg-black/20 z-10'
+                : 'border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 z-10'
       }`}
     >
       {value ? (
         <span className="text-[clamp(1rem,5vw,2.5rem)] whitespace-nowrap px-1">{value}</span>
       ) : (
-        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 rounded-full ${isCarMode ? 'bg-white/40' : 'bg-zinc-300 dark:bg-zinc-700'}`}></span>
       )}
     </button>
   );
 }
 
-function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger' }) {
+function OperatorButton({ icon, onClick, variant = 'default', isCarMode = false }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger', isCarMode?: boolean }) {
   return (
     <button
       onClick={onClick}
       className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${
-        variant === 'danger'
-          ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm'
-          : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'
+        isCarMode 
+          ? 'glass-panel text-white hover:bg-white/20 border-white/20' 
+          : variant === 'danger'
+            ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm'
+            : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'
       }`}
     >
       {icon}
