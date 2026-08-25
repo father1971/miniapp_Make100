@@ -1,0 +1,18 @@
+3211:function OperatorButton({ icon, onClick, variant = 'default', isCarMode = false }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger', isCarMode?: boolean }) {
+3212-  return (
+3213-    <button
+3214-      onClick={onClick}
+3215-      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${
+3216-        isCarMode 
+3217-          ? variant === 'danger'
+3218-            ? 'bg-red-50 text-red-500 border-red-100 hover:bg-red-100 hover:border-red-200 shadow-sm'
+3219-            : 'bg-white/95 text-zinc-800 border-white/50 hover:bg-white hover:border-white shadow-sm'
+3220-          : variant === 'danger'
+3221-            ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm'
+3222-            : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'
+3223-      }`}
+3224-    >
+3225-      {icon}
+3226-    </button>
+3227-  );
+3228-}

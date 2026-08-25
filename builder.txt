@@ -1,0 +1,101 @@
+2709:        {/* Expression Builder */}
+2710-        <div className={`w-full max-w-5xl backdrop-blur-2xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden ${
+2711-          isCarMode
+2712-            ? 'bg-white/95 border border-white/50'
+2713-            : 'bg-white/95 dark:bg-zinc-900/95 border border-white/30 dark:border-zinc-800/60'
+2714-        }`}>
+2715-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full ${isCarMode ? 'text-zinc-900' : 'text-zinc-900 dark:text-white'}`}>
+2716-            <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot} forceLight={isCarMode} />
+2717-            
+2718-            {digits.map((digit, idx) => (
+2719-              <React.Fragment key={idx}>
+2720-                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none ${isCarMode ? 'text-zinc-800' : 'text-zinc-800 dark:text-zinc-200'}`}>{digit}</span>
+2721-                <Gap idx={idx + 1} value={gaps[idx + 1]} selected={selectedSlot === idx + 1} onClick={setSelectedSlot} forceLight={isCarMode} />
+2722-              </React.Fragment>
+2723-            ))}
+2724-          </div>
+2725-          <p className={`text-center text-xs sm:text-sm md:text-base mt-2 md:mt-3 font-bold ${isCarMode ? 'text-zinc-500' : 'text-zinc-400 dark:text-zinc-500'}`}>{t.tapGaps}</p>
+2726-        </div>
+2727-
+2728-        {/* Keypad */}
+2729-        <div className="flex gap-1 sm:gap-2 flex-nowrap justify-between sm:justify-center w-full max-w-3xl px-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+2730-          <OperatorButton op="+" icon={<Plus size={20} strokeWidth={3} />} onClick={() => handleOp('+')} isCarMode={isCarMode} />
+2731-          <OperatorButton op="-" icon={<Minus size={20} strokeWidth={3} />} onClick={() => handleOp('-')} isCarMode={isCarMode} />
+2732-          <OperatorButton op="*" icon={<X size={20} strokeWidth={3} />} onClick={() => handleOp('*')} isCarMode={isCarMode} />
+2733-          <OperatorButton op="/" icon={<Divide size={20} strokeWidth={3} />} onClick={() => handleOp('/')} isCarMode={isCarMode} />
+2734-          <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} isCarMode={isCarMode} />
+2735-          <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} isCarMode={isCarMode} />
+2736-          <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} isCarMode={isCarMode} />
+2737-          <OperatorButton op="Backspace" icon={<Delete size={20} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" isCarMode={isCarMode} />
+2738-        </div>
+2739-
+2740-        {/* Action Buttons */}
+2741-        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-12 sm:pb-6">
+2742-          <button 
+2743-            onClick={showHint}
+2744-            disabled={isHinting || won}
+2745-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${
+2746-              isCarMode 
+2747-                ? 'bg-white/95 border-white/50 text-zinc-600 hover:text-zinc-900 hover:bg-white shadow-lg' 
+2748-                : 'border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 backdrop-blur-md'
+2749-            } ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
+2750-          >
+2751-            <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
+2752-            <span className="truncate">{t.hint}</span>
+2753-          </button>
+2754-          <button 
+2755-            onClick={() => initGame(false, true)}
+2756-            disabled={isHinting}
+2757-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${
+2758-              isCarMode
+2759-                ? isHinting ? 'opacity-50 cursor-not-allowed bg-white/50 border-white/30 text-zinc-400' 
+2760-                  : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-600 bg-red-50 hover:bg-red-100 shadow-lg' 
+2761-                  : 'bg-white/95 border-white/50 text-zinc-600 hover:text-zinc-900 hover:bg-white shadow-lg'
+2762-                : isHinting ? 'opacity-50 cursor-not-allowed border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' 
+2763-                : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' 
+2764-                : 'border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 backdrop-blur-md'
+2765-            }`}
+2766-          >
+2767-            <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
+2768-            <span className="truncate">
+2769-              {hintUsed 
+2770-                ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar)
+2771-                : (gameMode === 'ticket' ? t.skipTicket : t.skipCar)}
+2772-            </span>
+2773-          </button>
+2774-        </div>
+2775-      </div>
+2776-      </>
+2777-      )}
+2778-
+2779-      {/* Modals */}
+2780-      <AnimatePresence>
+2781-        {showBuyHintModal && (
+2782-          <motion.div 
+2783-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+2784-            className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4"
+2785-            onClick={() => setShowBuyHintModal(false)}
+2786-          >
+2787-            <motion.div
+2788-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+2789-              className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-zinc-100 dark:border-zinc-800 relative flex flex-col items-center"
+2790-              onClick={e => e.stopPropagation()}
+2791-            >
+2792-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full flex items-center justify-center mb-4">
+2793-                <Lightbulb size={32} />
+2794-              </div>
+2795-              <h2 className="text-xl sm:text-2xl font-black text-center mb-2">{t.outOfHints || 'Подсказки закончились'}</h2>
+2796-              <p className="text-center text-sm sm:text-base text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+2797-                {t.outOfHintsDesc || 'Ваш лимит подсказок исчерпан. Вы можете приобрести 1 подсказку за 20 монет.'}
+2798-                <br/><br/>
+2799-                {t.balance || 'Баланс:'} <span className="font-bold text-yellow-600 dark:text-yellow-500">{stats.coins} 🪙</span>
+2800-              </p>
+2801-              <div className="w-full flex flex-col gap-3">
+2802-                <button
+2803-                  onClick={() => {
+2804-                    if (stats.coins >= 20) {
+2805-                      setStats(prev => ({ ...prev, coins: prev.coins - 20, hintsCount: prev.hintsCount + 1 }));
+2806-                      setShowBuyHintModal(false);
+2807-                    }
+2808-                  }}
+2809-                  disabled={stats.coins < 20}

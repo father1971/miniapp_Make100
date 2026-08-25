@@ -1,0 +1,51 @@
+3168:function Gap({ idx, value, selected, onClick, forceLight = false }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void, forceLight?: boolean }) {
+3169-  const charCount = value.length;
+3170-  // Calculate dynamic width based on character count.
+3171-  // Base width is for 0-1 chars. Add extra width for each additional char.
+3172-  const baseWidthRem = 1.25;
+3173-  const baseWidthVw = 7;
+3174-  const baseWidthMaxRem = 3.5;
+3175-  
+3176-  const extraWidthPerCharRem = 0.8;
+3177-  const extraWidthPerCharVw = 2;
+3178-  const extraWidthPerCharMaxRem = 1.5;
+3179-
+3180-  const extraChars = Math.max(0, charCount - 1);
+3181-  
+3182-  const dynamicWidth = `clamp(${baseWidthRem + (extraChars * extraWidthPerCharRem)}rem, ${baseWidthVw + (extraChars * extraWidthPerCharVw)}vw, ${baseWidthMaxRem + (extraChars * extraWidthPerCharMaxRem)}rem)`;
+3183-
+3184-  return (
+3185-    <button
+3186-      onClick={() => onClick(idx)}
+3187-      style={{ width: dynamicWidth }}
+3188-      className={`h-[clamp(1.75rem,9vw,4.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${
+3189-        selected
+3190-          ? forceLight
+3191-              ? 'border-orange-500 bg-orange-50 text-orange-600 shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20'
+3192-              : 'border-orange-500 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20'
+3193-          : value
+3194-            ? forceLight
+3195-                ? 'border-zinc-800 bg-zinc-800 text-white shadow-sm z-10'
+3196-                : 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-sm z-10'
+3197-            : forceLight
+3198-                ? 'border-dashed border-zinc-300 hover:border-zinc-400 text-zinc-400 bg-zinc-50 z-10'
+3199-                : 'border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 z-10'
+3200-      }`}
+3201-    >
+3202-      {value ? (
+3203-        <span className="text-[clamp(1rem,5vw,2.5rem)] whitespace-nowrap px-1">{value}</span>
+3204-      ) : (
+3205-        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 rounded-full ${forceLight ? 'bg-zinc-300' : 'bg-zinc-300 dark:bg-zinc-700'}`}></span>
+3206-      )}
+3207-    </button>
+3208-  );
+3209-}
+3210-
+3211-function OperatorButton({ icon, onClick, variant = 'default', isCarMode = false }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger', isCarMode?: boolean }) {
+3212-  return (
+3213-    <button
+3214-      onClick={onClick}
+3215-      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${
+3216-        isCarMode 
+3217-          ? variant === 'danger'
+3218-            ? 'bg-red-50 text-red-500 border-red-100 hover:bg-red-100 hover:border-red-200 shadow-sm'

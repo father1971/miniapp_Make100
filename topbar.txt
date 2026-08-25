@@ -1,0 +1,101 @@
+2341:      {/* Live Stopwatch & Character Counter (Top Bar) */}
+2342-      <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
+2343-        <div className={`flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono backdrop-blur-md shadow-md border ${
+2344-          isCarMode 
+2345-            ? 'bg-white/95 border-white/50 shadow-lg' 
+2346-            : 'bg-slate-900/40 dark:bg-slate-900/70 border-slate-800/60'
+2347-        }`}>
+2348-          {/* Секундомер в спортивном формате ММ:СС:мс */}
+2349-          <div className="flex items-center gap-2.5">
+2350-            <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
+2351-            <span className={`font-black text-xl sm:text-2xl tracking-wider font-mono ${
+2352-              isCarMode ? 'text-zinc-900' : 'text-zinc-900 dark:text-white'
+2353-            }`}>
+2354-              {formatLiveStopwatch(elapsedTime)}
+2355-            </span>
+2356-          </div>
+2357-          
+2358-          {/* Вертикальный разделитель */}
+2359-          <div className={`h-6 sm:h-7 w-[1.5px] ${
+2360-            isCarMode ? 'bg-slate-300' : 'bg-slate-700/60 dark:bg-slate-800'
+2361-          }`}></div>
+2362-
+2363-          {/* Счётчик символов в текущем вводе */}
+2364-          <div className="flex items-center gap-2.5">
+2365-            <span className="text-xl sm:text-2xl">✍️</span>
+2366-            <span className={`font-black text-xl sm:text-2xl tracking-tight ${
+2367-              isCarMode ? 'text-zinc-900' : 'text-zinc-900 dark:text-white'
+2368-            }`}>
+2369-              {currentInput.length} <span className={`text-xs sm:text-sm font-sans font-semibold ml-0.5 ${
+2370-                isCarMode ? 'text-zinc-500' : 'text-slate-400 dark:text-slate-500'
+2371-              }`}>{t.charsShort || 'симв.'}</span>
+2372-            </span>
+2373-          </div>
+2374-        </div>
+2375-      </div>
+2376-
+2377-      {/* Menu Overlay (Full-Screen) */}
+2378-      <AnimatePresence>
+2379-        {isMenuOpen && (
+2380-          <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-y-auto animate-fade-in select-none">
+2381-            
+2382-            {/* Нативная верхняя панель Меню (идентичная Профилю) */}
+2383-            <div 
+2384-              className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md"
+2385-              style={{
+2386-                paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 16px)'
+2387-              }}
+2388-            >
+2389-              {/* Кнопка назад */}
+2390-              <button 
+2391-                onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
+2392-                className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+2393-              >
+2394-                ⬅️ {t.back || 'Назад'}
+2395-              </button>
+2396-              <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
+2397-                {t.gameSettings || 'Настройки игры'}
+2398-              </h1>
+2399-              <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
+2400-            </div>
+2401-
+2402-            {/* Содержимое меню */}
+2403-            <div 
+2404-              className="flex-1 w-full max-w-md mx-auto px-4 pb-12 pt-6 overflow-y-auto space-y-6"
+2405-              style={{
+2406-                paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
+2407-              }}
+2408-            >
+2409-              {/* Game Mode */}
+2410-              <div className="flex flex-col gap-3">
+2411-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.gameMode}</span>
+2412-                <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
+2413-                  <button 
+2414-                    onClick={() => { setGameMode('ticket'); playSound('click'); playVibration('light'); }}
+2415-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${gameMode === 'ticket' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+2416-                  >
+2417-                    {t.ticket}
+2418-                  </button>
+2419-                  <button 
+2420-                    onClick={() => { setGameMode('car'); playSound('click'); playVibration('light'); }}
+2421-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${gameMode === 'car' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+2422-                  >
+2423-                    {t.car}
+2424-                  </button>
+2425-                </div>
+2426-              </div>
+2427-
+2428-              {/* Theme */}
+2429-              <div className="flex flex-col gap-3">
+2430-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.theme}</span>
+2431-                <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
+2432-                  <button 
+2433-                    onClick={() => { setThemePreference('auto'); playSound('click'); playVibration('light'); }}
+2434-                    className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${themePreference === 'auto' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+2435-                  >
+2436-                    <Smartphone size={16} /> {t.auto}
+2437-                  </button>
+2438-                  <button 
+2439-                    onClick={() => { setThemePreference('light'); playSound('click'); playVibration('light'); }}
+2440-                    className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${themePreference === 'light' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
+2441-                  >
