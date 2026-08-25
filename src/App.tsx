@@ -7,26 +7,7 @@ import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translatio
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
 
-// Вставьте сюда ссылку на папку image_cars в вашем GitHub репозитории.
-// Пример: 'https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/tree/main/image_cars'
-const GITHUB_FOLDER_URL: string = 'https://github.com/father1971/Cars_image';
-
-const FALLBACK_IMAGES = [
-  '/car1.jpg',
-  '/car2.jpg',
-  '/car3.jpg',
-  '/car4.jpg',
-  '/cars/1.jpg',
-  '/cars/2.jpg',
-  '/cars/3.jpg',
-  '/cars/4.jpg',
-  '/cars/5.jpg',
-  '/cars/6.jpg',
-  '/cars/7.jpg',
-  '/cars/8.jpg',
-  '/cars/9.jpg',
-  '/cars/10.jpg'
-];
+// Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
 const getLevelInfo = (solved: number) => {
   const milestones = [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
@@ -759,7 +740,7 @@ export default function App() {
   const [digits, setDigits] = useState<string[]>([]);
   const [letters, setLetters] = useState<string[]>(['A', 'B', 'C']);
   const [carImage, setCarImage] = useState<string>('');
-  const carImagesListRef = useRef<string[]>(FALLBACK_IMAGES);
+  const carImagesListRef = useRef<string[]>([]);
   const [gaps, setGaps] = useState<string[]>(['', '', '', '', '', '', '']);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(1);
   const [won, setWon] = useState(false);
@@ -895,7 +876,7 @@ export default function App() {
   // Load cached images from localStorage immediately on mount to prevent any delay or rate limit issues
   useEffect(() => {
     try {
-      const cached = localStorage.getItem('make100_github_images');
+      const cached = localStorage.getItem('make100_kv_images');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -904,66 +885,34 @@ export default function App() {
         }
       }
     } catch (e) {
-      console.warn('Failed to parse cached GitHub images:', e);
+      console.warn('Failed to parse cached KV images:', e);
     }
   }, []);
 
   useEffect(() => {
-    if (!GITHUB_FOLDER_URL) return;
-
     const fetchImages = async () => {
       try {
-        let apiUrl = '';
-        try {
-          const urlObj = new URL(GITHUB_FOLDER_URL);
-          const pathParts = urlObj.pathname.split('/').filter(Boolean);
-          
-          if (pathParts.length >= 2) {
-            const owner = pathParts[0];
-            const repo = pathParts[1];
-            let branch = 'main';
-            let path = '';
-            
-            if (pathParts.length >= 4 && pathParts[2] === 'tree') {
-              branch = pathParts[3];
-              path = pathParts.slice(4).join('/');
-            }
-            
-            apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-          } else {
-            console.warn('Неверный формат ссылки на GitHub.');
-            return;
-          }
-        } catch (e) {
-          console.warn('Неверный URL:', e);
-          return;
-        }
-        
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error('Ошибка при загрузке данных с GitHub API');
+        const response = await fetch(`${API_URL}/api/cars/pool`);
+        if (!response.ok) throw new Error('Ошибка при загрузке пула картинок с бэкенда');
         
         const data = await response.json();
-        if (Array.isArray(data)) {
-          const images = data
-            .filter((file: { name: string }) => file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-            .map((file: { download_url: string }) => file.download_url);
-            
-          if (images.length > 0) {
-            carImagesListRef.current = images;
-            setCarImage(images[Math.floor(Math.random() * images.length)]);
-            try {
-              localStorage.setItem('make100_github_images', JSON.stringify(images));
-            } catch (e) {
-              console.warn('Failed to cache GitHub images:', e);
-            }
+        const images = Array.isArray(data) ? data : data.pool || [];
+        
+        if (images.length > 0) {
+          carImagesListRef.current = images;
+          setCarImage(images[Math.floor(Math.random() * images.length)]);
+          try {
+            localStorage.setItem('make100_kv_images', JSON.stringify(images));
+          } catch (e) {
+            console.warn('Failed to cache KV images:', e);
           }
         }
       } catch (err) {
         // Use console.warn instead of console.error to avoid raising fatal errors in test automation
-        console.warn('Ошибка при получении картинок с GitHub:', err);
+        console.warn('Ошибка при получении картинок с бэкенда:', err);
       }
     };
-
+    
     fetchImages();
   }, []);
 
@@ -1663,7 +1612,9 @@ export default function App() {
     setLetters(randomLetters);
 
     // Set random car image
-    setCarImage(carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)]);
+    if (carImagesListRef.current.length > 0) {
+      setCarImage(carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)]);
+    }
 
     setGaps(['', '', '', '', '', '', '']);
     setSelectedSlot(1);
