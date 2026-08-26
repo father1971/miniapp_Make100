@@ -740,7 +740,15 @@ export default function App() {
   const [digits, setDigits] = useState<string[]>([]);
   const [letters, setLetters] = useState<string[]>(['A', 'B', 'C']);
   const [carImage, setCarImage] = useState<string>('');
+  const [carImageLoaded, setCarImageLoaded] = useState<boolean>(false);
   const carImagesListRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    if (carImage) {
+      setCarImageLoaded(false);
+    }
+  }, [carImage]);
+
   const [gaps, setGaps] = useState<string[]>(['', '', '', '', '', '', '']);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(1);
   const [won, setWon] = useState(false);
@@ -2208,16 +2216,23 @@ export default function App() {
   
   return (
     <div 
-      className={`h-[100dvh] w-full ${theme} ${isCarMode ? 'game-screen text-white' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
+      className={`h-[100dvh] w-full ${theme} ${isCarMode ? 'game-screen text-white bg-zinc-950' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
-        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)',
-        ...(isCarMode && carImage ? { backgroundImage: `url(${carImage})` } : {})
+        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
       }}
     >
-      {/* Если режим машины и картинки еще грузятся, можно показать небольшой спиннер поверх всего, но мы полагаемся на isCarMode */}
+      {isCarMode && carImage && (
+        <img 
+          src={carImage}
+          alt="Car background"
+          onLoad={() => setCarImageLoaded(true)}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out pointer-events-none z-0 ${carImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      )}
+      {/* Затемняющий оверлей поверх машины для лучшей читаемости */}
       {isCarMode && (
-         <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
+         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0 transition-opacity duration-1000 ease-in-out"></div>
       )}
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
