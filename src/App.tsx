@@ -2696,7 +2696,7 @@ export default function App() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-12 sm:pb-6">
+        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-2 sm:pb-2">
           <button 
             onClick={showHint}
             disabled={isHinting || won}
