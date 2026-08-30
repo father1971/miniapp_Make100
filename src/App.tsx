@@ -2661,7 +2661,7 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder */}
-        <div className={`w-full max-w-5xl backdrop-blur-2xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white/95 dark:bg-zinc-900/95 border border-white/30 dark:border-zinc-800/60`}>
+        <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white dark:bg-zinc-900/95 dark:backdrop-blur-2xl border border-zinc-200 dark:border-zinc-800/60`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot}  />
             
@@ -2700,7 +2700,7 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/95 dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2708,7 +2708,7 @@ export default function App() {
           <button 
             onClick={() => initGame(false, true)}
             disabled={isHinting}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white/95 dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/95 dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
