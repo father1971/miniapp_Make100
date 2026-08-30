@@ -2269,7 +2269,7 @@ export default function App() {
             {/* Блок баланса монет, подсказок и меню */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
               {/* Плашка монет */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.coinsLabel || "Монеты"}>
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.coinsLabel || "Монеты"}>
                 <span className="text-lg">🪙</span>
                 <span className="text-sm font-black text-slate-800 dark:text-slate-100">
                   {stats.coins}
@@ -2277,7 +2277,7 @@ export default function App() {
               </div>
 
               {/* Плашка подсказок */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-sm" title={t.hintsLabel || "Подсказки"}>
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.hintsLabel || "Подсказки"}>
                 <span className="text-lg">💡</span>
                 <span className="text-sm font-black text-slate-800 dark:text-slate-100">
                   {stats.hintsCount}
@@ -2287,7 +2287,7 @@ export default function App() {
               {/* Кнопка лидерборда (Кубок) */}
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
+                className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500/60 to-yellow-400/60 text-white backdrop-blur-md flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
                 title={t.leaderboard || "Зал славы"}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
@@ -2306,7 +2306,7 @@ export default function App() {
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
       <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
-        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white dark:bg-slate-900/70 border border-zinc-200 dark:border-slate-800/60 backdrop-blur-md shadow-md">
+        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2.5">
             <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
@@ -2661,7 +2661,7 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder */}
-        <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white dark:bg-zinc-900/95 dark:backdrop-blur-2xl border border-zinc-200 dark:border-zinc-800/60`}>
+        <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md dark:backdrop-blur-2xl border border-zinc-200/60 dark:border-zinc-800/60`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot}  />
             
@@ -2678,7 +2678,7 @@ export default function App() {
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
             ) : (
-              <p className="text-center text-xs sm:text-sm md:text-base font-bold text-zinc-400 dark:text-zinc-500">{t.tapGaps}</p>
+              <p className="text-center text-xs sm:text-sm md:text-base font-bold text-zinc-700 dark:text-zinc-400">{t.tapGaps}</p>
             )}
           </div>
         </div>
@@ -2700,7 +2700,7 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2708,7 +2708,7 @@ export default function App() {
           <button 
             onClick={() => initGame(false, true)}
             disabled={isHinting}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white dark:bg-zinc-900/95 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -3126,7 +3126,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
-      className={`h-[clamp(1.75rem,9vw,4.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${selected ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20' : value ? 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-sm z-10' : 'border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 z-10'}`}
+      className={`h-[clamp(1.75rem,9vw,4.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${selected ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-500/30 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20' : value ? 'border-zinc-800/60 dark:border-zinc-200/60 bg-zinc-800/60 dark:bg-zinc-200/60 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10' : 'border-dashed border-zinc-300/60 dark:border-zinc-700/60 hover:border-zinc-400/60 dark:hover:border-zinc-500/60 text-zinc-400 dark:text-zinc-500 bg-zinc-50/60 dark:bg-zinc-900/60 backdrop-blur-md z-10'}`}
     >
       {value ? (
         <span className="text-[clamp(1rem,5vw,2.5rem)] whitespace-nowrap px-1">{value}</span>
@@ -3141,7 +3141,7 @@ function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, ic
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${variant === 'danger' ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'}`}
+      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${variant === 'danger' ? 'bg-red-50/60 dark:bg-red-500/30 backdrop-blur-md text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm' : 'bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'}`}
     >
       {icon}
     </button>
