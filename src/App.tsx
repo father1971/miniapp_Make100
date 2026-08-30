@@ -2306,7 +2306,7 @@ export default function App() {
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
       <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
-        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-slate-900/40 dark:bg-slate-900/70 border border-slate-800/60 backdrop-blur-md shadow-md">
+        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white dark:bg-slate-900/70 border border-zinc-200 dark:border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2.5">
             <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
@@ -2316,7 +2316,7 @@ export default function App() {
           </div>
           
           {/* Вертикальный разделитель */}
-          <div className="h-6 sm:h-7 w-[1.5px] bg-slate-700/60 dark:bg-slate-800"></div>
+          <div className="h-6 sm:h-7 w-[1.5px] bg-zinc-200 dark:bg-slate-800"></div>
 
           {/* Счётчик символов в текущем вводе */}
           <div className="flex items-center gap-2.5">
