@@ -904,7 +904,7 @@ export default function App() {
         if (!response.ok) throw new Error('Ошибка при загрузке пула картинок с бэкенда');
         
         const data = await response.json();
-        const images = Array.isArray(data) ? data : data.pool || [];
+        const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
         
         if (images.length > 0) {
           carImagesListRef.current = images;
