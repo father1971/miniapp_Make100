@@ -1142,13 +1142,6 @@ export default function App() {
       try {
         tg.ready();
         tg.expand();
-        if (typeof tg.requestFullscreen === 'function') {
-          try {
-            tg.requestFullscreen();
-          } catch (err) {
-            console.warn('requestFullscreen is not supported on this client version:', err);
-          }
-        }
       } catch (e) {
         console.error(e);
       }
@@ -1676,13 +1669,6 @@ export default function App() {
         if (tg && (tg.initData || tg.initDataUnsafe?.user)) {
           tg.ready();
           tg.expand();
-          if (typeof (tg as any).requestFullscreen === 'function') {
-            try {
-              (tg as any).requestFullscreen();
-            } catch (err) {
-              console.warn('requestFullscreen is not supported on this client version:', err);
-            }
-          }
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
@@ -2230,7 +2216,7 @@ export default function App() {
   
   return (
     <div 
-      className={`h-[100dvh] w-full ${theme} ${isCarMode ? 'game-screen text-white bg-zinc-950' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
+      className={`h-[100dvh] w-full max-w-[420px] mx-auto ${theme} ${isCarMode ? 'game-screen text-white bg-zinc-950' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
