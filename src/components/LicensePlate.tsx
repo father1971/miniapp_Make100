@@ -14,7 +14,7 @@ export const LicensePlate: React.FC<LicensePlateProps> = ({ ticketDigits, letter
   const d46 = ticketDigits.slice(3, 6).join('');
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20" style={{ perspective: "800px" }}>
+    <div className="absolute top-12 sm:top-14 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20" style={{ perspective: "800px" }}>
       <div style={{ transform: "rotateX(6deg) rotateY(-8deg)" }} className="relative w-[270px] sm:w-[320px] h-[56px] sm:h-[64px] rounded-lg border-[1.5px] border-gray-400 bg-gradient-to-b from-white via-gray-100 to-gray-300 shadow-[inset_0_0_0_2.5px_#111,inset_0_3px_5px_rgba(255,255,255,1),inset_0_-3px_5px_rgba(0,0,0,0.2),0_15px_25px_rgba(0,0,0,0.7)] flex items-center overflow-hidden select-none">
         {/* Left mounting screw */}
         <div className="absolute left-0.5 sm:left-0.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8),0_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center border border-gray-600 z-10">

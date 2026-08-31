@@ -2216,7 +2216,7 @@ export default function App() {
   
   return (
     <div 
-      className={`h-[100dvh] w-full max-w-[420px] mx-auto ${theme} ${isCarMode ? 'game-screen text-white bg-zinc-950' : (theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900')} transition-colors duration-300 font-sans overflow-y-auto overflow-x-hidden relative flex flex-col items-center px-1 sm:px-4 md:px-6`}
+      className="min-h-screen h-[100dvh] w-full bg-zinc-950 text-white flex flex-col items-center justify-between overflow-hidden relative"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
@@ -2305,7 +2305,7 @@ export default function App() {
           </header>
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
-      <div className="w-full max-w-md mx-auto flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-4">
+      <div className="w-full max-w-md mx-auto flex justify-center items-center my-1 sm:my-2 py-1 px-4 z-10 flex-shrink-0">
         <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2.5">
@@ -2696,7 +2696,7 @@ export default function App() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-2 sm:pb-2">
+        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-2 sm:pb-4">
           <button 
             onClick={showHint}
             disabled={isHinting || won}
