@@ -1438,8 +1438,8 @@ export default function App() {
     const userId = tgUser?.id || (stats as any)?.id;
     if (!userId) return;
     
-    // Наша рабочая реферальная ссылка на бота Test_Make100_bot
-    const referralLink = `https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}/app?startapp=${userId}`;
+    // Наша рабочая реферальная ссылка на бота Test_Make 100_bot
+    const referralLink = `https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}/app?startapp=${userId}`;
     
     // Красивый пригласительный текст для друзей
     const shareText = t.inviteShareText || `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
@@ -2036,7 +2036,7 @@ export default function App() {
               {t.bannedTitle || 'Доступ ограничен'}
             </h1>
             <p className="text-slate-400 text-xs leading-relaxed">
-              {t.bannedDesc || 'Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.'}
+              {t.bannedDesc || 'Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make 100.'}
             </p>
           </div>
 
@@ -2071,10 +2071,10 @@ export default function App() {
           <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
         </div>
         <h1 className="text-xl font-black tracking-wider text-orange-500 animate-pulse">
-          СДЕЛАЙ 100
+          MAKE 100
         </h1>
         <p className="mt-2 text-xs text-slate-400">
-          Синхронизация с базой данных...
+          {t?.syncingDb || 'Синхронизация с базой данных...'}
         </p>
       </div>
     );
@@ -2154,12 +2154,12 @@ export default function App() {
             const tg = (window as any).Telegram?.WebApp;
             if (tg && typeof tg.openTelegramLink === 'function') {
               try {
-                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`);
+                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`);
               } catch (e) {
-                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`, "_blank");
+                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`, "_blank");
               }
             } else {
-              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot'}`, "_blank");
+              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`, "_blank");
             }
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
@@ -2789,7 +2789,7 @@ export default function App() {
               <div className="w-20 h-20 bg-orange-100 dark:bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-orange-500">
                 <Play size={36} className="ml-2" fill="currentColor" />
               </div>
-              <h2 className="text-4xl sm:text-5xl font-black mb-4 tracking-tighter">Make100</h2>
+              <h2 className="text-4xl sm:text-5xl font-black mb-4 tracking-tighter">Make 100</h2>
               <p className="text-zinc-500 dark:text-zinc-400 mb-8 text-lg leading-relaxed">{t.introText}</p>
               <button 
                 onClick={() => setGameState('playing')}

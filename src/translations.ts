@@ -130,7 +130,7 @@ export interface TranslationData {
 
 export const TRANSLATIONS: Record<string, TranslationData> = {
   ru: {
-    title: "Make100", player: "Игрок", gameMode: "Режим", car: "Автомобиль", ticket: "Билет",
+    title: "Make 100", player: "Игрок", gameMode: "Режим", car: "Автомобиль", ticket: "Билет",
     solved: "Решено", skipped: "Пропущено", operators: "Знаков", current: "Текущее", total: "Общее",
     theme: "Тема", language: "Язык", auto: "Авто", light: "Светлая", dark: "Темная",
     menu: "Меню", play: "Играть!", skipDemo: "Пропустить демо", demoTitle: "Как играть?",
@@ -167,7 +167,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Пожалуйста, войдите в игру через официального Telegram-бота после авторизации.",
     openInTelegram: "Открыть в Telegram",
     bannedTitle: "Доступ ограничен",
-    bannedDesc: "Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make100.",
+    bannedDesc: "Ваш игровой аккаунт был временно или навсегда заблокирован за нарушение правил честной игры и сообщества Make 100.",
     bannedNote: "Если вы считаете, что блокировка произошла по ошибке, обратитесь к администратору нашего сообщества.",
     bannedContactSupport: "💬 Написать в поддержку",
     sessionsPlayed: "Сыграно сессий",
@@ -186,7 +186,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   en: {
-    title: "Make100", player: "Player", gameMode: "Mode", car: "Car", ticket: "Ticket",
+    title: "Make 100", player: "Player", gameMode: "Mode", car: "Car", ticket: "Ticket",
     solved: "Solved", skipped: "Skipped", operators: "Operators", current: "Current", total: "Total",
     theme: "Theme", language: "Language", auto: "Auto", light: "Light", dark: "Dark",
     menu: "Menu", play: "Play!", skipDemo: "Skip demo", demoTitle: "How to play?",
@@ -223,7 +223,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Please enter the game via the official Telegram bot after authorization.",
     openInTelegram: "Open in Telegram",
     bannedTitle: "Access Restricted",
-    bannedDesc: "Your gaming account has been temporarily or permanently suspended for violating fair play rules and Make100 community guidelines.",
+    bannedDesc: "Your gaming account has been temporarily or permanently suspended for violating fair play rules and Make 100 community guidelines.",
     bannedNote: "If you believe this restriction was made in error, please contact our community administrator.",
     bannedContactSupport: "💬 Contact Support",
     sessionsPlayed: "Sessions played",
@@ -242,7 +242,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   de: {
-    title: "Make100", player: "Spieler", gameMode: "Modus", car: "Auto", ticket: "Ticket",
+    title: "Make 100", player: "Spieler", gameMode: "Modus", car: "Auto", ticket: "Ticket",
     solved: "Gelöst", skipped: "Übersprungen", operators: "Zeichen", current: "Aktuell", total: "Gesamt",
     theme: "Thema", language: "Sprache", auto: "Auto", light: "Hell", dark: "Dunkel",
     menu: "Menü", play: "Spielen!", skipDemo: "Demo überspringen", demoTitle: "Spielanleitung?",
@@ -279,7 +279,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Bitte starte das Spiel über den offiziellen Telegram-Bot nach der Autorisierung.",
     openInTelegram: "In Telegram öffnen",
     bannedTitle: "Zugriff eingeschränkt",
-    bannedDesc: "Ihr Spielkonto wurde wegen Verstoßes gegen die Fairplay-Regeln und Community-Richtlinien von Make100 vorübergehend oder dauerhaft gesperrt.",
+    bannedDesc: "Ihr Spielkonto wurde wegen Verstoßes gegen die Fairplay-Regeln und Community-Richtlinien von Make 100 vorübergehend oder dauerhaft gesperrt.",
     bannedNote: "Wenn Sie glauben, dass diese Sperre irrtümlich erfolgt ist, wenden Sie sich bitte an unseren Community-Administrator.",
     bannedContactSupport: "💬 Support kontaktieren",
     sessionsPlayed: "Gespielte Sitzungen",
@@ -298,7 +298,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   fr: {
-    title: "Make100", player: "Joueur", gameMode: "Mode", car: "Voiture", ticket: "Billet",
+    title: "Make 100", player: "Joueur", gameMode: "Mode", car: "Voiture", ticket: "Billet",
     solved: "Résolu", skipped: "Passé", operators: "Signes", current: "Actuel", total: "Total",
     theme: "Thème", language: "Langue", auto: "Auto", light: "Clair", dark: "Sombre",
     menu: "Menu", play: "Jouer!", skipDemo: "Passer la démo", demoTitle: "Comment jouer?",
@@ -335,7 +335,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Veuillez entrer dans le jeu via le bot officiel Telegram après autorisation.",
     openInTelegram: "Ouvrir dans Telegram",
     bannedTitle: "Accès restreint",
-    bannedDesc: "Votre compte de jeu a été suspendu temporairement ou définitivement pour non-respect des règles du fair-play et de la communauté Make100.",
+    bannedDesc: "Votre compte de jeu a été suspendu temporairement ou définitivement pour non-respect des règles du fair-play et de la communauté Make 100.",
     bannedNote: "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter l'administrateur de notre communauté.",
     bannedContactSupport: "💬 Contacter le support",
     sessionsPlayed: "Sessions jouées",
@@ -354,7 +354,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   pt: {
-    title: "Make100", player: "Jogador", gameMode: "Modo", car: "Carro", ticket: "Bilhete",
+    title: "Make 100", player: "Jogador", gameMode: "Modo", car: "Carro", ticket: "Bilhete",
     solved: "Resolvido", skipped: "Pulado", operators: "Sinais", current: "Atual", total: "Total",
     theme: "Tema", language: "Idioma", auto: "Auto", light: "Claro", dark: "Escuro",
     menu: "Menu", play: "Jogar!", skipDemo: "Pular demo", demoTitle: "Como jogar?",
@@ -391,7 +391,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Por favor, entre no jogo pelo bot oficial do Telegram após a autorização.",
     openInTelegram: "Abrir no Telegram",
     bannedTitle: "Acesso Restrito",
-    bannedDesc: "Sua conta de jogo foi suspensa temporariamente ou permanentemente por violar as regras de fair play e da comunidade Make100.",
+    bannedDesc: "Sua conta de jogo foi suspensa temporariamente ou permanentemente por violar as regras de fair play e da comunidade Make 100.",
     bannedNote: "Se você acredita que esta restrição foi um erro, entre em contato com o administrador da nossa comunidade.",
     bannedContactSupport: "💬 Falar com o suporte",
     sessionsPlayed: "Sessões jogadas",
@@ -410,7 +410,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   es: {
-    title: "Make100", player: "Jugador", gameMode: "Modo", car: "Coche", ticket: "Boleto",
+    title: "Make 100", player: "Jugador", gameMode: "Modo", car: "Coche", ticket: "Boleto",
     solved: "Resuelto", skipped: "Saltado", operators: "Signos", current: "Actual", total: "Total",
     theme: "Tema", language: "Idioma", auto: "Auto", light: "Claro", dark: "Oscuro",
     menu: "Menú", play: "¡Jugar!", skipDemo: "Saltar demo", demoTitle: "¿Cómo jugar?",
@@ -447,7 +447,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Por favor, entra al juego a través del bot oficial de Telegram tras la autorización.",
     openInTelegram: "Abrir en Telegram",
     bannedTitle: "Acceso Restringido",
-    bannedDesc: "Tu cuenta de juego ha sido suspendida temporal o permanentemente por violar las reglas de juego limpio y de la comunidad Make100.",
+    bannedDesc: "Tu cuenta de juego ha sido suspendida temporal o permanentemente por violar las reglas de juego limpio y de la comunidad Make 100.",
     bannedNote: "Si crees que este bloqueo ocurrió por error, comunícate con el administrador de nuestra comunidad.",
     bannedContactSupport: "💬 Contactar con soporte",
     sessionsPlayed: "Sesiones jugadas",
@@ -466,7 +466,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   zh: {
-    title: "Make100", player: "玩家", gameMode: "模式", car: "汽车", ticket: "门票",
+    title: "Make 100", player: "玩家", gameMode: "模式", car: "汽车", ticket: "门票",
     solved: "已解决", skipped: "已跳过", operators: "符号", current: "当前", total: "总计",
     theme: "主题", language: "语言", auto: "自动", light: "浅色", dark: "深色",
     menu: "菜单", play: "开始!", skipDemo: "跳过演示", demoTitle: "怎么玩？",
@@ -503,7 +503,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "请在授权后通过官方 Telegram 机器人进入游戏。",
     openInTelegram: "在 Telegram 中打开",
     bannedTitle: "访问受限",
-    bannedDesc: "由于违反公平游戏规则和 Make100 社区准则，您的游戏帐户已被暂时或永久封禁。",
+    bannedDesc: "由于违反公平游戏规则和 Make 100 社区准则，您的游戏帐户已被暂时或永久封禁。",
     bannedNote: "如果您认为这是误封，请联系我们的社区管理员。",
     bannedContactSupport: "💬 联系客服支持",
     sessionsPlayed: "已玩游戏次数",
@@ -522,7 +522,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ja: {
-    title: "Make100", player: "プレイヤー", gameMode: "モード", car: "車", ticket: "チケット",
+    title: "Make 100", player: "プレイヤー", gameMode: "モード", car: "車", ticket: "チケット",
     solved: "解決済み", skipped: "スキップ", operators: "記号", current: "現在", total: "合計",
     theme: "テーマ", language: "言語", auto: "自動", light: "ライト", dark: "ダーク",
     menu: "メニュー", play: "プレイ！", skipDemo: "デモをスキップ", demoTitle: "遊び方",
@@ -559,7 +559,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "認証後、公式Telegramボットからゲームを起動してください。",
     openInTelegram: "Telegramで開く",
     bannedTitle: "アクセスが制限されています",
-    bannedDesc: "フェアプレイルールおよびMake100コミュニティガイドラインへの違反により、あなたのアカウントは一時的または永久に停止されました。",
+    bannedDesc: "フェアプレイルールおよびMake 100コミュニティガイドラインへの違反により、あなたのアカウントは一時的または永久に停止されました。",
     bannedNote: "誤認による制限と思われる場合は、コミュニティ管理者までお問い合わせください。",
     bannedContactSupport: "💬 サポートに問い合わせる",
     sessionsPlayed: "プレイセッション数",
@@ -578,7 +578,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   it: {
-    title: "Make100", player: "Giocatore", gameMode: "Modalità", car: "Auto", ticket: "Biglietto",
+    title: "Make 100", player: "Giocatore", gameMode: "Modalità", car: "Auto", ticket: "Biglietto",
     solved: "Risolti", skipped: "Saltati", operators: "Operatori", current: "Attuale", total: "Totale",
     theme: "Tema", language: "Lingua", auto: "Auto", light: "Chiaro", dark: "Scuro",
     menu: "Menu", play: "Gioca!", skipDemo: "Salta demo", demoTitle: "Come si gioca?",
@@ -615,7 +615,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Entra nel gioco tramite il bot ufficiale di Telegram dopo l'autorizzazione.",
     openInTelegram: "Apri in Telegram",
     bannedTitle: "Accesso limitato",
-    bannedDesc: "Il tuo account di gioco è stato sospeso temporaneamente o permanentemente per violazione delle regole del fair play e della community Make100.",
+    bannedDesc: "Il tuo account di gioco è stato sospeso temporaneamente o permanentemente per violazione delle regole del fair play e della community Make 100.",
     bannedNote: "Se ritieni che il blocco sia avvenuto per errore, contatta l'amministratore della nostra community.",
     bannedContactSupport: "💬 Contatta l'assistenza",
     sessionsPlayed: "Sessioni giocate",
@@ -634,7 +634,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ko: {
-    title: "Make100", player: "플레이어", gameMode: "모드", car: "자동차", ticket: "티켓",
+    title: "Make 100", player: "플레이어", gameMode: "모드", car: "자동차", ticket: "티켓",
     solved: "해결됨", skipped: "건너뜀", operators: "기호", current: "현재", total: "총",
     theme: "테마", language: "언어", auto: "자동", light: "라이트", dark: "다크",
     menu: "메뉴", play: "플레이!", skipDemo: "데모 건너뛰기", demoTitle: "게임 방법",
@@ -671,7 +671,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "인증 후 공식 Telegram 봇을 통해 게임에 접속해 주세요.",
     openInTelegram: "Telegram에서 열기",
     bannedTitle: "접근이 제한되었습니다",
-    bannedDesc: "공정 플레이 규칙 및 Make100 커뮤니티 가이드라인 위반으로 인해 게임 계정이 일시적 또는 영구적으로 정지되었습니다.",
+    bannedDesc: "공정 플레이 규칙 및 Make 100 커뮤니티 가이드라인 위반으로 인해 게임 계정이 일시적 또는 영구적으로 정지되었습니다.",
     bannedNote: "오류로 인한 제한이라고 생각되시면 커뮤니티 관리자에게 문의해 주세요.",
     bannedContactSupport: "💬 고객지원 문의하기",
     sessionsPlayed: "플레이 세션 수",
@@ -690,7 +690,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   tr: {
-    title: "Make100", player: "Oyuncu", gameMode: "Mod", car: "Araba", ticket: "Bilet",
+    title: "Make 100", player: "Oyuncu", gameMode: "Mod", car: "Araba", ticket: "Bilet",
     solved: "Çözüldü", skipped: "Atlandı", operators: "İşaretler", current: "Mevcut", total: "Toplam",
     theme: "Tema", language: "Dil", auto: "Otomatik", light: "Açık", dark: "Koyu",
     menu: "Menü", play: "Oyna!", skipDemo: "Demoyu geç", demoTitle: "Nasıl oynanır?",
@@ -727,7 +727,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Lütfen yetkilendirmeden sonra resmi Telegram botu üzerinden oyuna girin.",
     openInTelegram: "Telegram'da Aç",
     bannedTitle: "Erişim Kısıtlandı",
-    bannedDesc: "Oyun hesabınız, adil oyun kurallarını ve Make100 topluluk kurallarını ihlal ettiği gerekçesiyle geçici veya kalıcı olarak askıya alındı.",
+    bannedDesc: "Oyun hesabınız, adil oyun kurallarını ve Make 100 topluluk kurallarını ihlal ettiği gerekçesiyle geçici veya kalıcı olarak askıya alındı.",
     bannedNote: "Bu kısıtlamanın bir hata sonucu olduğunu düşünüyorsanız lütfen topluluk yöneticimizle iletişime geçin.",
     bannedContactSupport: "💬 Desteğe Yazın",
     sessionsPlayed: "Oynanan Oturumlar",
@@ -746,7 +746,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   he: {
-    title: "Make100", player: "שחקן", gameMode: "מצב", car: "מכונית", ticket: "כרטיס",
+    title: "Make 100", player: "שחקן", gameMode: "מצב", car: "מכונית", ticket: "כרטיס",
     solved: "נפתר", skipped: "דולג", operators: "סימנים", current: "נוכחי", total: "סה\"כ",
     theme: "ערכת נושא", language: "שפה", auto: "אוטומטי", light: "בהיר", dark: "כהה",
     menu: "תפריט", play: "שחק!", skipDemo: "דלג על הדגמה", demoTitle: "איך לשחק?",
@@ -783,7 +783,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "אנא היכנס למשחק דרך בוט הטלגרם הרשמי לאחר הרשאה.",
     openInTelegram: "פתח בטלגרם",
     bannedTitle: "הגישה הוגבלה",
-    bannedDesc: "חשבון המשחק שלך הושעה באופן זמני או לצמיתות עקב הפרת כללי המשחק ההוגן ותקנון קהילת Make100.",
+    bannedDesc: "חשבון המשחק שלך הושעה באופן זמני או לצמיתות עקב הפרת כללי המשחק ההוגן ותקנון קהילת Make 100.",
     bannedNote: "אם לדעתך החסימה בוצעה בטעות, אנא צור קשר עם מנהל הקהילה שלנו.",
     bannedContactSupport: "💬 פנה לתמיכה",
     sessionsPlayed: "סשנים ששוחקו",
@@ -802,7 +802,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ar: {
-    title: "Make100", player: "اللاعب", gameMode: "الوضع", car: "سيارة", ticket: "تذكرة",
+    title: "Make 100", player: "اللاعب", gameMode: "الوضع", car: "سيارة", ticket: "تذكرة",
     solved: "تم الحل", skipped: "تم التخطي", operators: "العلامات", current: "الحالي", total: "المجموع",
     theme: "المظهر", language: "اللغة", auto: "تلقائي", light: "فاتح", dark: "داكن",
     menu: "القائمة", play: "العب!", skipDemo: "تخطي العرض", demoTitle: "كيف تلعب؟",
@@ -839,7 +839,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "يرجى الدخول إلى اللعبة عبر بوت تيليجرام الرسمي بعد التفويض.",
     openInTelegram: "فتح في تيليجرام",
     bannedTitle: "تم تقييد الوصول",
-    bannedDesc: "تم تعليق حساب اللعبة الخاص بك مؤقتًا أو دائمًا لانتهاك قواعد اللعب النظيف وإرشادات مجتمع Make100.",
+    bannedDesc: "تم تعليق حساب اللعبة الخاص بك مؤقتًا أو دائمًا لانتهاك قواعد اللعب النظيف وإرشادات مجتمع Make 100.",
     bannedNote: "إذا كنت تعتقد أن هذا الحظر حدث عن طريق الخطأ، يرجى التواصل مع مسؤول المجتمع.",
     bannedContactSupport: "💬 التواصل مع الدعم",
     sessionsPlayed: "الجلسات الملعوبة",
@@ -858,7 +858,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   hi: {
-    title: "Make100", player: "खिलाड़ी", gameMode: "मोड", car: "कार", ticket: "टिकट",
+    title: "Make 100", player: "खिलाड़ी", gameMode: "मोड", car: "कार", ticket: "टिकट",
     solved: "हल किया", skipped: "छोड़ दिया", operators: "चिह्न", current: "वर्तमान", total: "कुल",
     theme: "थीम", language: "भाषा", auto: "ऑटो", light: "लाइट", dark: "डार्क",
     menu: "मेनू", play: "खेलें!", skipDemo: "डेमो छोड़ें", demoTitle: "कैसे खेलें?",
@@ -895,7 +895,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "कृपया प्रमाणीकरण के बाद आधिकारिक टेलीग्राम बॉट के माध्यम से गेम में प्रवेश करें।",
     openInTelegram: "टेलीग्राम में खोलें",
     bannedTitle: "पहुंच प्रतिबंधित है",
-    bannedDesc: "फेयर प्ले नियमों और Make100 समुदाय दिशानिर्देशों का उल्लंघन करने के कारण आपका गेमिंग खाता अस्थायी या स्थायी रूप से निलंबित कर दिया गया है।",
+    bannedDesc: "फेयर प्ले नियमों और Make 100 समुदाय दिशानिर्देशों का उल्लंघन करने के कारण आपका गेमिंग खाता अस्थायी या स्थायी रूप से निलंबित कर दिया गया है।",
     bannedNote: "यदि आपको लगता है कि यह प्रतिबंध गलती से हुआ है, तो कृपया हमारे समुदाय व्यवस्थापक से संपर्क करें।",
     bannedContactSupport: "💬 सहायता से संपर्क करें",
     sessionsPlayed: "खेले गए सत्र",
@@ -914,7 +914,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   la: {
-    title: "Make100", player: "Lusor", gameMode: "Modus", car: "Currus", ticket: "Tessera",
+    title: "Make 100", player: "Lusor", gameMode: "Modus", car: "Currus", ticket: "Tessera",
     solved: "Solutum", skipped: "Omissum", operators: "Signa", current: "Praesens", total: "Summa",
     theme: "Thema", language: "Lingua", auto: "Auto", light: "Clarum", dark: "Obscurum",
     menu: "Tabula", play: "Lude!", skipDemo: "Omitte demo", demoTitle: "Quomodo ludere?",
@@ -951,7 +951,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Quaeso intra in ludum per bot Telegram post auctoritatem.",
     openInTelegram: "Aperi in Telegram",
     bannedTitle: "Aditus Restrictus",
-    bannedDesc: "Ratio tua lusoria ad tempus vel in perpetuum interdicta est propter leges aequi ludi et communitatis Make100 violatas.",
+    bannedDesc: "Ratio tua lusoria ad tempus vel in perpetuum interdicta est propter leges aequi ludi et communitatis Make 100 violatas.",
     bannedNote: "Si hoc per errorem factum esse censes, quaeso administratorem communitatis nostrae adeas.",
     bannedContactSupport: "💬 Auxilium Petere",
     sessionsPlayed: "Sessiones actae",
@@ -970,7 +970,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   eo: {
-    title: "Make100", player: "Ludanto", gameMode: "Reĝimo", car: "Aŭto", ticket: "Bileto",
+    title: "Make 100", player: "Ludanto", gameMode: "Reĝimo", car: "Aŭto", ticket: "Bileto",
     solved: "Solvita", skipped: "Preterlasita", operators: "Signoj", current: "Nuna", total: "Entute",
     theme: "Etoso", language: "Lingvo", auto: "Aŭto", light: "Hela", dark: "Malhela",
     menu: "Menuo", play: "Ludu!", skipDemo: "Preterlasi demon", demoTitle: "Kiel ludi?",
@@ -1007,7 +1007,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Bonvolu eniri la ludon per la oficiala Telegram-roboto post rajtigo.",
     openInTelegram: "Malfermi en Telegram",
     bannedTitle: "Aliro Limigita",
-    bannedDesc: "Via ludkonto estis provizore aŭ konstante blokita pro malobservo de justludaj reguloj kaj komunumo Make100.",
+    bannedDesc: "Via ludkonto estis provizore aŭ konstante blokita pro malobservo de justludaj reguloj kaj komunumo Make 100.",
     bannedNote: "Se vi opinias, ke la blokado okazis erare, bonvolu kontakti la administranton de nia komunumo.",
     bannedContactSupport: "💬 Skribi al Subteno",
     sessionsPlayed: "Luditaj sesioj",
@@ -1026,7 +1026,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   elvish: {
-    title: "Make100", player: "Tyalo", gameMode: "Tárië", car: "Racar", ticket: "Tarma",
+    title: "Make 100", player: "Tyalo", gameMode: "Tárië", car: "Racar", ticket: "Tarma",
     solved: "Sinyar", skipped: "Lelyar", operators: "Tengwar", current: "Sina", total: "Ilya",
     theme: "Cala", language: "Lambë", auto: "Auto", light: "Calina", dark: "Morna",
     menu: "Tengwa", play: "Tyalië!", skipDemo: "Lelya demo", demoTitle: "Manen tyalië?",
@@ -1063,7 +1063,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Tula mi Telegram tyalië yesta.",
     openInTelegram: "Panta mi Telegram",
     bannedTitle: "Men Dangen",
-    bannedDesc: "I-faron gin gwanno am lû 'ell ah chîr Make100.",
+    bannedDesc: "I-faron gin gwanno am lû 'ell ah chîr Make 100.",
     bannedNote: "Ae no gwerian, tiro a chanon mîn.",
     bannedContactSupport: "💬 Pedo a Thol",
     sessionsPlayed: "I-leithian dangen",
@@ -1082,7 +1082,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   klingon: {
-    title: "Make100", player: "Qujwl'", gameMode: "mIw", car: "Duj", ticket: "chaw'",
+    title: "Make 100", player: "Qujwl'", gameMode: "mIw", car: "Duj", ticket: "chaw'",
     solved: "ta'", skipped: "buS", operators: "Degh", current: "DaH", total: "Hoch",
     theme: "Segh", language: "Hol", auto: "Auto", light: "wov", dark: "hurgh",
     menu: "HIDjolev", play: "Quj!", skipDemo: "buS demo", demoTitle: "chay' Quj?",
@@ -1119,7 +1119,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Telegram Quj tlhegh lo' jInmolvaD.",
     openInTelegram: "Telegram yIpoSmoH",
     bannedTitle: "botlu'pu'",
-    bannedDesc: "Make100 mabmey DaquvHa'mo' Quj potlhvam botlu'pu'.",
+    bannedDesc: "Make 100 mabmey DaquvHa'mo' Quj potlhvam botlu'pu'.",
     bannedNote: "Qagh 'oH 'e' DaHarchugh, ra'wI'vaD yIjatlh.",
     bannedContactSupport: "💬 QaH yIpoQ",
     sessionsPlayed: "Quj qeS",
@@ -1138,7 +1138,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   dothraki: {
-    title: "Make100", player: "Dothrak", gameMode: "Fich", car: "Hrakkar", ticket: "Tim",
+    title: "Make 100", player: "Dothrak", gameMode: "Fich", car: "Hrakkar", ticket: "Tim",
     solved: "Azzis", skipped: "Dothras", operators: "Vezh", current: "Jin", total: "Eyel",
     theme: "Zhalia", language: "Lekh", auto: "Auto", light: "Shekh", dark: "Qoy",
     menu: "Vezh", play: "Dothras!", skipDemo: "Dothras demo", demoTitle: "Kifinosi dothras?",
@@ -1175,7 +1175,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Dothras mra Telegram.",
     openInTelegram: "Poki mra Telegram",
     bannedTitle: "Azhas Vitiherat",
-    bannedDesc: "Vikea anni astolat Make100 yeri nem dothrak.",
+    bannedDesc: "Vikea anni astolat Make 100 yeri nem dothrak.",
     bannedNote: "Kishi laz fichat k'athjilari, kash athchomar chomakea.",
     bannedContactSupport: "💬 Astilat Vitiherat",
     sessionsPlayed: "Athdrivar kishi",
@@ -1194,7 +1194,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   valyrian: {
-    title: "Make100", player: "Tyalas", gameMode: "Kasta", car: "Zaldrīzes", ticket: "Tēmi",
+    title: "Make 100", player: "Tyalas", gameMode: "Kasta", car: "Zaldrīzes", ticket: "Tēmi",
     solved: "Keligon", skipped: "Sōvegon", operators: "Tegun", current: "Sīr", total: "Iōr",
     theme: "Bantis", language: "Tīkun", auto: "Auto", light: "Ānogar", dark: "Bantis",
     menu: "Tegun", play: "Sōvegon!", skipDemo: "Sōvegon demo", demoTitle: "Skoros sōvegon?",
@@ -1231,7 +1231,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     tgOnlyDesc: "Sōvegon isse Telegram.",
     openInTelegram: "Pāletilla isse Telegram",
     bannedTitle: "Rhaenagon Daor",
-    bannedDesc: "Aōha Make100 pryjatan dōren se zālagon gaomagon.",
+    bannedDesc: "Aōha Make 100 pryjatan dōren se zālagon gaomagon.",
     bannedNote: "Skorion mirre zūgagon, Dāro oressagon.",
     bannedContactSupport: "💬 Menty vestretis",
     sessionsPlayed: "Gaomagon temby",
