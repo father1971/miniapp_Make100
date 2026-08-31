@@ -1142,6 +1142,13 @@ export default function App() {
       try {
         tg.ready();
         tg.expand();
+        if (typeof tg.requestFullscreen === 'function') {
+          try {
+            tg.requestFullscreen();
+          } catch (err) {
+            console.warn('requestFullscreen is not supported on this client version:', err);
+          }
+        }
       } catch (e) {
         console.error(e);
       }
@@ -1669,6 +1676,13 @@ export default function App() {
         if (tg && (tg.initData || tg.initDataUnsafe?.user)) {
           tg.ready();
           tg.expand();
+          if (typeof (tg as any).requestFullscreen === 'function') {
+            try {
+              (tg as any).requestFullscreen();
+            } catch (err) {
+              console.warn('requestFullscreen is not supported on this client version:', err);
+            }
+          }
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
@@ -2305,7 +2319,7 @@ export default function App() {
           </header>
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
-      <div className="w-full max-w-4xl flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-2">
+      <div className="w-full max-w-md mx-auto flex justify-center items-center mt-3 sm:mt-4 mb-2 sm:mb-3 z-10 flex-shrink-0 px-4">
         <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2.5">
