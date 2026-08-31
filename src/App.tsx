@@ -2288,7 +2288,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
                 className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500/60 to-yellow-400/60 text-white backdrop-blur-md flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
-                title={t.leaderboard || "Зал славы"}
+                title={t.leaderboard || "{t.leaderboard || 'Зал славы'}"}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
@@ -2476,10 +2476,10 @@ export default function App() {
                 onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
               >
-                ⬅️ Назад
+                ⬅️ {t.back || 'Назад'}
               </button>
               <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
-                Зал славы
+                {t.leaderboard || 'Зал славы'}
               </h1>
               <div className="w-16"></div> {/* Заглушка для идеальной центровки */}
             </div>
@@ -2520,7 +2520,7 @@ export default function App() {
                             <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-lg"><User size={24} className="text-slate-400" /></div>
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-sm font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">2</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">{t.empty || 'Пусто'}</span>
                         </div>
                       )}
                       
@@ -2545,7 +2545,7 @@ export default function App() {
                             <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-xl"><User size={32} className="text-slate-400" /></div>
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-base font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">1</div>
                           </div>
-                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-slate-400">{t.empty || 'Пусто'}</span>
                         </div>
                       )}
                       
@@ -2569,7 +2569,7 @@ export default function App() {
                             <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-4 border-slate-200 dark:border-slate-800 shadow-lg"><User size={24} className="text-slate-400" /></div>
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-sm font-black text-slate-400 border-2 border-white dark:border-slate-900 shadow-md">3</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">Пусто</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2 text-slate-400">{t.empty || 'Пусто'}</span>
                         </div>
                       )}
                     </div>
@@ -2613,9 +2613,9 @@ export default function App() {
               <div className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20 transition-transform active:scale-98">
                 <span className="font-bold text-sm sm:text-base">
                   {myRank > 0 ? (
-                    `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`
+                    (t.youAreOnRank ? t.youAreOnRank.replace('{rank}', String(myRank)).replace('{score}', String((stats as any)?.score || 0)) : `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`)
                   ) : (
-                    "Сыграйте раунд, чтобы войти в рейтинг!"
+                    t.playRoundToEnter || 'Сыграйте раунд, чтобы войти в рейтинг!'
                   )}
                 </span>
                 <Trophy size={20} className="opacity-80 animate-pulse" />
@@ -2829,7 +2829,7 @@ export default function App() {
                   transition={{ type: "spring", stiffness: 400, damping: 18 }}
                   className="mb-4 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-orange-500/25 flex items-center justify-center gap-1.5"
                 >
-                  <span>⚡️ {t.newRecordBanner ? t.newRecordBanner.replace('{time}', (lastRoundTimeMs / 1000).toFixed(2)) : `НОВЫЙ РЕКОРД: ${(lastRoundTimeMs / 1000).toFixed(2)} сек!`}</span>
+                  <span>{t.newRecordBanner ? (t.newRecordBanner.includes('{time}') ? t.newRecordBanner.replace('{time}', (lastRoundTimeMs / 1000).toFixed(2)) : `${t.newRecordBanner} ${(lastRoundTimeMs / 1000).toFixed(2)} ${t.secondsShort || 'sec.'}`) : `⚡️ НОВЫЙ РЕКОРД: ${(lastRoundTimeMs / 1000).toFixed(2)} сек!`}</span>
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-1 mb-8">
@@ -2838,7 +2838,7 @@ export default function App() {
                 
                 <div className="text-center py-2 mt-2">
                   <span className="inline-block px-4 py-2 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-amber-500 text-sm font-black animate-bounce">
-                    🏆 +{lastEarnedScore} очков рейтинга!
+                    🏆 +{lastEarnedScore} {t.earnedRatingPoints || 'очков рейтинга!'}
                   </span>
                 </div>
               </div>
@@ -2850,10 +2850,10 @@ export default function App() {
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-xl">🏆</span>
                     <h4 className="font-black text-sm text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                      Идеальное решение!
+                      {t.perfectSolution || 'Идеальное решение!'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      Вы нашли самый лаконичный путь! Бот в шоке и снимает шляпу! 🎩🤖
+                      {t.perfectSolutionDesc || 'Вы нашли самый лаконичный путь! Бот в шоке и снимает шляпу! 🎩🤖'}
                     </p>
                   </div>
                 ) : (
@@ -2861,17 +2861,17 @@ export default function App() {
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-xl">🤖</span>
                     <h4 className="font-black text-sm text-amber-600 dark:text-amber-400 uppercase tracking-wide">
-                      Бот кусает локти...
+                      {t.botIsJealous || 'Бот кусает локти...'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium px-2">
-                      А ведь этот пример можно решить всего за <span className="font-bold text-amber-500 dark:text-amber-400">{aiSignsCount} знака(ов)</span>! Хотите узнать как?
+                      {t.botCanSolveFasterP1 || "А ведь этот пример можно решить всего за "}<span className="font-bold text-amber-500 dark:text-amber-400">{aiSignsCount} {t.botCanSolveFasterP2 || "знака(ов)! Хотите узнать как?"}</span>
                     </p>
                     
                     <button
                       onClick={handleWatchOptimal}
                       className="mt-1 flex items-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-amber-500/10 active:scale-95 transition-transform cursor-pointer"
                     >
-                      👁️ Посмотреть решение
+                      👁️ {t.viewSolution || 'Посмотреть решение'}
                       <span className="text-[10px] py-0.5 px-1.5 rounded-md bg-white/20 font-bold ml-1">
                         {stats.hintsCount > 0 ? "1 🧠" : "20 🪙"}
                       </span>
@@ -2953,7 +2953,7 @@ export default function App() {
                   {(stats as any)?.score || 0}
                 </span>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mt-1">
-                  Рейтинг (XP)
+                  {t.ratingXp || 'Рейтинг (XP)'}
                 </span>
               </div>
               
