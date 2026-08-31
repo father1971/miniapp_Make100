@@ -14,7 +14,7 @@ export const LicensePlate: React.FC<LicensePlateProps> = ({ ticketDigits, letter
   const d46 = ticketDigits.slice(3, 6).join('');
 
   return (
-    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 pointer-events-none z-20">
+    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 pointer-events-none z-20 transform scale-75 origin-top-left">
       <div 
         className="bg-[#f0f0f0] shadow-xl rounded border-[3px] border-black flex flex-col items-center justify-center transform -rotate-2 overflow-hidden" 
         style={{ width: '130px', height: '95px', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.3), 0 10px 15px -3px rgba(0,0,0,0.5)' }}
