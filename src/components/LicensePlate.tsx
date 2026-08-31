@@ -14,30 +14,36 @@ export const LicensePlate: React.FC<LicensePlateProps> = ({ ticketDigits, letter
   const d46 = ticketDigits.slice(3, 6).join('');
 
   return (
-    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 pointer-events-none z-20 transform scale-75 origin-top-left">
-      <div 
-        className="bg-[#f0f0f0] shadow-xl rounded border-[3px] border-black flex flex-col items-center justify-center transform -rotate-2 overflow-hidden" 
-        style={{ width: '130px', height: '95px', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.3), 0 10px 15px -3px rgba(0,0,0,0.5)' }}
-      >
-        {/* Болтики */}
-        <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 bg-gray-400 rounded-full shadow-sm border border-gray-500"></div>
-        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-gray-400 rounded-full shadow-sm border border-gray-500"></div>
-        <div className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 bg-gray-400 rounded-full shadow-sm border border-gray-500"></div>
-        <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 bg-gray-400 rounded-full shadow-sm border border-gray-500"></div>
-
-        {/* Внутренняя каемка (выштамповка) */}
-        <div className="absolute inset-0.5 rounded border border-gray-400 pointer-events-none opacity-50"></div>
-        
-        {/* Верхняя строка: Буква и 3 цифры */}
-        <div className="flex items-end gap-1.5 text-black font-sans leading-none mt-2" style={{ textShadow: '-1px -1px 0 rgba(255,255,255,0.7), 1px 1px 0 rgba(0,0,0,0.2)' }}>
-          <span className="text-xl font-bold mb-0.5">{l1}</span>
-          <span className="text-4xl font-black tracking-widest">{d13}</span>
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20" style={{ perspective: "800px" }}>
+      <div style={{ transform: "rotateX(6deg) rotateY(-8deg)" }} className="relative w-[270px] sm:w-[320px] h-[56px] sm:h-[64px] rounded-lg border-[1.5px] border-gray-400 bg-gradient-to-b from-white via-gray-100 to-gray-300 shadow-[inset_0_0_0_2.5px_#111,inset_0_3px_5px_rgba(255,255,255,1),inset_0_-3px_5px_rgba(0,0,0,0.2),0_15px_25px_rgba(0,0,0,0.7)] flex items-center overflow-hidden select-none">
+        {/* Left mounting screw */}
+        <div className="absolute left-0.5 sm:left-0.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8),0_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center border border-gray-600 z-10">
+          <div className="w-[60%] h-[1px] bg-gray-800 absolute rotate-45 shadow-[0_0.5px_0_rgba(255,255,255,0.4)]"></div>
+          <div className="w-[60%] h-[1px] bg-gray-800 absolute -rotate-45 shadow-[0_0.5px_0_rgba(255,255,255,0.4)]"></div>
         </div>
-        
-        {/* Нижняя строка: 2 буквы и 3 цифры */}
-        <div className="flex items-end gap-1.5 text-black font-sans leading-none mb-2 mt-1" style={{ textShadow: '-1px -1px 0 rgba(255,255,255,0.7), 1px 1px 0 rgba(0,0,0,0.2)' }}>
-          <span className="text-xl font-bold mb-0.5">{l2}{l3}</span>
-          <span className="text-3xl font-black tracking-widest">{d46}</span>
+
+        {/* Right mounting screw */}
+        <div className="absolute right-0.5 sm:right-0.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8),0_1px_1px_rgba(255,255,255,0.8)] flex items-center justify-center border border-gray-600 z-10">
+          <div className="w-[60%] h-[1px] bg-gray-800 absolute rotate-[25deg] shadow-[0_0.5px_0_rgba(255,255,255,0.4)]"></div>
+          <div className="w-[60%] h-[1px] bg-gray-800 absolute rotate-[-65deg] shadow-[0_0.5px_0_rgba(255,255,255,0.4)]"></div>
+        </div>
+
+        {/* Left accent */}
+        <div className="w-3.5 sm:w-4 h-full bg-blue-700"></div>
+
+        {/* Center section */}
+        <div className="flex-1 flex items-center justify-center gap-1.5 font-mono font-black text-gray-800 text-4xl sm:text-[45px] tracking-wider leading-none pt-1" style={{ textShadow: '-1px -1px 1px rgba(255,255,255,0.9), 1px 2px 3px rgba(0,0,0,0.6), 0px 1px 1px rgba(0,0,0,0.8)' }}>
+          <span>{l1}</span>
+          <span>{d13}</span>
+          <span>{l2}{l3}</span>
+        </div>
+
+        {/* Divider */}
+        <div className="w-[2px] h-full bg-black/80"></div>
+
+        {/* Right region section */}
+        <div className="w-[90px] sm:w-[105px] pr-1.5 sm:pr-2 h-full flex items-center justify-center font-mono font-black text-gray-800 text-3xl sm:text-4xl tracking-widest bg-black/[0.03] leading-none pt-1" style={{ textShadow: '-1px -1px 1px rgba(255,255,255,0.9), 1px 2px 3px rgba(0,0,0,0.6), 0px 1px 1px rgba(0,0,0,0.8)' }}>
+          {d46}
         </div>
       </div>
     </div>
