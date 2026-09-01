@@ -2216,7 +2216,7 @@ export default function App() {
   
   return (
     <div 
-      className="min-h-screen h-[100dvh] w-full bg-zinc-950 text-white flex flex-col items-center justify-between overflow-hidden relative"
+      className="fixed inset-0 w-full h-full min-h-screen bg-zinc-950 text-white overflow-hidden flex flex-col items-center justify-between"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
@@ -2230,14 +2230,10 @@ export default function App() {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out pointer-events-none z-0 ${carImageLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
-      {/* Затемняющий оверлей поверх машины для лучшей читаемости */}
-      {isCarMode && (
-         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0 transition-opacity duration-1000 ease-in-out"></div>
-      )}
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
-        <>
+        <div className="relative z-10 w-full max-w-[420px] h-full flex flex-col justify-between items-center px-3 py-2">
           {/* Header */}
           <header className="w-full max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3 select-none mb-2 sm:mb-3 z-10 flex-shrink-0">
             {/* Кликабельная аватарка с индикатором кликабельности */}
@@ -2719,7 +2715,7 @@ export default function App() {
           </button>
         </div>
       </div>
-      </>
+      </div>
       )}
 
       {/* Modals */}
