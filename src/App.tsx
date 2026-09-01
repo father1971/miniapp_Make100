@@ -2218,8 +2218,8 @@ export default function App() {
     <div 
       className="fixed inset-0 w-full h-full min-h-screen bg-zinc-950 text-white overflow-hidden flex flex-col items-center justify-between"
       style={{
-        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 8px)',
-        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 8px)'
+        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 2px)',
+        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 2px)'
       }}
     >
       {isCarMode && carImage && (
@@ -2233,9 +2233,9 @@ export default function App() {
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
-        <div className="relative z-10 w-full max-w-[420px] h-full flex flex-col justify-between items-center px-3 py-2">
+        <div className="relative z-10 w-full max-w-[420px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
           {/* Header */}
-          <header className="w-full max-w-md mx-auto px-4 pt-4 flex items-center justify-between gap-3 select-none mb-2 sm:mb-3 z-10 flex-shrink-0">
+          <header className="w-full max-w-md mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
             {/* Кликабельная аватарка с индикатором кликабельности */}
             <button 
               onClick={() => setIsProfileOpen(true)}
@@ -2301,24 +2301,24 @@ export default function App() {
           </header>
 
       {/* Live Stopwatch & Character Counter (Top Bar) */}
-      <div className="w-full max-w-md mx-auto flex justify-center items-center my-1 sm:my-2 py-1 px-4 z-10 flex-shrink-0">
-        <div className="flex justify-center items-center gap-8 sm:gap-12 py-2.5 sm:py-3.5 px-6 sm:px-9 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
+      <div className="w-full max-w-md mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
+        <div className="flex justify-center items-center gap-4 sm:gap-6 py-1.5 sm:py-2 px-4 sm:px-6 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
-          <div className="flex items-center gap-2.5">
-            <span className="animate-pulse text-xl sm:text-2xl">⏱️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-wider font-mono">
+          <div className="flex items-center gap-2">
+            <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
+            <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono">
               {formatLiveStopwatch(elapsedTime)}
             </span>
           </div>
           
           {/* Вертикальный разделитель */}
-          <div className="h-6 sm:h-7 w-[1.5px] bg-zinc-200 dark:bg-slate-800"></div>
+          <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-200 dark:bg-slate-800"></div>
 
           {/* Счётчик символов в текущем вводе */}
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl sm:text-2xl">✍️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl tracking-tight">
-              {currentInput.length} <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg sm:text-xl">✍️</span>
+            <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-tight">
+              {currentInput.length} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
             </span>
           </div>
         </div>
@@ -2692,7 +2692,7 @@ export default function App() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-2 sm:mt-4 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10 pb-2 sm:pb-4">
+        <div className="mt-1 sm:mt-2 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won}
