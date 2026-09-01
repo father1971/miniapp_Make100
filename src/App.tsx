@@ -6,6 +6,7 @@ import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi,
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
+import { TicketCard } from './components/TicketCard';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
@@ -742,6 +743,30 @@ export default function App() {
   const [carImage, setCarImage] = useState<string>('');
   const [carImageLoaded, setCarImageLoaded] = useState<boolean>(false);
   const carImagesListRef = useRef<string[]>([]);
+
+  const [ticketBg, setTicketBg] = useState<{
+    imageUrl: string;
+    category: string;
+    categoryName: string;
+  } | null>(null);
+
+  const fetchRandomTicket = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/tickets/random`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.ticket) {
+          setTicketBg({
+            imageUrl: data.ticket.imageUrl,
+            category: data.ticket.category,
+            categoryName: data.ticket.categoryName
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch random ticket:', e);
+    }
+  }, []);
 
   useEffect(() => {
     if (carImage) {
@@ -1624,6 +1649,10 @@ export default function App() {
       setCarImage(carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)]);
     }
 
+    if (gameMode === 'ticket') {
+      fetchRandomTicket();
+    }
+
     setGaps(['', '', '', '', '', '', '']);
     setSelectedSlot(1);
     setWon(false);
@@ -1641,7 +1670,7 @@ export default function App() {
     } else {
       stopTimer();
     }
-  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime, startTimer, stopTimer]);
+  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime, startTimer, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
     let attempts = 0;
@@ -2085,41 +2114,12 @@ export default function App() {
   };
 
   const renderTicket = () => {
-    const styles = getTicketStyles(t);
-    const ticketStyle = styles.find(s => s.id === ticketStyleId) || styles[0];
-    const numStr = digits.join('');
-    const Icon = ticketStyle.icon;
-    const tTicket = t.tickets?.[ticketStyle.id as keyof typeof t.tickets] || ticketStyle;
-    
     return (
-      <div className={`relative w-full max-w-lg sm:max-w-xl md:max-w-2xl mx-auto overflow-hidden ${ticketStyle.containerClass}`}>
-        {/* Watermark / Pattern */}
-        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: ticketStyle.pattern, backgroundSize: '10px 10px' }}></div>
-        
-        <div className="flex justify-between items-center mb-6 sm:mb-8 relative z-10">
-          <div className="flex items-center gap-2">
-            <Icon className={ticketStyle.iconClass} size={28} />
-            <span className={`${ticketStyle.labelClass} text-base sm:text-lg`}>{tTicket.title}</span>
-          </div>
-          <span className={`${ticketStyle.labelClass} text-base sm:text-lg`}>{tTicket.subtitle}</span>
-        </div>
-        
-        <div className={`py-10 sm:py-16 md:py-20 flex justify-center items-center relative z-10 ${ticketStyle.numberContainerClass}`}>
-          <span className={`font-mono text-5xl sm:text-6xl md:text-8xl font-black tracking-[0.1em] sm:tracking-[0.2em] ml-1 sm:ml-3 ${ticketStyle.numberClass}`}>
-            {numStr}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center mt-6 sm:mt-8 relative z-10">
-          <span className={`${ticketStyle.footerClass} text-lg sm:text-xl`}>{tTicket.footerLeft}</span>
-          <span className={`${ticketStyle.footerClass} text-lg sm:text-xl`}>{tTicket.footerRight}</span>
-        </div>
-        
-        {/* Barcode */}
-        {ticketStyle.hasBarcode && (
-          <div className="h-14 sm:h-16 w-full opacity-40 mt-8 sm:mt-10 relative z-10" style={{ backgroundImage: 'repeating-linear-gradient(to right, currentColor 0, currentColor 2px, transparent 2px, transparent 4px, currentColor 4px, currentColor 5px, transparent 5px, transparent 8px, currentColor 8px, currentColor 12px, transparent 12px, transparent 14px)' }}></div>
-        )}
-      </div>
+      <TicketCard 
+        digits={digits} 
+        category={ticketBg?.category} 
+        categoryName={ticketBg?.categoryName} 
+      />
     );
   };
 
@@ -2228,6 +2228,13 @@ export default function App() {
           alt="Car background"
           onLoad={() => setCarImageLoaded(true)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out pointer-events-none z-0 ${carImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      )}
+      {gameMode === 'ticket' && ticketBg?.imageUrl && (
+        <img 
+          src={ticketBg.imageUrl}
+          alt="Ticket background"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
         />
       )}
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
@@ -2361,7 +2368,7 @@ export default function App() {
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.gameMode}</span>
                 <div className="flex bg-slate-200/60 dark:bg-slate-900 p-1 rounded-2xl border border-slate-300/40 dark:border-slate-800">
                   <button 
-                    onClick={() => { setGameMode('ticket'); playSound('click'); playVibration('light'); }}
+                    onClick={() => { setGameMode('ticket'); fetchRandomTicket(); playSound('click'); playVibration('light'); }}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${gameMode === 'ticket' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
                   >
                     {t.ticket}
