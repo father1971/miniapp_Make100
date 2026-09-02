@@ -2635,9 +2635,9 @@ export default function App() {
             key={digits.join('') + gameMode}
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className={`relative w-full h-full flex items-center justify-center ${gameMode === 'ticket' ? 'max-w-md' : 'max-w-3xl'}`}
+            className={`relative w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end max-w-md' : 'items-center max-w-3xl'}`}
           >
-            <div className={`origin-center w-full h-full flex items-center justify-center ${gameMode === 'ticket' ? 'scale-[0.8] sm:scale-100' : ''}`}>
+            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-0 -mb-2 sm:-mb-4' : 'items-center'}`}>
               {gameMode === 'ticket' ? renderTicket() : renderLicensePlate()}
             </div>
             
