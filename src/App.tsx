@@ -2637,7 +2637,7 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={`relative w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end max-w-md' : 'items-center max-w-3xl'}`}
           >
-            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-0 -mb-2 sm:-mb-4' : 'items-center'}`}>
+            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-4 sm:pb-8' : 'items-center'}`}>
               {gameMode === 'ticket' ? renderTicket() : renderLicensePlate()}
             </div>
             

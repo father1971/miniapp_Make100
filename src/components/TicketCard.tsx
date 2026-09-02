@@ -141,15 +141,15 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cine
   const theme = THEMES[category] || THEMES['cinema'];
 
   return (
-    <div className="w-[94%] max-w-[390px] h-[142px] sm:h-[156px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.75)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
+    <div className="w-[94%] max-w-[273px] h-[100px] sm:h-[110px] drop-shadow-[0_15px_30px_rgba(0,0,0,0.75)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
       <div 
         className={`w-full h-full rounded-xl ${theme.bg} border ${theme.border} flex relative overflow-hidden`}
         style={{
-          WebkitMaskImage: 'radial-gradient(circle at 75% 0px, transparent 10px, black 11px), radial-gradient(circle at 75% 100%, transparent 10px, black 11px)',
+          WebkitMaskImage: 'radial-gradient(circle at 75% 0px, transparent 7px, black 8px), radial-gradient(circle at 75% 100%, transparent 7px, black 8px)',
           WebkitMaskSize: '100% 51%, 100% 51%',
           WebkitMaskPosition: 'top, bottom',
           WebkitMaskRepeat: 'no-repeat',
-          maskImage: 'radial-gradient(circle at 75% 0px, transparent 10px, black 11px), radial-gradient(circle at 75% 100%, transparent 10px, black 11px)',
+          maskImage: 'radial-gradient(circle at 75% 0px, transparent 7px, black 8px), radial-gradient(circle at 75% 100%, transparent 7px, black 8px)',
           maskSize: '100% 51%, 100% 51%',
           maskPosition: 'top, bottom',
           maskRepeat: 'no-repeat',
@@ -158,8 +158,8 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cine
         {theme.extraStyles}
 
         {/* Main Ticket Section (Left, ~75%) */}
-        <div className={`w-[75%] h-full flex flex-col justify-between p-4 sm:p-5 border-r-2 border-dashed ${theme.perforation} relative z-10`}>
-          <div className={`flex justify-between items-start text-[10px] sm:text-xs uppercase tracking-widest ${theme.textMain}`}>
+        <div className={`w-[75%] h-full flex flex-col justify-between p-3 sm:p-3.5 border-r-2 border-dashed ${theme.perforation} relative z-10`}>
+          <div className={`flex justify-between items-start text-[7px] sm:text-[8px] uppercase tracking-widest ${theme.textMain}`}>
             <span className="max-w-[45%] line-clamp-2 leading-tight">
               {categoryName || theme.badgeLeft}
             </span>
@@ -168,24 +168,24 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cine
             </span>
           </div>
           
-          <div className="flex-1 flex items-center justify-center mt-2">
-            <span className={`font-mono font-black text-4xl sm:text-5xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
+          <div className="flex-1 flex items-center justify-center mt-1 sm:mt-1.5">
+            <span className={`font-mono font-black text-2xl sm:text-3xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
               {displayDigits}
             </span>
           </div>
         </div>
 
         {/* Stub Section (Right, ~25%) */}
-        <div className={`w-[25%] h-full flex flex-col items-center justify-between py-4 sm:py-5 relative z-10 ${theme.textMain}`}>
-          <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 ${theme.textAccent}`}>
+        <div className={`w-[25%] h-full flex flex-col items-center justify-between py-3 sm:py-3.5 relative z-10 ${theme.textMain}`}>
+          <span className={`text-[7px] sm:text-[8px] font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 ${theme.textAccent}`}>
             КОНТРОЛЬ
           </span>
           
-          <div className="flex items-end justify-center gap-[2px] h-10 w-full px-2 opacity-80">
+          <div className="flex items-end justify-center gap-[1px] sm:gap-[1.5px] h-7 sm:h-8 w-full px-1.5 opacity-80">
             {barcodeBars.map((height, i) => (
               <div 
                 key={i} 
-                className="w-[2px] bg-current rounded-t-sm"
+                className="w-[1.5px] bg-current rounded-t-sm"
                 style={{ height: `${height}%` }}
               />
             ))}
