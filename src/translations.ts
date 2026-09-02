@@ -126,10 +126,31 @@ export interface TranslationData {
     'metro-pass': { title: string; subtitle: string; footerLeft: string; footerRight: string };
     lottery: { title: string; subtitle: string; footerLeft: string; footerRight: string };
   };
+  ticketTheatreTitle: string;
+  ticketTheatreDesc: string;
+  ticketBusTitle: string;
+  ticketBusDesc: string;
+  ticketFlightTitle: string;
+  ticketFlightDesc: string;
+  ticketTrainTitle: string;
+  ticketTrainDesc: string;
+  ticketConcertTitle: string;
+  ticketConcertDesc: string;
+  ticketStadiumTitle: string;
+  ticketStadiumDesc: string;
+  ticketCinemaTitle: string;
+  ticketCinemaDesc: string;
+  ticketAmusementTitle: string;
+  ticketAmusementDesc: string;
+  ticketMuseumTitle: string;
+  ticketMuseumDesc: string;
+  ticketLotteryTitle: string;
+  ticketLotteryDesc: string;
+  ticketControl: string;
 }
 
 export const TRANSLATIONS: Record<string, TranslationData> = {
-  ru: {
+  ru: { ticketControl: "КОНТРОЛЬ", ticketLotteryDesc: "СЧАСТЛИВЫЙ БИЛЕТ • JACKPOT", ticketLotteryTitle: "ЛОТЕРЕЯ", ticketMuseumDesc: "GENERAL ADMISSION", ticketMuseumTitle: "EXHIBITION PASS", ticketAmusementDesc: "★ UNLIMITED RIDES ★", ticketAmusementTitle: "AMUSEMENT PARK", ticketCinemaDesc: "ADMIT ONE • СЕАНС 20:00", ticketCinemaTitle: "БИЛЕТ В КИНО", ticketStadiumDesc: "MATCH DAY • SECTOR C • ROW 12", ticketStadiumTitle: "STADIUM TICKET", ticketConcertDesc: "FAN ZONE • ACCESS ALL AREAS", ticketConcertTitle: "CONCERT PASS", ticketTrainDesc: "МЕЖДУГОРОДНИЙ КУПОН", ticketTrainTitle: "Ж/Д БИЛЕТ", ticketFlightDesc: "SVO ✈ DXB • GATE B22", ticketFlightTitle: "FLIGHT SU-100", ticketBusDesc: "ЦЕНА 6 КОП.", ticketBusTitle: "БИЛЕТ НА АВТОБУС", ticketTheatreDesc: "ПАРТЕР • РЯД 3 • ЛОЖА №5", ticketTheatreTitle: "ТЕАТРАЛЬНЫЙ БИЛЕТ",
     title: "Make 100", player: "Игрок", gameMode: "Режим", car: "Автомобиль", ticket: "Билет",
     solved: "Решено", skipped: "Пропущено", operators: "Знаков", current: "Текущее", total: "Общее",
     theme: "Тема", language: "Язык", auto: "Авто", light: "Светлая", dark: "Темная",
@@ -185,7 +206,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'ЛОТЕРЕЙНЫЙ БИЛЕТ', subtitle: 'ДЖЕКПОТ', footerLeft: 'ДАТА РОЗЫГРЫША', footerRight: 'СЕГОДНЯ' }
     }
   },
-  en: {
+  en: { ticketControl: "CONTROL", ticketLotteryDesc: "LUCKY TICKET • JACKPOT", ticketLotteryTitle: "LOTTERY", ticketMuseumDesc: "GENERAL ADMISSION", ticketMuseumTitle: "EXHIBITION PASS", ticketAmusementDesc: "★ UNLIMITED RIDES ★", ticketAmusementTitle: "AMUSEMENT PARK", ticketCinemaDesc: "ADMIT ONE • SHOW 20:00", ticketCinemaTitle: "CINEMA TICKET", ticketStadiumDesc: "MATCH DAY • SECTOR C • ROW 12", ticketStadiumTitle: "STADIUM TICKET", ticketConcertDesc: "FAN ZONE • ACCESS ALL AREAS", ticketConcertTitle: "CONCERT PASS", ticketTrainDesc: "INTERCITY COUPON", ticketTrainTitle: "TRAIN TICKET", ticketFlightDesc: "SVO ✈ DXB • GATE B22", ticketFlightTitle: "FLIGHT SU-100", ticketBusDesc: "PRICE 6 ¢", ticketBusTitle: "BUS TICKET", ticketTheatreDesc: "STALLS • ROW 3 • BOX 5", ticketTheatreTitle: "THEATRE TICKET",
     title: "Make 100", player: "Player", gameMode: "Mode", car: "Car", ticket: "Ticket",
     solved: "Solved", skipped: "Skipped", operators: "Operators", current: "Current", total: "Total",
     theme: "Theme", language: "Language", auto: "Auto", light: "Light", dark: "Dark",
@@ -241,7 +262,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'LOTTERY TICKET', subtitle: 'JACKPOT', footerLeft: 'DRAW DATE', footerRight: 'TODAY' }
     }
   },
-  de: {
+  de: { ticketControl: "KONTROLLE", ticketLotteryDesc: "GLÜCKSTICKET • JACKPOT", ticketLotteryTitle: "LOTTERIE", ticketMuseumDesc: "ALLGEMEINER EINTRITT", ticketMuseumTitle: "AUSSTELLUNGSPASS", ticketAmusementDesc: "★ UNBEGRENZTE FAHRTEN ★", ticketAmusementTitle: "FREIZEITPARK", ticketCinemaDesc: "EINLASS FÜR EINEN • VORSTELLUNG 20:00", ticketCinemaTitle: "KINOTICKET", ticketStadiumDesc: "SPIELTAG • SEKTOR C • REIHE 12", ticketStadiumTitle: "STADIONTICKET", ticketConcertDesc: "FANZONE • ALL AREAS ACCESS", ticketConcertTitle: "KONZERTPASS", ticketTrainDesc: "INTERCITY COUPON", ticketTrainTitle: "ZUGTICKET", ticketFlightDesc: "SVO ✈ DXB • GATE B22", ticketFlightTitle: "FLUG SU-100", ticketBusDesc: "PREIS 6 ¢", ticketBusTitle: "BUSTICKET", ticketTheatreDesc: "PARKETT • REIHE 3 • LOGE 5", ticketTheatreTitle: "THEATERTICKET",
     title: "Make 100", player: "Spieler", gameMode: "Modus", car: "Auto", ticket: "Ticket",
     solved: "Gelöst", skipped: "Übersprungen", operators: "Zeichen", current: "Aktuell", total: "Gesamt",
     theme: "Thema", language: "Sprache", auto: "Auto", light: "Hell", dark: "Dunkel",
@@ -297,7 +318,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'LOTTERIELOS', subtitle: 'JACKPOT', footerLeft: 'ZIEHUNGSDATUM', footerRight: 'HEUTE' }
     }
   },
-  fr: {
+  fr: { ticketControl: "CONTRÔLE", ticketLotteryDesc: "BILLET CHANCEUX • JACKPOT", ticketLotteryTitle: "LOTERIE", ticketMuseumDesc: "ADMISSION GÉNÉRALE", ticketMuseumTitle: "PASS EXPOSITION", ticketAmusementDesc: "★ MANÈGES ILLIMITÉS ★", ticketAmusementTitle: "PARC D'ATTRACTIONS", ticketCinemaDesc: "BON POUR UN • SÉANCE 20:00", ticketCinemaTitle: "BILLET DE CINÉMA", ticketStadiumDesc: "JOUR DE MATCH • SECTEUR C • RANG 12", ticketStadiumTitle: "BILLET DE STADE", ticketConcertDesc: "ZONE FAN • ACCÈS TOTAL", ticketConcertTitle: "PASS CONCERT", ticketTrainDesc: "COUPON INTERVILLES", ticketTrainTitle: "BILLET DE TRAIN", ticketFlightDesc: "SVO ✈ DXB • PORTE B22", ticketFlightTitle: "VOL SU-100", ticketBusDesc: "PRIX 6 ¢", ticketBusTitle: "TICKET DE BUS", ticketTheatreDesc: "ORCHESTRE • RANG 3 • LOGE 5", ticketTheatreTitle: "BILLET DE THÉÂTRE",
     title: "Make 100", player: "Joueur", gameMode: "Mode", car: "Voiture", ticket: "Billet",
     solved: "Résolu", skipped: "Passé", operators: "Signes", current: "Actuel", total: "Total",
     theme: "Thème", language: "Langue", auto: "Auto", light: "Clair", dark: "Sombre",
@@ -353,7 +374,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'BILLET DE LOTERIE', subtitle: 'JACKPOT', footerLeft: 'DATE DE TIRAGE', footerRight: 'AUJOURD\'HUI' }
     }
   },
-  pt: {
+  pt: { ticketControl: "CONTROLE", ticketLotteryDesc: "BILHETE DA SORTE • JACKPOT", ticketLotteryTitle: "LOTERIA", ticketMuseumDesc: "ENTRADA GERAL", ticketMuseumTitle: "PASSE DE EXPOSIÇÃO", ticketAmusementDesc: "★ PASSEIOS ILIMITADOS ★", ticketAmusementTitle: "PARQUE DE DIVERSÕES", ticketCinemaDesc: "VÁLIDO PARA UM • SESSÃO 20:00", ticketCinemaTitle: "BILHETE DE CINEMA", ticketStadiumDesc: "DIA DE JOGO • SETOR C • FILA 12", ticketStadiumTitle: "BILHETE DE ESTÁDIO", ticketConcertDesc: "ZONA DE FÃS • ACESSO TOTAL", ticketConcertTitle: "PASSE DE CONCERTO", ticketTrainDesc: "CUPOM INTERMUNICIPAL", ticketTrainTitle: "BILHETE DE TREM", ticketFlightDesc: "SVO ✈ DXB • PORTÃO B22", ticketFlightTitle: "VOO SU-100", ticketBusDesc: "PREÇO 6 ¢", ticketBusTitle: "BILHETE DE ÔNIBUS", ticketTheatreDesc: "PLATEIA • FILA 3 • CAMAROTE 5", ticketTheatreTitle: "BILHETE DE TEATRO",
     title: "Make 100", player: "Jogador", gameMode: "Modo", car: "Carro", ticket: "Bilhete",
     solved: "Resolvido", skipped: "Pulado", operators: "Sinais", current: "Atual", total: "Total",
     theme: "Tema", language: "Idioma", auto: "Auto", light: "Claro", dark: "Escuro",
@@ -409,7 +430,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'BILHETE DE LOTERIA', subtitle: 'JACKPOT', footerLeft: 'DATA DO SORTEIO', footerRight: 'HOJE' }
     }
   },
-  es: {
+  es: { ticketControl: "CONTROL", ticketLotteryDesc: "BOLETO DE LA SUERTE • JACKPOT", ticketLotteryTitle: "LOTERÍA", ticketMuseumDesc: "ADMISIÓN GENERAL", ticketMuseumTitle: "PASE DE EXPOSICIÓN", ticketAmusementDesc: "★ ATRACCIONES ILIMITADAS ★", ticketAmusementTitle: "PARQUE DE ATRACCIONES", ticketCinemaDesc: "VÁLIDO PARA UNO • FUNCIÓN 20:00", ticketCinemaTitle: "BOLETO DE CINE", ticketStadiumDesc: "DÍA DE PARTIDO • SECTOR C • FILA 12", ticketStadiumTitle: "BOLETO DE ESTADIO", ticketConcertDesc: "ZONA FAN • ACCESO TOTAL", ticketConcertTitle: "PASE DE CONCIERTO", ticketTrainDesc: "CUPÓN INTERURBANO", ticketTrainTitle: "BOLETO DE TREN", ticketFlightDesc: "SVO ✈ DXB • PUERTA B22", ticketFlightTitle: "VUELO SU-100", ticketBusDesc: "PRECIO 6 ¢", ticketBusTitle: "BOLETO DE AUTOBÚS", ticketTheatreDesc: "PLATEA • FILA 3 • PALCO 5", ticketTheatreTitle: "BOLETO DE TEATRO",
     title: "Make 100", player: "Jugador", gameMode: "Modo", car: "Coche", ticket: "Boleto",
     solved: "Resuelto", skipped: "Saltado", operators: "Signos", current: "Actual", total: "Total",
     theme: "Tema", language: "Idioma", auto: "Auto", light: "Claro", dark: "Oscuro",
@@ -465,7 +486,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'BOLETO DE LOTERÍA', subtitle: 'PREMIO MAYOR', footerLeft: 'FECHA DE SORTEO', footerRight: 'HOY' }
     }
   },
-  zh: {
+  zh: { ticketControl: "检票区", ticketLotteryDesc: "幸运彩票 • JACKPOT", ticketLotteryTitle: "彩票", ticketMuseumDesc: "普通入场", ticketMuseumTitle: "展览通行证", ticketAmusementDesc: "★ 无限次乘坐 ★", ticketAmusementTitle: "游乐园", ticketCinemaDesc: "单人票 • 场次 20:00", ticketCinemaTitle: "电影票", ticketStadiumDesc: "比赛日 • C区 • 第12排", ticketStadiumTitle: "体育场门票", ticketConcertDesc: "粉丝区 • 全区通行", ticketConcertTitle: "演唱会通行证", ticketTrainDesc: "城际乘车券", ticketTrainTitle: "火车票", ticketFlightDesc: "SVO ✈ DXB • B22 登机口", ticketFlightTitle: "航班 SU-100", ticketBusDesc: "票价 6 分", ticketBusTitle: "公交车票", ticketTheatreDesc: "正厅 • 第3排 • 5号包厢", ticketTheatreTitle: "戏院门票",
     title: "Make 100", player: "玩家", gameMode: "模式", car: "汽车", ticket: "门票",
     solved: "已解决", skipped: "已跳过", operators: "符号", current: "当前", total: "总计",
     theme: "主题", language: "语言", auto: "自动", light: "浅色", dark: "深色",
@@ -521,7 +542,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: '彩票', subtitle: '头奖', footerLeft: '开奖日期', footerRight: '今天' }
     }
   },
-  ja: {
+  ja: { ticketControl: "半券", ticketLotteryDesc: "ラッキーチケット • JACKPOT", ticketLotteryTitle: "宝くじ", ticketMuseumDesc: "一般入場", ticketMuseumTitle: "展示会パス", ticketAmusementDesc: "★ 乗り放題 ★", ticketAmusementTitle: "遊園地", ticketCinemaDesc: "1名様 • 上映 20:00", ticketCinemaTitle: "映画のチケット", ticketStadiumDesc: "試合当日 • セクターC • 12列", ticketStadiumTitle: "スタジアムチケット", ticketConcertDesc: "ファンゾーン • 全エリア入場可", ticketConcertTitle: "コンサートパス", ticketTrainDesc: "都市間クーポン", ticketTrainTitle: "列車の切符", ticketFlightDesc: "SVO ✈ DXB • ゲート B22", ticketFlightTitle: "フライト SU-100", ticketBusDesc: "料金 6 ¢", ticketBusTitle: "バス乗車券", ticketTheatreDesc: "1階席 • 3列 • ボックス5", ticketTheatreTitle: "演劇チケット",
     title: "Make 100", player: "プレイヤー", gameMode: "モード", car: "車", ticket: "チケット",
     solved: "解決済み", skipped: "スキップ", operators: "記号", current: "現在", total: "合計",
     theme: "テーマ", language: "言語", auto: "自動", light: "ライト", dark: "ダーク",
@@ -577,7 +598,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: '宝くじ', subtitle: 'ジャックポット', footerLeft: '抽選日', footerRight: '今日' }
     }
   },
-  it: {
+  it: { ticketControl: "CONTROLLO", ticketLotteryDesc: "BIGLIETTO FORTUNATO • JACKPOT", ticketLotteryTitle: "LOTTERIA", ticketMuseumDesc: "INGRESSO GENERALE", ticketMuseumTitle: "PASS MOSTRA", ticketAmusementDesc: "★ GIRI ILLIMITATI ★", ticketAmusementTitle: "PARCO DIVERTIMENTI", ticketCinemaDesc: "INGRESSO PER UNO • SPETTACOLO 20:00", ticketCinemaTitle: "BIGLIETTO DEL CINEMA", ticketStadiumDesc: "GIORNO DELLA PARTITA • SETTORE C • FILA 12", ticketStadiumTitle: "BIGLIETTO DELLO STADIO", ticketConcertDesc: "FAN ZONE • ACCESSO TOTALE", ticketConcertTitle: "PASS PER IL CONCERTO", ticketTrainDesc: "COUPON INTERCITY", ticketTrainTitle: "BIGLIETTO DEL TRENO", ticketFlightDesc: "SVO ✈ DXB • GATE B22", ticketFlightTitle: "VOLO SU-100", ticketBusDesc: "PREZZO 6 ¢", ticketBusTitle: "BIGLIETTO DEL AUTOBUS", ticketTheatreDesc: "PLATEA • FILA 3 • PALCO 5", ticketTheatreTitle: "BIGLIETTO TEATRALE",
     title: "Make 100", player: "Giocatore", gameMode: "Modalità", car: "Auto", ticket: "Biglietto",
     solved: "Risolti", skipped: "Saltati", operators: "Operatori", current: "Attuale", total: "Totale",
     theme: "Tema", language: "Lingua", auto: "Auto", light: "Chiaro", dark: "Scuro",
@@ -633,7 +654,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'BIGLIETTO LOTTERIA', subtitle: 'JACKPOT', footerLeft: 'DATA ESTRAZIONE', footerRight: 'OGGI' }
     }
   },
-  ko: {
+  ko: { ticketControl: "확인란", ticketLotteryDesc: "행운의 티켓 • JACKPOT", ticketLotteryTitle: "복권", ticketMuseumDesc: "일반 입장", ticketMuseumTitle: "전시회 패스", ticketAmusementDesc: "★ 무제한 탑승 ★", ticketAmusementTitle: "놀이공원", ticketCinemaDesc: "1인 입장 • 상영 20:00", ticketCinemaTitle: "영화 티켓", ticketStadiumDesc: "매치 데이 • C구역 • 12열", ticketStadiumTitle: "경기장 티켓", ticketConcertDesc: "팬 존 • 모든 구역 접근 가능", ticketConcertTitle: "콘서트 패스", ticketTrainDesc: "시외 쿠폰", ticketTrainTitle: "기차표", ticketFlightDesc: "SVO ✈ DXB • 게이트 B22", ticketFlightTitle: "항공편 SU-100", ticketBusDesc: "가격 6 ¢", ticketBusTitle: "버스 티켓", ticketTheatreDesc: "1층석 • 3열 • 박스 5", ticketTheatreTitle: "극장 티켓",
     title: "Make 100", player: "플레이어", gameMode: "모드", car: "자동차", ticket: "티켓",
     solved: "해결됨", skipped: "건너뜀", operators: "기호", current: "현재", total: "총",
     theme: "테마", language: "언어", auto: "자동", light: "라이트", dark: "다크",
@@ -689,7 +710,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: '복권', subtitle: '잭팟', footerLeft: '추첨일', footerRight: '오늘' }
     }
   },
-  tr: {
+  tr: { ticketControl: "KONTROL", ticketLotteryDesc: "ŞANSLI BİLET • JACKPOT", ticketLotteryTitle: "PİYANGO", ticketMuseumDesc: "GENEL GİRİŞ", ticketMuseumTitle: "SERGİ GEÇİŞİ", ticketAmusementDesc: "★ SINIRSIZ BİNİŞ ★", ticketAmusementTitle: "LUNAPARK", ticketCinemaDesc: "BİR KİŞİLİK • SEANS 20:00", ticketCinemaTitle: "SİNEMA BİLETİ", ticketStadiumDesc: "MAÇ GÜNÜ • SEKTÖR C • SIRA 12", ticketStadiumTitle: "STADYUM BİLETİ", ticketConcertDesc: "TARAFTAR BÖLGESİ • TÜM ALANLARA ERİŞİM", ticketConcertTitle: "KONSER GEÇİŞİ", ticketTrainDesc: "ŞEHİRLERARASI KUPON", ticketTrainTitle: "TREN BİLETİ", ticketFlightDesc: "SVO ✈ DXB • KAPI B22", ticketFlightTitle: "UÇUŞ SU-100", ticketBusDesc: "FİYAT 6 ¢", ticketBusTitle: "OTOBÜS BİLETİ", ticketTheatreDesc: "ZEMİN • SIRA 3 • LOCA 5", ticketTheatreTitle: "TİYATRO BİLETİ",
     title: "Make 100", player: "Oyuncu", gameMode: "Mod", car: "Araba", ticket: "Bilet",
     solved: "Çözüldü", skipped: "Atlandı", operators: "İşaretler", current: "Mevcut", total: "Toplam",
     theme: "Tema", language: "Dil", auto: "Otomatik", light: "Açık", dark: "Koyu",
@@ -745,7 +766,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'PİYANGO BİLETİ', subtitle: 'BÜYÜK İKRAMİYE', footerLeft: 'ÇEKİLİŞ TARİHİ', footerRight: 'BUGÜN' }
     }
   },
-  he: {
+  he: { ticketControl: "ביקורת", ticketLotteryDesc: "כרטיס מזל • קופה", ticketLotteryTitle: "הגרלה", ticketMuseumDesc: "כניסה רגילה", ticketMuseumTitle: "אישור תערוכה", ticketAmusementDesc: "★ נסיעות ללא הגבלה ★", ticketAmusementTitle: "פארק שעשועים", ticketCinemaDesc: "כניסה ליחיד • הצגה 20:00", ticketCinemaTitle: "כרטיס קולנוע", ticketStadiumDesc: "יום משחק • יציע C • שורה 12", ticketStadiumTitle: "כרטיס לאצטדיון", ticketConcertDesc: "אזור מעריצים • גישה לכל האזורים", ticketConcertTitle: "אישור הופעה", ticketTrainDesc: "קופון בין-עירוני", ticketTrainTitle: "כרטיס רכבת", ticketFlightDesc: "SVO ✈ DXB • שער B22", ticketFlightTitle: "טיסה SU-100", ticketBusDesc: "מחיר 6 ¢", ticketBusTitle: "כרטיס אוטובוס", ticketTheatreDesc: "אולם • שורה 3 • תא 5", ticketTheatreTitle: "כרטיס לתיאטרון",
     title: "Make 100", player: "שחקן", gameMode: "מצב", car: "מכונית", ticket: "כרטיס",
     solved: "נפתר", skipped: "דולג", operators: "סימנים", current: "נוכחי", total: "סה\"כ",
     theme: "ערכת נושא", language: "שפה", auto: "אוטומטי", light: "בהיר", dark: "כהה",
@@ -801,7 +822,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'כרטיס הגרלה', subtitle: 'קופה', footerLeft: 'תאריך הגרלה', footerRight: 'היום' }
     }
   },
-  ar: {
+  ar: { ticketControl: "مراقبة", ticketLotteryDesc: "تذكرة الحظ • الجائزة الكبرى", ticketLotteryTitle: "يانصيب", ticketMuseumDesc: "دخول عام", ticketMuseumTitle: "تصريح المعرض", ticketAmusementDesc: "★ ركوب غير محدود ★", ticketAmusementTitle: "مدينة ملاهي", ticketCinemaDesc: "دخول لفرد • عرض 20:00", ticketCinemaTitle: "تذكرة سينما", ticketStadiumDesc: "يوم المباراة • قطاع C • صف 12", ticketStadiumTitle: "تذكرة ملعب", ticketConcertDesc: "منطقة المشجعين • دخول لجميع المناطق", ticketConcertTitle: "تصريح حفلة", ticketTrainDesc: "قسيمة بين المدن", ticketTrainTitle: "تذكرة قطار", ticketFlightDesc: "SVO ✈ DXB • بوابة B22", ticketFlightTitle: "رحلة SU-100", ticketBusDesc: "السعر 6 ¢", ticketBusTitle: "تذكرة حافلة", ticketTheatreDesc: "الصالة • صف 3 • مقصورة 5", ticketTheatreTitle: "تذكرة مسرح",
     title: "Make 100", player: "اللاعب", gameMode: "الوضع", car: "سيارة", ticket: "تذكرة",
     solved: "تم الحل", skipped: "تم التخطي", operators: "العلامات", current: "الحالي", total: "المجموع",
     theme: "المظهر", language: "اللغة", auto: "تلقائي", light: "فاتح", dark: "داكن",
@@ -857,7 +878,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'تذكرة يانصيب', subtitle: 'الجائزة الكبرى', footerLeft: 'تاريخ السحب', footerRight: 'اليوم' }
     }
   },
-  hi: {
+  hi: { ticketControl: "नियंत्रण", ticketLotteryDesc: "लकी टिकट • जैकपॉट", ticketLotteryTitle: "लॉटरी", ticketMuseumDesc: "सामान्य प्रवेश", ticketMuseumTitle: "प्रदर्शनी पास", ticketAmusementDesc: "★ असीमित सवारी ★", ticketAmusementTitle: "मनोरंजन पार्क", ticketCinemaDesc: "एक का प्रवेश • शो 20:00", ticketCinemaTitle: "सिनेमा टिकट", ticketStadiumDesc: "मैच का दिन • सेक्टर C • पंक्ति 12", ticketStadiumTitle: "स्टेडियम टिकट", ticketConcertDesc: "फैन ज़ोन • सभी क्षेत्रों तक पहुंच", ticketConcertTitle: "संगीत कार्यक्रम पास", ticketTrainDesc: "इंटरसि‍टी कूपन", ticketTrainTitle: "ट्रेन टिकट", ticketFlightDesc: "SVO ✈ DXB • गेट B22", ticketFlightTitle: "उड़ान SU-100", ticketBusDesc: "कीमत 6 ¢", ticketBusTitle: "बस टिकट", ticketTheatreDesc: "स्टॉल्स • पंक्ति 3 • बॉक्स 5", ticketTheatreTitle: "थिएटर टिकट",
     title: "Make 100", player: "खिलाड़ी", gameMode: "मोड", car: "कार", ticket: "टिकट",
     solved: "हल किया", skipped: "छोड़ दिया", operators: "चिह्न", current: "वर्तमान", total: "कुल",
     theme: "थीम", language: "भाषा", auto: "ऑटो", light: "लाइट", dark: "डार्क",
@@ -913,7 +934,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'लॉटरी टिकट', subtitle: 'जैकपॉट', footerLeft: 'ड्रा तिथि', footerRight: 'आज' }
     }
   },
-  la: {
+  la: { ticketControl: "INSPECTIO", ticketLotteryDesc: "TESSERA FORTUNATA • JACKPOT", ticketLotteryTitle: "SORS", ticketMuseumDesc: "ADMISSIO GENERALIS", ticketMuseumTitle: "TESSERA EXHIBITIONIS", ticketAmusementDesc: "★ VEHICULA INFINITA ★", ticketAmusementTitle: "HORTI OBLECTAMENTI", ticketCinemaDesc: "ADMITTE UNUM • SPECTACULUM 20:00", ticketCinemaTitle: "TESSERA CINEMATECA", ticketStadiumDesc: "DIES CERTAMINIS • SECTOR C • ORDO 12", ticketStadiumTitle: "TESSERA STADII", ticketConcertDesc: "ZONA FAUTORUM • OMNIA ADITUS", ticketConcertTitle: "TESSERA CONCENTUS", ticketTrainDesc: "TESSERA INTERURBANA", ticketTrainTitle: "TESSERA FERROVIARIA", ticketFlightDesc: "SVO ✈ DXB • PORTA B22", ticketFlightTitle: "VOLATUS SU-100", ticketBusDesc: "PRETIUM VI AS.", ticketBusTitle: "TESSERA LAOPHORII", ticketTheatreDesc: "PARADISUS • ORDO 3 • PODIUM 5", ticketTheatreTitle: "TESSERA THEATRALIS",
     title: "Make 100", player: "Lusor", gameMode: "Modus", car: "Currus", ticket: "Tessera",
     solved: "Solutum", skipped: "Omissum", operators: "Signa", current: "Praesens", total: "Summa",
     theme: "Thema", language: "Lingua", auto: "Auto", light: "Clarum", dark: "Obscurum",
@@ -969,7 +990,7 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
       lottery: { title: 'TESSERA SORTITIONIS', subtitle: 'PRAEMIUM MAXIMUM', footerLeft: 'DIES SORTITIONIS', footerRight: 'HODIE' }
     }
   },
-  eo: {
+  eo: { ticketControl: "KONTROLO", ticketLotteryDesc: "BONŜANCA BILETO • JACKPOT", ticketLotteryTitle: "LOTERIO", ticketMuseumDesc: "ĜENERALA AKCEPTO", ticketMuseumTitle: "EKSPOZICIA PASPERMESILO", ticketAmusementDesc: "★ SENLIMAJ VETUROJ ★", ticketAmusementTitle: "AMUZPARKO", ticketCinemaDesc: "AKCEPTU UNU • EKRANADO 20:00", ticketCinemaTitle: "KINEJA BILETO", ticketStadiumDesc: "MATĈTAĜO • SEKTORO C • VICO 12", ticketStadiumTitle: "STADIONA BILETO", ticketConcertDesc: "FAN-ZONO • ĈIUJ AREOJ", ticketConcertTitle: "KONCERTA PASPERMESILO", ticketTrainDesc: "INTERURBA KUPONO", ticketTrainTitle: "TRAJNA BILETO", ticketFlightDesc: "SVO ✈ DXB • ELIREJO B22", ticketFlightTitle: "FLUGO SU-100", ticketBusDesc: "PREZO 6 ¢", ticketBusTitle: "BUSA BILETO", ticketTheatreDesc: "PARTERO • VICO 3 • LOĜIO 5", ticketTheatreTitle: "TEATRA BILETO",
     title: "Make 100", player: "Ludanto", gameMode: "Reĝimo", car: "Aŭto", ticket: "Bileto",
     solved: "Solvita", skipped: "Preterlasita", operators: "Signoj", current: "Nuna", total: "Entute",
     theme: "Etoso", language: "Lingvo", auto: "Aŭto", light: "Hela", dark: "Malhela",

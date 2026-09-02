@@ -1,6 +1,7 @@
 import React from 'react';
 
 export interface TicketCardProps {
+  t?: any;
   digits: string[];
   category?: string;
   categoryName?: string;
@@ -12,8 +13,8 @@ type ThemeDef = {
   textMain: string;
   textAccent: string;
   digits: string;
-  badgeLeft: string;
-  badgeRight: string;
+  titleKey: string;
+  descKey: string;
   perforation: string;
   extraStyles?: React.ReactNode;
 };
@@ -25,8 +26,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#cfb53b] font-serif',
     textAccent: 'text-[#e6d070] font-serif',
     digits: 'text-[#cfb53b] drop-shadow-[0_0_8px_rgba(207,181,59,0.5)] mix-blend-screen opacity-90',
-    badgeLeft: 'ТЕАТРАЛЬНЫЙ БИЛЕТ',
-    badgeRight: 'ПАРТЕР • РЯД 3 • ЛОЖА №5',
+    titleKey: 'ticketTheatreTitle',
+    descKey: 'ticketTheatreDesc',
     perforation: 'border-[#cfb53b]/40',
     extraStyles: <div className="absolute inset-1.5 sm:inset-2 border-4 border-double border-[#cfb53b]/60 pointer-events-none rounded-md" />
   },
@@ -36,8 +37,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#3d3830] font-sans font-bold',
     textAccent: 'text-[#5c5549]',
     digits: 'text-[#a51c24] mix-blend-multiply opacity-85',
-    badgeLeft: 'БИЛЕТ НА АВТОБУС',
-    badgeRight: 'ЦЕНА 6 КОП.',
+    titleKey: 'ticketBusTitle',
+    descKey: 'ticketBusDesc',
     perforation: 'border-[#8c8577]/50',
     extraStyles: <div className="absolute top-3 right-[26%] w-5 h-5 rounded-full bg-black/15 mix-blend-multiply shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]" />
   },
@@ -47,8 +48,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#075985] font-sans font-bold',
     textAccent: 'text-[#0284c7]',
     digits: 'text-[#0f172a] mix-blend-multiply opacity-90',
-    badgeLeft: 'FLIGHT SU-100',
-    badgeRight: 'SVO ✈ DXB • GATE B22',
+    titleKey: 'ticketFlightTitle',
+    descKey: 'ticketFlightDesc',
     perforation: 'border-[#94a3b8]/40',
   },
   train: {
@@ -57,8 +58,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#5eead4] font-sans tracking-wide',
     textAccent: 'text-[#99f6e4]',
     digits: 'text-[#14b8a6] mix-blend-screen drop-shadow-md',
-    badgeLeft: 'Ж/Д БИЛЕТ',
-    badgeRight: 'МЕЖДУГОРОДНИЙ КУПОН',
+    titleKey: 'ticketTrainTitle',
+    descKey: 'ticketTrainDesc',
     perforation: 'border-[#2dd4bf]/40',
     extraStyles: <div className="absolute inset-0 opacity-15 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,#2dd4bf_4px,#2dd4bf_5px),repeating-linear-gradient(-45deg,transparent,transparent_4px,#2dd4bf_4px,#2dd4bf_5px)] pointer-events-none mix-blend-overlay" />
   },
@@ -68,8 +69,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-fuchsia-400 font-sans font-black tracking-tighter',
     textAccent: 'text-cyan-400',
     digits: 'text-white mix-blend-overlay opacity-90 drop-shadow-[0_0_12px_rgba(217,70,239,0.8)]',
-    badgeLeft: 'CONCERT PASS',
-    badgeRight: 'FAN ZONE • ACCESS ALL AREAS',
+    titleKey: 'ticketConcertTitle',
+    descKey: 'ticketConcertDesc',
     perforation: 'border-fuchsia-500/40',
     extraStyles: (
       <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-b from-purple-500 via-pink-500 to-yellow-500 opacity-90 mix-blend-screen bg-[size:4px_4px] bg-[linear-gradient(135deg,rgba(255,255,255,0.4)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.4)_50%,rgba(255,255,255,0.4)_75%,transparent_75%,transparent)]" />
@@ -81,8 +82,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-white font-sans font-black italic',
     textAccent: 'text-[#86efac]',
     digits: 'text-[#facc15] drop-shadow-[1px_2px_0_rgba(0,0,0,0.8)]',
-    badgeLeft: 'STADIUM TICKET',
-    badgeRight: 'MATCH DAY • SECTOR C • ROW 12',
+    titleKey: 'ticketStadiumTitle',
+    descKey: 'ticketStadiumDesc',
     perforation: 'border-white/30',
     extraStyles: <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
   },
@@ -92,8 +93,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#fffbeb] font-serif font-bold',
     textAccent: 'text-[#fde68a]',
     digits: 'text-[#451a03] mix-blend-multiply opacity-80',
-    badgeLeft: 'БИЛЕТ В КИНО',
-    badgeRight: 'ADMIT ONE • СЕАНС 20:00',
+    titleKey: 'ticketCinemaTitle',
+    descKey: 'ticketCinemaDesc',
     perforation: 'border-[#78350f]/40',
   },
   amusement: {
@@ -102,8 +103,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#dc2626] font-sans font-black',
     textAccent: 'text-[#b91c1c]',
     digits: 'text-[#991b1b] mix-blend-multiply drop-shadow-sm',
-    badgeLeft: 'AMUSEMENT PARK',
-    badgeRight: '★ UNLIMITED RIDES ★',
+    titleKey: 'ticketAmusementTitle',
+    descKey: 'ticketAmusementDesc',
     perforation: 'border-[#dc2626]/40',
     extraStyles: <div className="absolute inset-2 sm:inset-2.5 rounded-lg bg-white/95 shadow-[inset_0_0_8px_rgba(0,0,0,0.2)] pointer-events-none" />
   },
@@ -113,8 +114,8 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#171717] font-sans tracking-tight',
     textAccent: 'text-[#525252]',
     digits: 'text-[#171717] font-light tracking-[0.25em] mix-blend-multiply',
-    badgeLeft: 'EXHIBITION PASS',
-    badgeRight: 'GENERAL ADMISSION',
+    titleKey: 'ticketMuseumTitle',
+    descKey: 'ticketMuseumDesc',
     perforation: 'border-[#171717]',
   },
   lottery: {
@@ -123,14 +124,14 @@ const THEMES: Record<string, ThemeDef> = {
     textMain: 'text-[#713f12] font-sans font-bold',
     textAccent: 'text-[#854d0e]',
     digits: 'text-[#b91c1c] font-black mix-blend-multiply opacity-90 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]',
-    badgeLeft: 'ЛОТЕРЕЯ',
-    badgeRight: 'СЧАСТЛИВЫЙ БИЛЕТ • JACKPOT',
+    titleKey: 'ticketLotteryTitle',
+    descKey: 'ticketLotteryDesc',
     perforation: 'border-[#854d0e]/40',
     extraStyles: <div className="absolute inset-0 opacity-25 pointer-events-none bg-[radial-gradient(#713f12_1px,transparent_1px)] bg-[size:4px_4px]" />
   },
 };
 
-export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cinema', categoryName }) => {
+export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cinema', categoryName, t }) => {
   const displayDigits = digits && digits.length === 6 
     ? `${digits.slice(0, 3).join('')} ${digits.slice(3, 6).join('')}`
     : '••• •••';
@@ -161,10 +162,10 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cine
         <div className={`w-[75%] h-full flex flex-col justify-between p-3 sm:p-3.5 border-r-2 border-dashed ${theme.perforation} relative z-10`}>
           <div className={`flex justify-between items-start text-[7px] sm:text-[8px] uppercase tracking-widest ${theme.textMain}`}>
             <span className="max-w-[45%] line-clamp-2 leading-tight">
-              {categoryName || theme.badgeLeft}
+              {categoryName || (t ? t[theme.titleKey as keyof typeof t] : '')}
             </span>
             <span className={`text-right leading-tight max-w-[50%] ${theme.textAccent}`}>
-              {theme.badgeRight}
+              {t ? t[theme.descKey as keyof typeof t] : ''}
             </span>
           </div>
           
@@ -178,7 +179,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category = 'cine
         {/* Stub Section (Right, ~25%) */}
         <div className={`w-[25%] h-full flex flex-col items-center justify-between py-3 sm:py-3.5 relative z-10 ${theme.textMain}`}>
           <span className={`text-[7px] sm:text-[8px] font-bold uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 ${theme.textAccent}`}>
-            КОНТРОЛЬ
+            {t?.ticketControl || 'КОНТРОЛЬ'}
           </span>
           
           <div className="flex items-end justify-center gap-[1px] sm:gap-[1.5px] h-7 sm:h-8 w-full px-1.5 opacity-80">

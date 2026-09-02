@@ -2119,6 +2119,7 @@ export default function App() {
         digits={digits} 
         category={ticketBg?.category} 
         categoryName={ticketBg?.categoryName} 
+        t={t}
       />
     );
   };
