@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip } from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
@@ -1403,19 +1403,6 @@ export default function App() {
         lastName: tgUser.last_name,
         username: tgUser.username,
         avatarUrl: tgUser.photo_url,
-        solvedCount,
-        skippedCount: unsolvedCount,
-        totalTimeMs: totalSolveTime,
-        totalCharacters: totalOperatorsUsed,
-        bestTimeMs: bestTimeMs ?? undefined,
-        minCharacters: minCharacters ?? undefined,
-        coins: stats.coins,
-        hintsCount: stats.hintsCount,
-        referralCount: (stats as any)?.referralCount ?? 0,
-        referredBy: (stats as any)?.referredBy ?? undefined,
-        createdAt: (stats as any)?.createdAt,
-        lastExpression: lastRoundExpressionRef.current || undefined,
-        lastSolveTimeMs: lastRoundSolveTimeMsRef.current || undefined,
         settings: {
           themePreference,
           language,
@@ -1424,25 +1411,8 @@ export default function App() {
           soundEnabled,
           vibrationEnabled,
           hasSeenOnboarding
-        },
-        modeStats
-      }).then((updatedServerStats: any) => {
-        if (updatedServerStats) {
-          setStats((prev: any) => {
-            if (!prev) return prev;
-            // 🌟 БЕЗОПАСНОЕ СЛИЯНИЕ: берем серверное значение ТОЛЬКО если оно пришло и валидно!
-            return {
-              ...prev,
-              score: updatedServerStats.score !== undefined ? updatedServerStats.score : prev.score,
-              coins: updatedServerStats.coins !== undefined ? updatedServerStats.coins : prev.coins,
-              hintsCount: updatedServerStats.hintsCount !== undefined ? updatedServerStats.hintsCount : prev.hintsCount,
-              solvedCount: updatedServerStats.solvedCount !== undefined ? updatedServerStats.solvedCount : prev.solvedCount
-            };
-          });
         }
       });
-      lastRoundExpressionRef.current = '';
-      lastRoundSolveTimeMsRef.current = 0;
     }
 
     const tg = (window as any).Telegram?.WebApp;
@@ -1553,71 +1523,38 @@ export default function App() {
     return roundScore;
   };
 
-  const handleGameUpdate = useCallback((isSolved: boolean, solutionLength: number, timeSpent: number, isNewGlobalRecord?: boolean) => {
-    const activeMode = gameMode === 'ticket' ? 'tickets' : 'car';
-    
-    setModeStats(prev => {
-      const currentModeStats = prev[activeMode] || {
-        solvedCount: 0,
-        skippedCount: 0,
-        bestTimeMs: null,
-        minCharacters: null,
-        totalTimeMs: 0,
-        totalCharacters: 0
-      };
-      
-      const updatedModeStats = {
-        ...prev,
-        [activeMode]: {
-          solvedCount: currentModeStats.solvedCount + (isSolved ? 1 : 0),
-          skippedCount: currentModeStats.skippedCount + (isSolved ? 0 : 1),
-          bestTimeMs: isSolved
-            ? (currentModeStats.bestTimeMs === null ? timeSpent : Math.min(currentModeStats.bestTimeMs, timeSpent))
-            : currentModeStats.bestTimeMs,
-          minCharacters: isSolved
-            ? (currentModeStats.minCharacters === null ? solutionLength : Math.min(currentModeStats.minCharacters, solutionLength))
-            : currentModeStats.minCharacters,
-          totalTimeMs: currentModeStats.totalTimeMs + timeSpent,
-          totalCharacters: currentModeStats.totalCharacters + solutionLength
-        }
-      };
-      return updatedModeStats;
-    });
+  
 
-    if (isSolved) {
-      setStats(prev => {
-        const prevBest = (prev as any)?.bestTimeMs ?? bestTimeMs ?? Infinity;
-        const prevMin = (prev as any)?.minCharacters ?? minCharacters ?? Infinity;
-        return {
-          ...prev,
-          coins: ((prev as any)?.coins ?? 0) + 10,
-          solvedCount: ((prev as any)?.solvedCount ?? 0) + 1,
-          totalTimeMs: ((prev as any)?.totalTimeMs ?? 0) + timeSpent,
-          totalCharacters: ((prev as any)?.totalCharacters ?? 0) + solutionLength,
-          bestTimeMs: (isNewGlobalRecord ?? (timeSpent < prevBest)) ? timeSpent : (prevBest === Infinity ? timeSpent : prevBest),
-          minCharacters: (prevMin === Infinity || solutionLength < prevMin) ? solutionLength : prevMin
-        };
-      });
-      setSolvedCount(prev => prev + 1);
-      setTotalSolveTime(prev => prev + timeSpent);
-      setTotalOperatorsUsed(prev => prev + solutionLength);
-      setBestTimeMs(prev => {
-        const previousGlobalBest = prev || Infinity;
-        return (isNewGlobalRecord ?? (timeSpent < previousGlobalBest)) ? timeSpent : (prev ?? timeSpent);
-      });
-      setMinCharacters(prev => (prev === null || solutionLength < prev) ? solutionLength : prev);
-    } else {
-      setStats(prev => ({
-        ...prev,
-        skippedCount: ((prev as any)?.skippedCount ?? 0) + 1,
-        totalTimeMs: ((prev as any)?.totalTimeMs ?? 0) + timeSpent,
-        totalCharacters: ((prev as any)?.totalCharacters ?? 0) + solutionLength
-      }));
-      setUnsolvedCount(prev => prev + 1);
-      setTotalSolveTime(prev => prev + timeSpent);
-      setTotalOperatorsUsed(prev => prev + solutionLength);
+
+  const handleSkip = async () => {
+    if (isHinting) return;
+    
+    // Send API request
+    try {
+      const res = await submitGameSkip({ gameMode });
+      if (res && res.success) {
+        setStats(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            score: res.score !== undefined ? res.score : prev.score,
+            coins: res.coins !== undefined ? res.coins : prev.coins,
+            solvedCount: res.solvedCount !== undefined ? res.solvedCount : prev.solvedCount,
+            modeStats: res.modeStats !== undefined ? res.modeStats : prev.modeStats
+          };
+        });
+        if (res.solvedCount !== undefined) setSolvedCount(res.solvedCount);
+        if (res.skippedCount !== undefined) setUnsolvedCount(res.skippedCount);
+        if (res.totalTimeMs !== undefined) setTotalSolveTime(res.totalTimeMs);
+        if (res.totalCharacters !== undefined) setTotalOperatorsUsed(res.totalCharacters);
+      }
+    } catch(e) {
+      console.error(e);
     }
-  }, [gameMode]);
+    
+    // trigger next round
+    initGame(false, true);
+  };
 
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
     setNoSolutionMessage(false);
@@ -1625,7 +1562,7 @@ export default function App() {
       const now = Date.now();
       const calculatedMs = now - roundStartTimeRef.current;
       const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
-      handleGameUpdate(false, 0, timeSpentMs);
+      
       playSound('skip');
       playVibration('medium');
     } else if (!startAsIdle) {
@@ -1670,7 +1607,7 @@ export default function App() {
     } else {
       stopTimer();
     }
-  }, [playSound, playVibration, language, handleGameUpdate, elapsedTime, startTimer, stopTimer, gameMode, fetchRandomTicket]);
+  }, [playSound, playVibration, language, , elapsedTime, startTimer, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
     let attempts = 0;
@@ -1970,85 +1907,64 @@ export default function App() {
   useEffect(() => {
     if (isWin && !won && !hintUsed) {
       stopTimer();
-
       const exactSolveTimeMs = Date.now() - roundStartTimeRef.current;
       const exactSolveTimeSec = exactSolveTimeMs / 1000;
       setElapsedTime(exactSolveTimeSec);
-
       setWon(true);
       setGameState('idle');
       playSound('success');
       playVibration('success');
       
       setLastRoundTimeMs(exactSolveTimeMs);
-
-      // 1. Проверяем, побит ли глобальный рекорд скорости (bestTimeMs в корне стейта)
-      const previousGlobalBest = (stats as any)?.bestTimeMs || bestTimeMs || Infinity;
-      const isNewGlobalRecord = exactSolveTimeMs < previousGlobalBest;
-
-      if (isNewGlobalRecord) {
-        setIsNewRecord(true);
-
-        // 1. СИНХРОННО обновляем локальный стейт, чтобы Профиль мгновенно перерисовал рекорд!
-        setStats(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            bestTimeMs: exactSolveTimeMs // Записываем новый рекорд прямо в память телефона
-          };
-        });
-
-        // 2. Также не забываем обновить реф для синхронизации автосохранений
-        if (statsRef.current) {
-          (statsRef.current as any).bestTimeMs = exactSolveTimeMs;
-        }
-
-        try {
-          confetti({
-            particleCount: 100,
-            spread: 80,
-            origin: { y: 0.6 },
-            zIndex: 9999
-          });
-        } catch (e) {}
-
-        const tg = (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: { notificationOccurred: (type: string) => void } } } }).Telegram?.WebApp;
-        if (tg?.HapticFeedback?.notificationOccurred) {
-          try {
-            tg.HapticFeedback.notificationOccurred('success');
-          } catch (e) {}
-        }
-      }
-
-      // Проверяем рекорд по краткости ввода (minCharacters)
-      const currentMinChars = (stats as any)?.minCharacters || minCharacters;
-      if (!currentMinChars || currentInput.length < currentMinChars) {
-        setStats(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            minCharacters: currentInput.length
-          };
-        });
-        
-        if (statsRef.current) {
-          (statsRef.current as any).minCharacters = currentInput.length;
-        }
-      }
-
-      // Update statistics via handleGameUpdate
-      const operatorsUsed = gaps.join('').replace(/[0-9.]/g, '').length;
-      lastRoundExpressionRef.current = gaps.join('');
+      const currentInput = gaps.join('');
+      lastRoundExpressionRef.current = currentInput;
       lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
-      
-      const earnedPoints = calculateRoundScore(currentInput, exactSolveTimeMs);
-      setLastEarnedScore(earnedPoints);
-      
-      handleGameUpdate(true, operatorsUsed, exactSolveTimeMs, isNewGlobalRecord);
-      
+
+      // Validate on server
+      submitGameSolve({
+        formula: currentInput,
+        digits: digits,
+        elapsedTimeMs: exactSolveTimeMs,
+        gameMode: gameMode
+      }).then(res => {
+        if (res && res.success) {
+          setStats(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              score: res.score !== undefined ? res.score : prev.score,
+              coins: res.coins !== undefined ? res.coins : prev.coins,
+              solvedCount: res.solvedCount !== undefined ? res.solvedCount : prev.solvedCount,
+              modeStats: res.modeStats !== undefined ? res.modeStats : prev.modeStats
+            };
+          });
+
+        if (res.solvedCount !== undefined) setSolvedCount(res.solvedCount);
+        if (res.skippedCount !== undefined) setUnsolvedCount(res.skippedCount);
+        if (res.totalTimeMs !== undefined) setTotalSolveTime(res.totalTimeMs);
+        if (res.totalCharacters !== undefined) setTotalOperatorsUsed(res.totalCharacters);
+
+          if (res.isNewGlobalRecord) {
+             setIsNewRecord(true);
+             try {
+                confetti({
+                  particleCount: 100,
+                  spread: 80,
+                  origin: { y: 0.6 },
+                  zIndex: 9999
+                });
+             } catch (e) {}
+             const tg = (window as unknown as { Telegram?: { WebApp?: { HapticFeedback?: { notificationOccurred: (type: string) => void } } } }).Telegram?.WebApp;
+             if (tg?.HapticFeedback?.notificationOccurred) {
+               try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
+             }
+          }
+        }
+      });
+
       setSelectedSlot(null);
     }
-  }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, handleGameUpdate, bestTimeMs, stopTimer]);
+  }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, , bestTimeMs, stopTimer]);
 
   // 🌟 Полноэкранный экран блокировки (Guard Clause)
   if (isBanned) {
@@ -2710,7 +2626,7 @@ export default function App() {
             <span className="truncate">{t.hint}</span>
           </button>
           <button 
-            onClick={() => initGame(false, true)}
+            onClick={handleSkip}
             disabled={isHinting}
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
           >
