@@ -1917,12 +1917,21 @@ export default function App() {
       
       setLastRoundTimeMs(exactSolveTimeMs);
       const currentInput = gaps.join('');
-      lastRoundExpressionRef.current = currentInput;
+      
+      let fullExpression = "";
+      for (let i = 0; i < digits.length; i++) {
+        fullExpression += digits[i];
+        if (i < gaps.length && gaps[i]) {
+          fullExpression += gaps[i];
+        }
+      }
+      
+      lastRoundExpressionRef.current = fullExpression;
       lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
 
       // Validate on server
       submitGameSolve({
-        formula: currentInput,
+        formula: fullExpression,
         digits: digits,
         elapsedTimeMs: exactSolveTimeMs,
         gameMode: gameMode
