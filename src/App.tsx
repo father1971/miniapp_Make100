@@ -752,16 +752,22 @@ export default function App() {
   } | null>(null);
 
   const fetchRandomTicket = useCallback(async () => {
+    setIsVisualReady(false);
     try {
       const response = await fetch(`${API_URL}/api/tickets/random`);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.ticket) {
-          setTicketBg({
-            imageUrl: data.ticket.imageUrl,
-            category: data.ticket.category,
-            categoryName: data.ticket.categoryName
-          });
+          const img = new Image();
+          img.onload = () => {
+            setTicketBg({
+              imageUrl: data.ticket.imageUrl,
+              category: data.ticket.category,
+              categoryName: data.ticket.categoryName
+            });
+            setIsVisualReady(true);
+          };
+          img.src = data.ticket.imageUrl;
         }
       }
     } catch (e) {
@@ -774,6 +780,7 @@ export default function App() {
   const [won, setWon] = useState(false);
   const [isHinting, setIsHinting] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [isVisualReady, setIsVisualReady] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
 
@@ -1561,6 +1568,7 @@ export default function App() {
   };
 
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
+    setIsVisualReady(false);
     setNoSolutionMessage(false);
     if (isSkip) {
       const now = Date.now();
@@ -1585,16 +1593,22 @@ export default function App() {
     ];
     setLetters(randomLetters);
 
+    setIsVisualReady(false);
     // Set random car image
-    if (carImagesListRef.current.length > 0) {
-      const newUrl = carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)];
-      const img = new Image();
-      img.onload = () => setCarImage(newUrl);
-      img.src = newUrl;
-    }
-
     if (gameMode === 'ticket') {
       fetchRandomTicket();
+    } else {
+      if (carImagesListRef.current.length > 0) {
+        const newUrl = carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)];
+        const img = new Image();
+        img.onload = () => {
+          setCarImage(newUrl);
+          setIsVisualReady(true);
+        };
+        img.src = newUrl;
+      } else {
+        setIsVisualReady(true);
+      }
     }
 
     setGaps(['', '', '', '', '', '', '']);
@@ -2573,7 +2587,7 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={`relative w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end max-w-md' : 'items-center max-w-3xl'}`}
           >
-            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-4 sm:pb-8' : 'items-center'}`}>
+            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-4 sm:pb-8' : 'items-center'} transition-all duration-300 ${isVisualReady ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
               {gameMode === 'ticket' ? renderTicket() : renderLicensePlate()}
             </div>
             
