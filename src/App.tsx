@@ -769,16 +769,11 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (carImage) {
-      setCarImageLoaded(false);
-    }
-  }, [carImage]);
-
   const [gaps, setGaps] = useState<string[]>(['', '', '', '', '', '', '']);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(1);
   const [won, setWon] = useState(false);
   const [isHinting, setIsHinting] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
 
@@ -915,7 +910,10 @@ export default function App() {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
           carImagesListRef.current = parsed;
-          setCarImage(parsed[Math.floor(Math.random() * parsed.length)]);
+          const newUrl = parsed[Math.floor(Math.random() * parsed.length)];
+          const img = new Image();
+          img.onload = () => setCarImage(newUrl);
+          img.src = newUrl;
         }
       }
     } catch (e) {
@@ -934,7 +932,10 @@ export default function App() {
         
         if (images.length > 0) {
           carImagesListRef.current = images;
-          setCarImage(images[Math.floor(Math.random() * images.length)]);
+          const newUrl = images[Math.floor(Math.random() * images.length)];
+          const img = new Image();
+          img.onload = () => setCarImage(newUrl);
+          img.src = newUrl;
           try {
             localStorage.setItem('make100_kv_images', JSON.stringify(images));
           } catch (e) {
@@ -1528,7 +1529,8 @@ export default function App() {
 
 
   const handleSkip = async () => {
-    if (isHinting) return;
+    if (isHinting || isPending) return;
+    setIsPending(true);
     
     // Send API request
     try {
@@ -1555,6 +1557,7 @@ export default function App() {
     
     // trigger next round
     initGame(false, true);
+    setIsPending(false);
   };
 
   const initGame = useCallback((startAsIdle = false, isSkip = false) => {
@@ -1584,7 +1587,10 @@ export default function App() {
 
     // Set random car image
     if (carImagesListRef.current.length > 0) {
-      setCarImage(carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)]);
+      const newUrl = carImagesListRef.current[Math.floor(Math.random() * carImagesListRef.current.length)];
+      const img = new Image();
+      img.onload = () => setCarImage(newUrl);
+      img.src = newUrl;
     }
 
     if (gameMode === 'ticket') {
@@ -1928,6 +1934,7 @@ export default function App() {
       lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
 
       // Validate on server
+      setIsPending(true);
       submitGameSolve({
         formula: fullExpression,
         digits: digits,
@@ -1970,6 +1977,8 @@ export default function App() {
              }
           }
         }
+      }).finally(() => {
+        setIsPending(false);
       });
 
       setSelectedSlot(null);
@@ -2629,16 +2638,16 @@ export default function App() {
         <div className="mt-1 sm:mt-2 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
-            disabled={isHinting || won}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isHinting || won || isPending}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won || isPending ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
           </button>
           <button 
             onClick={handleSkip}
-            disabled={isHinting}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting ? 'opacity-50 cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
+            disabled={isHinting || isPending}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
