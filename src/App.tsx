@@ -2778,8 +2778,10 @@ export default function App() {
                 <button
                   onClick={() => {
                     if (stats.coins >= 20) {
-                      setStats(prev => ({ ...prev, coins: prev.coins - 20, hintsCount: prev.hintsCount + 1 }));
+                      setStats(prev => ({ ...prev, coins: prev.coins - 20 }));
                       setShowBuyHintModal(false);
+                      setGameState('playing');
+                      showHintOnScreen();
                     }
                   }}
                   disabled={stats.coins < 20}
