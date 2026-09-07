@@ -2220,14 +2220,11 @@ export default function App() {
   }
 
   const handleWatchOptimal = () => {
-    // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
-    setWon(false);
-    // Предотвращаем появление стартового экрана
-    setGameState('playing');
-
     // Проверяем баланс подсказок
     if (stats.hintsCount > 0) {
-      // Вызываем нашу стандартную функцию использования подсказки
+      // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
+      setWon(false);
+      setGameState('playing');
       setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
       showHintOnScreen();
       playSound('click');
@@ -2780,6 +2777,7 @@ export default function App() {
                     if (stats.coins >= 20) {
                       setStats(prev => ({ ...prev, coins: prev.coins - 20 }));
                       setShowBuyHintModal(false);
+                      setWon(false);
                       setGameState('playing');
                       showHintOnScreen();
                     }
