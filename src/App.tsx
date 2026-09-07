@@ -708,11 +708,11 @@ function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void
   );
 }
 
-const getPlayerDisplayName = (player: { username?: string; firstName?: string }) => {
+const getPlayerDisplayName = (player: { username?: string; firstName?: string }, t?: any) => {
   if (player.username && player.username.trim() !== '') {
     return `@${player.username}`;
   }
-  return player.firstName || 'Игрок';
+  return player.firstName || (t?.player || 'Игрок');
 };
 
 export default function App() {
@@ -2318,7 +2318,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
                 className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500/60 to-yellow-400/60 text-white backdrop-blur-md flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
-                title={t.leaderboard || "{t.leaderboard || 'Зал славы'}"}
+                title={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
@@ -2541,7 +2541,7 @@ export default function App() {
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center text-sm font-black text-slate-700 border-2 border-white dark:border-slate-900 shadow-md">2</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[1] as any)}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[1] as any, t)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[1]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2566,7 +2566,7 @@ export default function App() {
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-9 h-9 bg-amber-400 rounded-full flex items-center justify-center text-base font-black text-amber-900 border-2 border-white dark:border-slate-900 shadow-md">1</div>
                           </div>
-                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{getPlayerDisplayName(leaderboardData[0] as any)}</span>
+                          <span className="text-sm font-bold truncate w-full text-center mt-2 text-amber-600 dark:text-amber-400">{getPlayerDisplayName(leaderboardData[0] as any, t)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-lg">{leaderboardData[0]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2590,7 +2590,7 @@ export default function App() {
                             )}
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-sm font-black text-orange-900 border-2 border-white dark:border-slate-900 shadow-md">3</div>
                           </div>
-                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[2] as any)}</span>
+                          <span className="text-xs font-bold truncate w-full text-center mt-2">{getPlayerDisplayName(leaderboardData[2] as any, t)}</span>
                           <span className="text-amber-600 dark:text-amber-400 font-black text-sm">{leaderboardData[2]?.score || 0}</span>
                         </div>
                       ) : (
@@ -2623,7 +2623,7 @@ export default function App() {
                           
                           <div className="flex-1 min-w-0">
                             <span className="font-bold text-slate-800 dark:text-slate-200 truncate block text-sm">
-                              {getPlayerDisplayName(player)}
+                              {getPlayerDisplayName(player, t)}
                             </span>
                           </div>
                           
