@@ -784,7 +784,10 @@ export default function App() {
         const { item: chosenTicket, updatedUrls } = getSmartRandomItem(ticketImagesListRef.current, prev, 6);
         if (chosenTicket) {
           const img = new Image();
-          img.onload = () => {
+          let isDone = false;
+          const handleDone = () => {
+            if (isDone) return;
+            isDone = true;
             setTicketBg({
               imageUrl: chosenTicket.imageUrl,
               category: chosenTicket.category,
@@ -792,6 +795,9 @@ export default function App() {
             });
             setIsVisualReady(true);
           };
+          img.onload = handleDone;
+          img.onerror = handleDone;
+          setTimeout(handleDone, 5000);
           img.src = chosenTicket.imageUrl;
         } else {
           setIsVisualReady(true);
@@ -812,7 +818,10 @@ export default function App() {
             return updatedUrls;
           });
           const img = new Image();
-          img.onload = () => {
+          let isDone = false;
+          const handleDone = () => {
+            if (isDone) return;
+            isDone = true;
             setTicketBg({
               imageUrl: data.ticket.imageUrl,
               category: data.ticket.category,
@@ -820,11 +829,19 @@ export default function App() {
             });
             setIsVisualReady(true);
           };
+          img.onload = handleDone;
+          img.onerror = handleDone;
+          setTimeout(handleDone, 5000);
           img.src = data.ticket.imageUrl;
+        } else {
+          setIsVisualReady(true);
         }
+      } else {
+        setIsVisualReady(true);
       }
     } catch (e) {
       console.warn('Failed to fetch random ticket:', e);
+      setIsVisualReady(true);
     }
   }, []);
 
@@ -850,11 +867,9 @@ export default function App() {
       timerIntervalRef.current = null;
     }
     
-    setElapsedTime(0);
-    
     timerIntervalRef.current = setInterval(() => {
       if (roundStartTimeRef.current) {
-        const diffMs = Date.now() - roundStartTimeRef.current;
+        const diffMs = Math.max(0, Date.now() - roundStartTimeRef.current);
         setElapsedTime(diffMs / 1000);
       }
     }, 50);
@@ -1673,10 +1688,16 @@ export default function App() {
           const { item: newUrl, updatedUrls } = getSmartRandomItem(carImagesListRef.current, prev, 6);
           if (newUrl) {
             const img = new Image();
-            img.onload = () => {
+            let isDone = false;
+            const handleDone = () => {
+              if (isDone) return;
+              isDone = true;
               setCarImage(newUrl);
               setIsVisualReady(true);
             };
+            img.onload = handleDone;
+            img.onerror = handleDone;
+            setTimeout(handleDone, 5000);
             img.src = newUrl;
           } else {
             setIsVisualReady(true);
@@ -1696,16 +1717,11 @@ export default function App() {
     const styles = getTicketStyles(TRANSLATIONS[language] || TRANSLATIONS['ru']);
     setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
     setElapsedTime(0);
-    roundStartTimeRef.current = Date.now();
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
-    if (startAsIdle !== true) {
-      startTimer();
-    } else {
-      stopTimer();
-    }
-  }, [playSound, playVibration, language, elapsedTime, startTimer, stopTimer, gameMode, fetchRandomTicket]);
+    stopTimer();
+  }, [playSound, playVibration, language, elapsedTime, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
     let attempts = 0;
@@ -1943,13 +1959,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (gameState === 'playing' && !won) {
+    if (gameState === 'playing' && !won && isVisualReady) {
+      roundStartTimeRef.current = Date.now();
+      setElapsedTime(0);
       startTimer();
     } else {
       stopTimer();
     }
     return () => stopTimer();
-  }, [gameState, won, startTimer, stopTimer]);
+  }, [gameState, won, isVisualReady, startTimer, stopTimer]);
 
   const handleOp = useCallback((op: string) => {
     if (selectedSlot === null || won) return;
