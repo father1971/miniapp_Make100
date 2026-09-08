@@ -1546,7 +1546,7 @@ export default function App() {
   };
 
   const showHint = () => {
-    if (isHinting || won) return;
+    if (isHinting || won || !isVisualReady) return;
     
     const currentStats = statsRef.current;
     
@@ -1621,7 +1621,7 @@ export default function App() {
 
 
   const handleSkip = async () => {
-    if (isHinting || isPending) return;
+    if (isHinting || isPending || !isVisualReady) return;
     setIsPending(true);
     
     // Send API request
@@ -1970,7 +1970,7 @@ export default function App() {
   }, [gameState, won, isVisualReady, startTimer, stopTimer]);
 
   const handleOp = useCallback((op: string) => {
-    if (selectedSlot === null || won) return;
+    if (selectedSlot === null || won || !isVisualReady) return;
     
     const newGaps = [...gaps];
     if (op === 'Backspace') {
@@ -1983,11 +1983,11 @@ export default function App() {
       playVibration('medium');
     }
     setGaps(newGaps);
-  }, [selectedSlot, gaps, won, playSound, playVibration]);
+  }, [selectedSlot, gaps, won, isVisualReady, playSound, playVibration]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState !== 'playing') return;
+      if (gameState !== 'playing' || !isVisualReady) return;
       if (won) {
          if (e.key === 'Enter' || e.key === ' ') {
             initGame(false);
@@ -2709,17 +2709,23 @@ export default function App() {
         {/* Expression Builder */}
         <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md dark:backdrop-blur-2xl border border-zinc-200/60 dark:border-zinc-800/60`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
-            <Gap idx={0} value={gaps[0]} selected={selectedSlot === 0} onClick={setSelectedSlot}  />
+            <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
             
             {digits.map((digit, idx) => (
               <React.Fragment key={idx}>
-                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none text-zinc-800 dark:text-zinc-200`}>{digit}</span>
-                <Gap idx={idx + 1} value={gaps[idx + 1]} selected={selectedSlot === idx + 1} onClick={setSelectedSlot}  />
+                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none transition-all duration-300 ${isVisualReady ? 'text-zinc-800 dark:text-zinc-200 opacity-100 scale-100' : 'text-zinc-400/50 dark:text-zinc-600/50 opacity-40 scale-90 animate-pulse'}`}>
+                  {isVisualReady ? digit : '•'}
+                </span>
+                <Gap idx={idx + 1} value={isVisualReady ? gaps[idx + 1] : ''} selected={isVisualReady && selectedSlot === idx + 1} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
               </React.Fragment>
             ))}
           </div>
           <div className="h-6 sm:h-8 md:h-10 mt-1 sm:mt-2 flex items-center justify-center w-full">
-            {gaps.some(g => g !== '') ? (
+            {!isVisualReady ? (
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-xs sm:text-sm md:text-base animate-pulse">
+                <span>{t.loading}</span>
+              </div>
+            ) : gaps.some(g => g !== '') ? (
               <div className={`font-mono text-lg sm:text-xl md:text-2xl font-bold ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-500 dark:text-zinc-400'}`}>
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
@@ -2745,16 +2751,16 @@ export default function App() {
         <div className="mt-1 sm:mt-2 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
-            disabled={isHinting || won || isPending}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won || isPending ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            disabled={isHinting || won || isPending || !isVisualReady}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
           </button>
           <button 
             onClick={handleSkip}
-            disabled={isHinting || isPending}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
+            disabled={isHinting || isPending || !isVisualReady}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
