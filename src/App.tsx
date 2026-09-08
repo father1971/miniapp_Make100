@@ -2140,10 +2140,11 @@ export default function App() {
   };
 
   const renderTicket = () => {
+    const baseCategory = ticketBg?.category ? ticketBg.category.split('_')[0] : 'default';
     return (
       <TicketCard 
         digits={digits} 
-        category={ticketBg?.category} 
+        category={baseCategory} 
         categoryName={ticketBg?.categoryName} 
         t={t}
       />
