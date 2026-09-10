@@ -7,3 +7,19 @@ dist-ssr/
 .env
 .env.local
 .env.*.local
+
+# Logs and temp files
+*.log
+*.txt
+*.py
+patch*
+test*
+check_*
+download.*
+fetch_*
+fix_*
+get_*
+make_transparent*
+replace_in_app.py
+update*
+bun.lock

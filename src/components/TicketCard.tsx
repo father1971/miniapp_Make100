@@ -310,9 +310,33 @@ const THEMES: Record<string, ThemeDef> = {
 // Map default fallback to cinema
 THEMES.default = THEMES.cinema;
 
+const resolveCategory = (cat?: string, catName?: string): string => {
+  const c = (cat || '').toLowerCase().trim();
+  const cn = (catName || '').toLowerCase().trim();
+  const combined = `${c} ${cn}`;
+
+  if (combined.includes('theatre') || combined.includes('theater') || combined.includes('театр')) return 'theatre';
+  if (combined.includes('bus') || combined.includes('автобус')) return 'bus';
+  if (combined.includes('flight') || combined.includes('plane') || combined.includes('avia') || combined.includes('самол') || combined.includes('авиа') || combined.includes('рейс')) return 'flight';
+  if (combined.includes('train') || combined.includes('rail') || combined.includes('поезд') || combined.includes('ж/д') || combined.includes('жд')) return 'train';
+  if (combined.includes('concert') || combined.includes('концерт')) return 'concert';
+  if (combined.includes('stadium') || combined.includes('match') || combined.includes('sport') || combined.includes('стадион') || combined.includes('матч')) return 'stadium';
+  if (combined.includes('cinema') || combined.includes('movie') || combined.includes('кино') || combined.includes('фильм')) return 'cinema';
+  if (combined.includes('amusement') || combined.includes('carnival') || combined.includes('park') || combined.includes('парк') || combined.includes('аттракцион')) return 'amusement';
+  if (combined.includes('museum') || combined.includes('gallery') || combined.includes('музей') || combined.includes('выставк')) return 'museum';
+  if (combined.includes('metro') || combined.includes('subway') || combined.includes('метро') || combined.includes('подземк')) return 'metro';
+  if (combined.includes('ski') || combined.includes('лыж') || combined.includes('ски')) return 'ski';
+  if (combined.includes('circus') || combined.includes('tent') || combined.includes('цирк')) return 'circus';
+  if (combined.includes('lottery') || combined.includes('lotto') || combined.includes('лотере')) return 'lottery';
+
+  const base = c.split('_')[0].trim();
+  if (THEMES[base]) return base;
+  return 'default';
+};
+
 export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, categoryName, t }) => {
-  // Safe extraction of base category from compound strings (e.g. "flight_modern_day_clear" -> "flight")
-  const baseCategory = category ? category.split('_')[0].toLowerCase() : 'default';
+  // Safe extraction of base category from compound strings and names
+  const baseCategory = resolveCategory(category, categoryName);
   
   const displayDigits = digits && digits.length === 6 
     ? `${digits.slice(0, 3).join('')} ${digits.slice(3, 6).join('')}`
@@ -323,6 +347,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, catego
   
   const theme = THEMES[baseCategory] || THEMES.default;
   const CategoryIcon = theme.icon;
+
+  // Localized 1-word category title:
+  // 1. Always prioritize the translated title from t for the matched category
+  // 2. Fallback to 1 word from categoryName or baseCategory
+  let ticketTitle = (t && theme.titleKey && t[theme.titleKey as keyof typeof t]) || '';
+  if (!ticketTitle) {
+    if (categoryName) {
+      ticketTitle = categoryName.trim().split(/\s+/)[0];
+    } else {
+      ticketTitle = baseCategory;
+    }
+  }
+  // Enforce strictly 1 word (single token without spaces)
+  ticketTitle = ticketTitle.trim().split(/\s+/)[0].toUpperCase();
 
   return (
     <div className="w-[94%] max-w-[273px] h-[100px] sm:h-[110px] drop-shadow-[0_16px_32px_rgba(0,0,0,0.85)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
@@ -387,7 +425,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, catego
             <div className="flex items-center gap-1 max-w-[48%] min-w-0">
               <CategoryIcon size={12} className={`shrink-0 ${theme.iconClass || theme.textAccent}`} />
               <span className="truncate leading-tight font-black">
-                {categoryName || (t ? t[theme.titleKey as keyof typeof t] : '')}
+                {ticketTitle}
               </span>
             </div>
             <span className={`text-right leading-tight max-w-[48%] truncate ${theme.textAccent}`}>
