@@ -752,14 +752,13 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
     console.warn('tg.expand error:', e);
   }
 
-  // requestFullscreen поддерживается только начиная с Telegram Bot API 8.0
+  // Полноэкранный режим отключен: при необходимости безопасно выходим из него
   try {
-    const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : false;
-    if (isAtLeast8 && typeof tg.requestFullscreen === 'function') {
-      tg.requestFullscreen();
+    if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
+      tg.exitFullscreen();
     }
   } catch (e) {
-    // Метод не поддерживается текущей версией Telegram WebApp
+    // Игнорируем ошибки неподдерживаемых методов
   }
 
   // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
@@ -790,15 +789,12 @@ export default function App() {
           webApp.expand();
         }
 
-        // 3. Запрос полноэкранного режима и скрытие нижней панели (если доступно и поддерживается версией Telegram Bot API 8.0+)
-        if (typeof webApp.requestFullscreen === 'function') {
-          const isAtLeast8 = typeof webApp.isVersionAtLeast === 'function' ? webApp.isVersionAtLeast('8.0') : false;
-          if (isAtLeast8) {
-            try {
-              webApp.requestFullscreen();
-            } catch (e) {
-              // Игнорируем ошибки неподдерживаемых методов
-            }
+        // 3. Если приложение случайно открылось в fullscreen, безопасно выходим из него
+        if (webApp.isFullscreen && typeof webApp.exitFullscreen === 'function') {
+          try {
+            webApp.exitFullscreen();
+          } catch (e) {
+            // Игнорируем ошибки неподдерживаемых методов
           }
         }
 
