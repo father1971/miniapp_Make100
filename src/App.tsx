@@ -108,7 +108,6 @@ interface TelegramWebApp {
   colorScheme?: 'light' | 'dark';
   platform?: string;
   version?: string;
-  isVersionAtLeast?: (version: string) => boolean;
   onEvent?: (eventType: string, eventHandler: () => void) => void;
   offEvent?: (eventType: string, eventHandler: () => void) => void;
 }
@@ -1270,10 +1269,10 @@ export default function App() {
       try {
         tg.ready();
         tg.expand();
-        if (tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && typeof tg.requestFullscreen === 'function') {
+        if (typeof tg.requestFullscreen === 'function') {
           tg.requestFullscreen();
         }
-        if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7') && typeof tg.disableVerticalSwipes === 'function') {
+        if (typeof tg.disableVerticalSwipes === 'function') {
           tg.disableVerticalSwipes();
         }
       } catch (e) {
@@ -1765,12 +1764,10 @@ export default function App() {
           try {
             tg.ready();
             tg.expand();
-            // requestFullscreen доступен только начиная с Telegram Bot API 8.0
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && typeof tg.requestFullscreen === 'function') {
+            if (typeof tg.requestFullscreen === 'function') {
               tg.requestFullscreen();
             }
-            // disableVerticalSwipes доступен начиная с Telegram Bot API 7.7
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7') && typeof tg.disableVerticalSwipes === 'function') {
+            if (typeof tg.disableVerticalSwipes === 'function') {
               tg.disableVerticalSwipes();
             }
           } catch (e) {
