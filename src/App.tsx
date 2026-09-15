@@ -113,6 +113,14 @@ interface TelegramWebApp {
   offEvent?: (eventType: string, eventHandler: () => void) => void;
 }
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: TelegramWebApp;
+    };
+  }
+}
+
 
 function gcd(a: number, b: number): number {
     a = Math.abs(a);
@@ -744,10 +752,11 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
     console.warn('tg.expand error:', e);
   }
 
-  // Полноэкранный режим отключен: при необходимости выходим из него
+  // requestFullscreen поддерживается только начиная с Telegram Bot API 8.0
   try {
-    if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
-      tg.exitFullscreen();
+    const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : false;
+    if (isAtLeast8 && typeof tg.requestFullscreen === 'function') {
+      tg.requestFullscreen();
     }
   } catch (e) {
     // Метод не поддерживается текущей версией Telegram WebApp
@@ -768,10 +777,39 @@ export default function App() {
   // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
   useEffect(() => {
     try {
-      const tgWindow = typeof window !== 'undefined' ? (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }) : undefined;
-      const tg = tgWindow?.Telegram?.WebApp;
-      if (tg) {
-        safeInitTelegramWebApp(tg);
+      if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+        const webApp = window.Telegram.WebApp;
+
+        // 1. Уведомляем клиент Telegram о готовности приложения
+        if (typeof webApp.ready === 'function') {
+          webApp.ready();
+        }
+
+        // 2. Раскрываем WebView на 100% высоты viewport
+        if (typeof webApp.expand === 'function') {
+          webApp.expand();
+        }
+
+        // 3. Запрос полноэкранного режима и скрытие нижней панели (если доступно и поддерживается версией Telegram Bot API 8.0+)
+        if (typeof webApp.requestFullscreen === 'function') {
+          const isAtLeast8 = typeof webApp.isVersionAtLeast === 'function' ? webApp.isVersionAtLeast('8.0') : false;
+          if (isAtLeast8) {
+            try {
+              webApp.requestFullscreen();
+            } catch (e) {
+              // Игнорируем ошибки неподдерживаемых методов
+            }
+          }
+        }
+
+        // 4. Отключение вертикальных свайпов для предотвращения случайного закрытия шторки
+        if (typeof webApp.disableVerticalSwipes === 'function') {
+          try {
+            webApp.disableVerticalSwipes();
+          } catch (e) {
+            // Игнорируем ошибки неподдерживаемых методов
+          }
+        }
       }
     } catch (e) {
       console.warn('Ошибка инициализации Telegram WebApp при запуске:', e);
