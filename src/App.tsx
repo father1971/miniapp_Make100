@@ -79,16 +79,10 @@ interface TelegramWebApp {
   initData?: string;
   initDataUnsafe?: {
     user?: TelegramUser;
-    start_param?: string;
   };
   ready: () => void;
   expand: () => void;
   close: () => void;
-  requestFullscreen?: () => void;
-  exitFullscreen?: () => void;
-  isFullscreen?: boolean;
-  disableVerticalSwipes?: () => void;
-  enableVerticalSwipes?: () => void;
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
   HapticFeedback?: {
@@ -106,8 +100,6 @@ interface TelegramWebApp {
     offClick: (callback: () => void) => void;
   };
   colorScheme?: 'light' | 'dark';
-  platform?: string;
-  version?: string;
   onEvent?: (eventType: string, eventHandler: () => void) => void;
   offEvent?: (eventType: string, eventHandler: () => void) => void;
 }
@@ -1269,12 +1261,6 @@ export default function App() {
       try {
         tg.ready();
         tg.expand();
-        if (typeof tg.requestFullscreen === 'function') {
-          tg.requestFullscreen();
-        }
-        if (typeof tg.disableVerticalSwipes === 'function') {
-          tg.disableVerticalSwipes();
-        }
       } catch (e) {
         console.error(e);
       }
@@ -1761,18 +1747,8 @@ export default function App() {
         // 1. Try Telegram Web App (Mini Apps) - High priority to capture actual Telegram user profiles
         const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
         if (tg && (tg.initData || tg.initDataUnsafe?.user)) {
-          try {
-            tg.ready();
-            tg.expand();
-            if (typeof tg.requestFullscreen === 'function') {
-              tg.requestFullscreen();
-            }
-            if (typeof tg.disableVerticalSwipes === 'function') {
-              tg.disableVerticalSwipes();
-            }
-          } catch (e) {
-            console.warn("Telegram WebApp fullscreen/expand error:", e);
-          }
+          tg.ready();
+          tg.expand();
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
