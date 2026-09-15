@@ -79,10 +79,19 @@ interface TelegramWebApp {
   initData?: string;
   initDataUnsafe?: {
     user?: TelegramUser;
+    start_param?: string;
   };
+  version?: string;
+  isVersionAtLeast?: (version: string) => boolean;
   ready: () => void;
   expand: () => void;
   close: () => void;
+  requestFullscreen?: () => void;
+  exitFullscreen?: () => void;
+  disableVerticalSwipes?: () => void;
+  enableVerticalSwipes?: () => void;
+  isFullscreen?: boolean;
+  isVerticalSwipesEnabled?: boolean;
   setHeaderColor: (color: string) => void;
   setBackgroundColor: (color: string) => void;
   HapticFeedback?: {
@@ -715,7 +724,60 @@ const getPlayerDisplayName = (player: { username?: string; firstName?: string },
   return player.firstName || (t?.player || 'Игрок');
 };
 
+// Безопасная инициализация Telegram WebApp с проверкой версии Bot API
+const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
+  if (!tg) return;
+
+  try {
+    if (typeof tg.ready === 'function') {
+      tg.ready();
+    }
+  } catch (e) {
+    console.warn('tg.ready error:', e);
+  }
+
+  try {
+    if (typeof tg.expand === 'function') {
+      tg.expand();
+    }
+  } catch (e) {
+    console.warn('tg.expand error:', e);
+  }
+
+  // Полноэкранный режим отключен: при необходимости выходим из него
+  try {
+    if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
+      tg.exitFullscreen();
+    }
+  } catch (e) {
+    // Метод не поддерживается текущей версией Telegram WebApp
+  }
+
+  // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
+  try {
+    const isAtLeast77 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('7.7') : false;
+    if (isAtLeast77 && typeof tg.disableVerticalSwipes === 'function') {
+      tg.disableVerticalSwipes();
+    }
+  } catch (e) {
+    // Метод не поддерживается текущей версией Telegram WebApp
+  }
+};
+
 export default function App() {
+  // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
+  useEffect(() => {
+    try {
+      const tgWindow = typeof window !== 'undefined' ? (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }) : undefined;
+      const tg = tgWindow?.Telegram?.WebApp;
+      if (tg) {
+        safeInitTelegramWebApp(tg);
+      }
+    } catch (e) {
+      console.warn('Ошибка инициализации Telegram WebApp при запуске:', e);
+    }
+  }, []);
+
   const isStatsLoadedRef = useRef(false);
   const lastRoundExpressionRef = useRef<string>('');
   const lastRoundSolveTimeMsRef = useRef<number>(0);
@@ -1258,12 +1320,7 @@ export default function App() {
 
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
-      try {
-        tg.ready();
-        tg.expand();
-      } catch (e) {
-        console.error(e);
-      }
+      safeInitTelegramWebApp(tg);
     }
 
     const loadStats = async () => {
@@ -1747,8 +1804,7 @@ export default function App() {
         // 1. Try Telegram Web App (Mini Apps) - High priority to capture actual Telegram user profiles
         const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
         if (tg && (tg.initData || tg.initDataUnsafe?.user)) {
-          tg.ready();
-          tg.expand();
+          safeInitTelegramWebApp(tg);
           
           if (!tg.initData) {
             // Unsafe user fallback if initData is empty but user object is present
