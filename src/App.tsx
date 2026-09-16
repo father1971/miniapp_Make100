@@ -1413,20 +1413,22 @@ export default function App() {
         setTotalOperatorsUsed(data.totalCharacters || data.totalOperatorsUsed || 0);
         setBestTimeMs(data.bestTimeMs ?? null);
         setMinCharacters(data.minCharacters ?? null);
-        if (data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
+        if (localStorage.getItem('make100_theme_preference') === null && data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
           setThemePreference(data.settings.themePreference);
         }
-        if (data.settings?.language && data.settings.language in TRANSLATIONS) {
+        if (localStorage.getItem('make100_language') === null && data.settings?.language && data.settings.language in TRANSLATIONS) {
           setLanguage(data.settings.language);
         }
-        const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
-        if (savedMode === 'ticket' || savedMode === 'car') {
-          setGameMode(savedMode);
+        if (localStorage.getItem('make100_game_mode') === null) {
+          const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
+          if (savedMode === 'ticket' || savedMode === 'car') {
+            setGameMode(savedMode);
+          }
         }
-        if (data.settings?.soundEnabled !== undefined && data.settings.soundEnabled !== null) {
+        if (localStorage.getItem('make100_sound_enabled') === null && data.settings?.soundEnabled !== undefined && data.settings?.soundEnabled !== null) {
           setSoundEnabled(Boolean(data.settings.soundEnabled));
         }
-        if (data.settings?.vibrationEnabled !== undefined && data.settings.vibrationEnabled !== null) {
+        if (localStorage.getItem('make100_vibration_enabled') === null && data.settings?.vibrationEnabled !== undefined && data.settings?.vibrationEnabled !== null) {
           setVibrationEnabled(Boolean(data.settings.vibrationEnabled));
         }
         if (data.settings?.hasSeenOnboarding !== undefined && data.settings.hasSeenOnboarding !== null) {
