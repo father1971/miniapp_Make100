@@ -1016,12 +1016,16 @@ export default function App() {
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
   
-  const [gameMode, setGameMode] = useState<'ticket' | 'car'>('ticket');
+  const [gameMode, setGameMode] = useState<'ticket' | 'car'>(() => {
+    return (typeof window !== 'undefined' ? (localStorage.getItem('make100_game_mode') as 'ticket' | 'car') : null) || 'ticket';
+  });
   
   // Предзагрузка изображений машин
   const imagesLoaded = useImagePreloader(carImagesListRef.current);
 
-  const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>('auto');
+  const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>(() => {
+    return (typeof window !== 'undefined' ? (localStorage.getItem('make100_theme_preference') as 'auto' | 'dark' | 'light') : null) || 'auto';
+  });
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
     if (tg?.colorScheme) return tg.colorScheme;
@@ -1050,6 +1054,19 @@ export default function App() {
       localStorage.setItem('make100_language', language);
     } catch (e) {}
   }, [language]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('make100_game_mode', gameMode);
+    } catch (e) {}
+  }, [gameMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('make100_theme_preference', themePreference);
+    } catch (e) {}
+  }, [themePreference]);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
@@ -1057,9 +1074,25 @@ export default function App() {
   const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [myRank, setMyRank] = useState<number>(0);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [vibrationEnabled, setVibrationEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('make100_sound_enabled') !== 'false' : true;
+  });
+  const [vibrationEnabled, setVibrationEnabled] = useState<boolean>(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('make100_vibration_enabled') !== 'false' : true;
+  });
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('make100_sound_enabled', String(soundEnabled));
+    } catch (e) {}
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('make100_vibration_enabled', String(vibrationEnabled));
+    } catch (e) {}
+  }, [vibrationEnabled]);
   
   useEffect(() => {
     if (tgUser && tgUser.id && tgUser.id !== 9999 && tgUser.id !== 1) {
@@ -1380,12 +1413,25 @@ export default function App() {
         setTotalOperatorsUsed(data.totalCharacters || data.totalOperatorsUsed || 0);
         setBestTimeMs(data.bestTimeMs ?? null);
         setMinCharacters(data.minCharacters ?? null);
-        if (data.settings?.themePreference) setThemePreference(data.settings.themePreference);
-        if (data.settings?.language) setLanguage(data.settings.language);
-        if (data.settings?.gameMode) setGameMode(data.settings.gameMode);
-        if (data.settings?.soundEnabled !== undefined) setSoundEnabled(data.settings.soundEnabled);
-        if (data.settings?.vibrationEnabled !== undefined) setVibrationEnabled(data.settings.vibrationEnabled);
-        if (data.settings?.hasSeenOnboarding !== undefined) setHasSeenOnboarding(data.settings.hasSeenOnboarding);
+        if (data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
+          setThemePreference(data.settings.themePreference);
+        }
+        if (data.settings?.language && data.settings.language in TRANSLATIONS) {
+          setLanguage(data.settings.language);
+        }
+        const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
+        if (savedMode === 'ticket' || savedMode === 'car') {
+          setGameMode(savedMode);
+        }
+        if (data.settings?.soundEnabled !== undefined && data.settings.soundEnabled !== null) {
+          setSoundEnabled(Boolean(data.settings.soundEnabled));
+        }
+        if (data.settings?.vibrationEnabled !== undefined && data.settings.vibrationEnabled !== null) {
+          setVibrationEnabled(Boolean(data.settings.vibrationEnabled));
+        }
+        if (data.settings?.hasSeenOnboarding !== undefined && data.settings.hasSeenOnboarding !== null) {
+          setHasSeenOnboarding(Boolean(data.settings.hasSeenOnboarding));
+        }
         if (data.modeStats) setModeStats(data.modeStats);
         setStats((prev: any) => ({ 
           ...prev,
