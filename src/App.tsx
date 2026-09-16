@@ -1118,14 +1118,17 @@ export default function App() {
         const data = await response.json();
         const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
         
-        if (images.length > 0) {
-          carImagesListRef.current = images;
-          const newUrl = images[Math.floor(Math.random() * images.length)];
+        const imageUrls = images.map((item: any) => typeof item === 'string' ? item : (item.imageUrl || item.url || item.dataUrl || ''));
+        const validUrls = imageUrls.filter(Boolean);
+        
+        if (validUrls.length > 0) {
+          carImagesListRef.current = validUrls;
+          const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
           const img = new Image();
           img.onload = () => setCarImage(newUrl);
           img.src = newUrl;
           try {
-            localStorage.setItem('make100_kv_images', JSON.stringify(images));
+            localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
           } catch (e) {
             console.warn('Failed to cache KV images:', e);
           }
