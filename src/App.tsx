@@ -1413,26 +1413,60 @@ export default function App() {
         setTotalOperatorsUsed(data.totalCharacters || data.totalOperatorsUsed || 0);
         setBestTimeMs(data.bestTimeMs ?? null);
         setMinCharacters(data.minCharacters ?? null);
-        if (localStorage.getItem('make100_theme_preference') === null && data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
-          setThemePreference(data.settings.themePreference);
-        }
-        if (localStorage.getItem('make100_language') === null && data.settings?.language && data.settings.language in TRANSLATIONS) {
-          setLanguage(data.settings.language);
-        }
-        if (localStorage.getItem('make100_game_mode') === null) {
-          const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
+        const isAuthenticated = Boolean(tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999);
+        const hasSettings = Boolean(data?.settings && typeof data.settings === 'object' && Object.keys(data.settings).length > 0);
+
+        if (isAuthenticated && hasSettings) {
+          // 1. Авторизованный пользователь: синхронизируем состояние React и локальный localStorage с бэкендом/CloudStorage для единства между Desktop и Mobile
+          if (data.settings.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
+            setThemePreference(data.settings.themePreference);
+            try { localStorage.setItem('make100_theme_preference', data.settings.themePreference); } catch (e) {}
+          }
+          if (data.settings.language && data.settings.language in TRANSLATIONS) {
+            setLanguage(data.settings.language);
+            try { localStorage.setItem('make100_language', data.settings.language); } catch (e) {}
+          }
+          const savedMode = data.settings.gameMode || (data.settings.currentMode === 'tickets' ? 'ticket' : data.settings.currentMode);
           if (savedMode === 'ticket' || savedMode === 'car') {
             setGameMode(savedMode);
+            try { localStorage.setItem('make100_game_mode', savedMode); } catch (e) {}
           }
-        }
-        if (localStorage.getItem('make100_sound_enabled') === null && data.settings?.soundEnabled !== undefined && data.settings?.soundEnabled !== null) {
-          setSoundEnabled(Boolean(data.settings.soundEnabled));
-        }
-        if (localStorage.getItem('make100_vibration_enabled') === null && data.settings?.vibrationEnabled !== undefined && data.settings?.vibrationEnabled !== null) {
-          setVibrationEnabled(Boolean(data.settings.vibrationEnabled));
-        }
-        if (data.settings?.hasSeenOnboarding !== undefined && data.settings.hasSeenOnboarding !== null) {
-          setHasSeenOnboarding(Boolean(data.settings.hasSeenOnboarding));
+          if (data.settings.soundEnabled !== undefined && data.settings.soundEnabled !== null) {
+            const val = Boolean(data.settings.soundEnabled);
+            setSoundEnabled(val);
+            try { localStorage.setItem('make100_sound_enabled', String(val)); } catch (e) {}
+          }
+          if (data.settings.vibrationEnabled !== undefined && data.settings.vibrationEnabled !== null) {
+            const val = Boolean(data.settings.vibrationEnabled);
+            setVibrationEnabled(val);
+            try { localStorage.setItem('make100_vibration_enabled', String(val)); } catch (e) {}
+          }
+          if (data.settings.hasSeenOnboarding !== undefined && data.settings.hasSeenOnboarding !== null) {
+            setHasSeenOnboarding(Boolean(data.settings.hasSeenOnboarding));
+          }
+        } else {
+          // 2. Анонимный пользователь или пустые настройки: сохраняем существующие значения из localStorage без перезаписи
+          if (localStorage.getItem('make100_theme_preference') === null && data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
+            setThemePreference(data.settings.themePreference);
+          }
+          if (localStorage.getItem('make100_language') === null && data.settings?.language && data.settings.language in TRANSLATIONS) {
+            setLanguage(data.settings.language);
+          }
+          if (localStorage.getItem('make100_game_mode') === null) {
+            const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
+            if (savedMode === 'ticket' || savedMode === 'car') {
+              setGameMode(savedMode);
+            }
+          }
+          if (localStorage.getItem('make100_sound_enabled') === null && data.settings?.soundEnabled !== undefined && data.settings?.soundEnabled !== null) {
+            setSoundEnabled(Boolean(data.settings.soundEnabled));
+          }
+          if (localStorage.getItem('make100_vibration_enabled') === null && data.settings?.vibrationEnabled !== undefined && data.settings?.vibrationEnabled !== null) {
+            setVibrationEnabled(Boolean(data.settings.vibrationEnabled));
+          }
+          if (data.settings?.hasSeenOnboarding !== undefined && data.settings.hasSeenOnboarding !== null) {
+            setHasSeenOnboarding(Boolean(data.settings.hasSeenOnboarding));
+          }
         }
         if (data.modeStats) setModeStats(data.modeStats);
         setStats((prev: any) => ({ 
