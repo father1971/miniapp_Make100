@@ -81,17 +81,32 @@ export async function saveUserStats(stats: UserStats): Promise<any> {
   }
 }
 
-export async function fetchLeaderboard(): Promise<UserStats[]> {
+export interface LeaderboardResponse {
+  leaderboard: UserStats[];
+  myRank?: number;
+  myScore?: number;
+}
+
+export async function fetchLeaderboard(userId?: number | null): Promise<LeaderboardResponse> {
   try {
     const headers = getAuthHeader();
-    const res = await fetch(`${API_URL}/api/leaderboard`, { headers });
+    const query = userId ? `?userId=${userId}` : '';
+    const res = await fetch(`${API_URL}/api/leaderboard${query}`, { headers });
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return { leaderboard: data };
+      }
+      return {
+        leaderboard: data.leaderboard || [],
+        myRank: data.myRank,
+        myScore: data.myScore
+      };
     }
-    return [];
+    return { leaderboard: [] };
   } catch (e) {
     console.error("Failed to fetch leaderboard", e);
-    return [];
+    return { leaderboard: [] };
   }
 }
 

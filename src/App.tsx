@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Smartphone, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Clock, Hash, Activity } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip } from './api';
@@ -1362,16 +1362,10 @@ export default function App() {
 
     setIsLoadingLeaderboard(true);
     try {
-      // Делаем запрос к абсолютному адресу бэкенда с использованием переменной окружения
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leaderboard?userId=${activeUserId}`);
-      if (res.ok) {
-        const data = await res.json();
-        console.log("📥 Успешно загружен лидерборд:", data);
-        setLeaderboardData(data.leaderboard || []);
-        setMyRank(data.myRank !== undefined ? data.myRank : 0);
-      } else {
-        console.error(`❌ Ошибка сервера при загрузке лидерборда: ${res.status}`);
-      }
+      const data = await fetchLeaderboardApi(activeUserId);
+      console.log("📥 Успешно загружен лидерборд:", data);
+      setLeaderboardData(data.leaderboard || []);
+      setMyRank(data.myRank !== undefined ? data.myRank : 0);
     } catch (err) {
       console.error("❌ Сетевая ошибка при загрузке лидерборда:", err);
     } finally {
