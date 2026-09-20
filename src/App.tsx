@@ -1390,14 +1390,26 @@ export default function App() {
     const loadStats = async () => {
       let referrerId: number | undefined = undefined;
 
-      if (tg && tg.initDataUnsafe) {
-        const startParam = tg.initDataUnsafe.start_param;
-        if (startParam) {
-          const parsedId = parseInt(startParam, 10);
-          if (!isNaN(parsedId)) {
-            referrerId = parsedId;
-          }
+      // 1. Из нативного Telegram WebApp start_param
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+        const parsedId = parseInt(tg.initDataUnsafe.start_param, 10);
+        if (!isNaN(parsedId)) {
+          referrerId = parsedId;
         }
+      }
+
+      // 2. Резервный поиск в URL-параметрах окна
+      if (!referrerId && typeof window !== 'undefined' && window.location) {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const rawParam = urlParams.get('tgWebAppStartParam') || urlParams.get('startapp') || urlParams.get('start_param') || urlParams.get('ref');
+          if (rawParam) {
+            const parsedId = parseInt(rawParam, 10);
+            if (!isNaN(parsedId)) {
+              referrerId = parsedId;
+            }
+          }
+        } catch (e) {}
       }
 
       const applyStatsToState = (data: any) => {
@@ -1464,7 +1476,8 @@ export default function App() {
 
         try {
           isStatsLoadedRef.current = false; // Сбрасываем флаг перед загрузкой
-          const res = await fetch(`${API_URL}/api/user`, { headers: getAuthHeader() });
+          const userFetchUrl = referrerId ? `${API_URL}/api/user?referredBy=${referrerId}` : `${API_URL}/api/user`;
+          const res = await fetch(userFetchUrl, { headers: getAuthHeader() });
           
           // 🌟 ПЕРЕХВАТ БАНА:
           if (res.status === 403) {
@@ -1663,8 +1676,9 @@ export default function App() {
     const userId = tgUser?.id || (stats as any)?.id;
     if (!userId) return;
     
-    // Наша рабочая реферальная ссылка на бота Test_Make 100_bot
-    const referralLink = `https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}/app?startapp=${userId}`;
+    // Наша рабочая реферальная ссылка на бота
+    const botUsername = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
+    const referralLink = `https://t.me/${botUsername}/app?startapp=${userId}`;
     
     // Красивый пригласительный текст для друзей
     const shareText = t.inviteShareText || `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
@@ -2333,14 +2347,15 @@ export default function App() {
         <button 
           onClick={() => {
             const tg = (window as any).Telegram?.WebApp;
+            const botName = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
             if (tg && typeof tg.openTelegramLink === 'function') {
               try {
-                tg.openTelegramLink(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`);
+                tg.openTelegramLink(`https://t.me/${botName}`);
               } catch (e) {
-                window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`, "_blank");
+                window.open(`https://t.me/${botName}`, "_blank");
               }
             } else {
-              window.open(`https://t.me/${import.meta.env.VITE_NAME_BOT || 'Test_Make 100_bot'}`, "_blank");
+              window.open(`https://t.me/${botName}`, "_blank");
             }
           }}
           className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
