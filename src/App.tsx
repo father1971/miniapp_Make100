@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
@@ -1705,6 +1705,13 @@ export default function App() {
         const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
         return newStats;
       });
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        useHint().then(res => {
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+          }
+        }).catch(err => console.error("useHint error", err));
+      }
       showHintOnScreen();
     } else {
       setShowBuyHintModal(true);
@@ -2395,6 +2402,13 @@ export default function App() {
       setWon(false);
       setGameState('playing');
       setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        useHint().then(res => {
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+          }
+        }).catch(err => console.error("useHint error", err));
+      }
       showHintOnScreen();
       playSound('click');
       playVibration('light');
@@ -2433,7 +2447,7 @@ export default function App() {
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
-        <div className="relative z-10 w-full max-w-[420px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
+        <div className="relative z-10 w-full max-w-[420px] sm:max-w-[460px] md:max-w-[480px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
           {/* Header */}
           <header className="w-full max-w-md mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
             {/* Кликабельная аватарка с индикатором кликабельности */}
@@ -2858,7 +2872,7 @@ export default function App() {
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder */}
         <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md dark:backdrop-blur-2xl border border-zinc-200/60 dark:border-zinc-800/60`}>
-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.5vw,0.5rem)] text-[clamp(1.5rem,7vw,4rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.4vw,0.35rem)] text-[clamp(1.35rem,5.5vw,2.25rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
             
             {digits.map((digit, idx) => (
@@ -2948,12 +2962,26 @@ export default function App() {
               </p>
               <div className="w-full flex flex-col gap-3">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (stats.coins >= 20) {
-                      setStats(prev => ({ ...prev, coins: prev.coins - 20 }));
                       setShowBuyHintModal(false);
                       setWon(false);
                       setGameState('playing');
+                      setStats(prev => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
+                      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+                        try {
+                          const res = await buyHint();
+                          if (res && res.success) {
+                            setStats(prev => ({
+                              ...prev,
+                              coins: res.coins !== undefined ? res.coins : prev.coins,
+                              hintsCount: res.hintsCount !== undefined ? res.hintsCount : prev.hintsCount
+                            }));
+                          }
+                        } catch (e) {
+                          console.error("buyHint error", e);
+                        }
+                      }
                       showHintOnScreen();
                     }
                   }}
@@ -3126,12 +3154,12 @@ export default function App() {
 }
 function Gap({ idx, value, selected, onClick }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void }) {
   const charCount = value.length;
-  const baseWidthRem = 1.25;
-  const baseWidthVw = 7;
-  const baseWidthMaxRem = 3.5;
-  const extraWidthPerCharRem = 0.8;
-  const extraWidthPerCharVw = 2;
-  const extraWidthPerCharMaxRem = 1.5;
+  const baseWidthRem = 1.1;
+  const baseWidthVw = 6;
+  const baseWidthMaxRem = 1.75;
+  const extraWidthPerCharRem = 0.5;
+  const extraWidthPerCharVw = 1.5;
+  const extraWidthPerCharMaxRem = 0.8;
   const extraChars = Math.max(0, charCount - 1);
   const dynamicWidth = `clamp(${baseWidthRem + (extraChars * extraWidthPerCharRem)}rem, ${baseWidthVw + (extraChars * extraWidthPerCharVw)}vw, ${baseWidthMaxRem + (extraChars * extraWidthPerCharMaxRem)}rem)`;
 
@@ -3139,12 +3167,12 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
-      className={`h-[clamp(1.75rem,9vw,4.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${selected ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-500/30 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20' : value ? 'border-zinc-800/60 dark:border-zinc-200/60 bg-zinc-800/60 dark:bg-zinc-200/60 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10' : 'border-dashed border-zinc-300/60 dark:border-zinc-700/60 hover:border-zinc-400/60 dark:hover:border-zinc-500/60 text-zinc-400 dark:text-zinc-500 bg-zinc-50/60 dark:bg-zinc-900/60 backdrop-blur-md z-10'}`}
+      className={`h-[clamp(1.65rem,7.5vw,2.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${selected ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-500/30 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20' : value ? 'border-zinc-800/60 dark:border-zinc-200/60 bg-zinc-800/60 dark:bg-zinc-200/60 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10' : 'border-dashed border-zinc-300/60 dark:border-zinc-700/60 hover:border-zinc-400/60 dark:hover:border-zinc-500/60 text-zinc-400 dark:text-zinc-500 bg-zinc-50/60 dark:bg-zinc-900/60 backdrop-blur-md z-10'}`}
     >
       {value ? (
-        <span className="text-[clamp(1rem,5vw,2.5rem)] whitespace-nowrap px-1">{value}</span>
+        <span className="text-[clamp(0.85rem,3.8vw,1.25rem)] whitespace-nowrap px-0.5">{value}</span>
       ) : (
-        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 rounded-full bg-zinc-300 dark:bg-zinc-700`}></span>
+        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700`}></span>
       )}
     </button>
   );

@@ -153,3 +153,45 @@ export async function submitGameSkip(payload: { gameMode: string }): Promise<any
     return null;
   }
 }
+
+export async function buyHint(): Promise<{ success: boolean; coins?: number; hintsCount?: number; error?: string } | null> {
+  const headers = getAuthHeader();
+  if (!headers.Authorization) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/user/buy-hint`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers
+      }
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to buy hint", e);
+    return null;
+  }
+}
+
+export async function useHint(): Promise<{ success: boolean; hintsCount?: number; error?: string } | null> {
+  const headers = getAuthHeader();
+  if (!headers.Authorization) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/user/use-hint`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers
+      }
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to use hint", e);
+    return null;
+  }
+}
