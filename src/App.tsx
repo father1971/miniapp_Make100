@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip } from './api';
+import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
@@ -1705,6 +1705,13 @@ export default function App() {
         const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
         return newStats;
       });
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        useHint().then(res => {
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+          }
+        }).catch(err => console.error("useHint error", err));
+      }
       showHintOnScreen();
     } else {
       setShowBuyHintModal(true);
@@ -2395,6 +2402,13 @@ export default function App() {
       setWon(false);
       setGameState('playing');
       setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        useHint().then(res => {
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+          }
+        }).catch(err => console.error("useHint error", err));
+      }
       showHintOnScreen();
       playSound('click');
       playVibration('light');
@@ -2948,12 +2962,26 @@ export default function App() {
               </p>
               <div className="w-full flex flex-col gap-3">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (stats.coins >= 20) {
-                      setStats(prev => ({ ...prev, coins: prev.coins - 20 }));
                       setShowBuyHintModal(false);
                       setWon(false);
                       setGameState('playing');
+                      setStats(prev => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
+                      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+                        try {
+                          const res = await buyHint();
+                          if (res && res.success) {
+                            setStats(prev => ({
+                              ...prev,
+                              coins: res.coins !== undefined ? res.coins : prev.coins,
+                              hintsCount: res.hintsCount !== undefined ? res.hintsCount : prev.hintsCount
+                            }));
+                          }
+                        } catch (e) {
+                          console.error("buyHint error", e);
+                        }
+                      }
                       showHintOnScreen();
                     }
                   }}
