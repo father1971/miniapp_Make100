@@ -1681,7 +1681,7 @@ export default function App() {
     const referralLink = `https://t.me/${botUsername}/app?startapp=${userId}`;
     
     // Красивый пригласительный текст для друзей
-    const shareText = t.inviteShareText || `Привет! Собери число 100 на скорость на крутых тачках! 🏎️🧠 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
+    const shareText = t.inviteShareText || `Привет! Прокачай логику в игре Make 100! 🧩🎯 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
     
     // Ссылка для вызова нативного Telegram Share Dialog
     const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
@@ -2662,7 +2662,7 @@ export default function App() {
               </div>
 
               <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-                v1.91
+                v1.00
               </div>
             </div>
 
