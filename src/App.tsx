@@ -772,6 +772,47 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
   }
 };
 
+function detectInitialLanguage(): Language {
+  // 1. Проверяем язык, сохраненный пользователем вручную
+  try {
+    const hasChosen = typeof window !== 'undefined' ? localStorage.getItem('make100_user_chose_lang') : null;
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('make100_language') : null;
+    if (hasChosen && saved && saved in TRANSLATIONS) {
+      return saved as Language;
+    }
+  } catch (e) {}
+
+  // 2. Определение языка из Telegram WebApp (с нормализацией кодов вроде ru-RU, ru_RU -> ru)
+  try {
+    const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
+    const rawTg = tg?.initDataUnsafe?.user?.language_code;
+    if (rawTg) {
+      const code = rawTg.toLowerCase().split(/[-_]/)[0];
+      if (code in TRANSLATIONS) {
+        return code as Language;
+      }
+    }
+  } catch (e) {}
+
+  // 3. Системный язык браузера / устройства
+  try {
+    if (typeof navigator !== 'undefined') {
+      const navLangs = navigator.languages && navigator.languages.length > 0 ? navigator.languages : [navigator.language || (navigator as any).userLanguage || ''];
+      for (const rawNav of navLangs) {
+        if (rawNav) {
+          const code = rawNav.toLowerCase().split(/[-_]/)[0];
+          if (code in TRANSLATIONS) {
+            return code as Language;
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 4. По умолчанию для нашей игры — русский язык ('ru')!
+  return 'ru';
+}
+
 export default function App() {
   // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
   useEffect(() => {
@@ -1032,22 +1073,7 @@ export default function App() {
     const systemPrefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return systemPrefersDark ? 'dark' : 'light';
   });
-  const [language, setLanguage] = useState<Language>(() => {
-    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('make100_language') : null;
-    if (savedLang && savedLang in TRANSLATIONS) {
-      return savedLang as Language;
-    }
-    const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
-    const tgLang = tg?.initDataUnsafe?.user?.language_code;
-    const browserLang = typeof navigator !== 'undefined' ? navigator.language.split('-')[0] : 'en';
-    const detectedLang = tgLang || browserLang;
-
-    if (detectedLang && detectedLang in TRANSLATIONS) {
-      return detectedLang as Language;
-    }
-    
-    return 'en';
-  });
+  const [language, setLanguage] = useState<Language>(detectInitialLanguage);
 
   useEffect(() => {
     try {
@@ -1422,8 +1448,10 @@ export default function App() {
         if (localStorage.getItem('make100_theme_preference') === null && data.settings?.themePreference && (data.settings.themePreference === 'auto' || data.settings.themePreference === 'dark' || data.settings.themePreference === 'light')) {
           setThemePreference(data.settings.themePreference);
         }
-        if (localStorage.getItem('make100_language') === null && data.settings?.language && data.settings.language in TRANSLATIONS) {
+        if (data.settings?.language && data.settings.language in TRANSLATIONS) {
           setLanguage(data.settings.language);
+          localStorage.setItem('make100_language', data.settings.language);
+          localStorage.setItem('make100_user_chose_lang', 'true');
         }
         if (localStorage.getItem('make100_game_mode') === null) {
           const savedMode = data.settings?.gameMode || (data.settings?.currentMode === 'tickets' ? 'ticket' : data.settings?.currentMode);
@@ -1943,6 +1971,13 @@ export default function App() {
           if (userToSet) {
             if (isMounted) {
               setTgUser(userToSet);
+              // Если язык еще не был выбран пользователем вручную, применяем язык из Telegram
+              if (userToSet.language_code && !localStorage.getItem('make100_user_chose_lang')) {
+                const code = userToSet.language_code.toLowerCase().split(/[-_]/)[0];
+                if (code in TRANSLATIONS) {
+                  setLanguage(code as Language);
+                }
+              }
               setIsTgValidating(false);
             }
             try {
@@ -2652,7 +2687,15 @@ export default function App() {
                   {LANGUAGES.map(({ code, label }) => (
                     <button
                       key={code}
-                      onClick={() => { setLanguage(code); playSound('click'); playVibration('light'); }}
+                      onClick={() => {
+                        setLanguage(code);
+                        try {
+                          localStorage.setItem('make100_language', code);
+                          localStorage.setItem('make100_user_chose_lang', 'true');
+                        } catch (e) {}
+                        playSound('click');
+                        playVibration('light');
+                      }}
                       className={`py-2.5 px-3.5 rounded-xl text-sm font-bold transition-all text-left cursor-pointer ${language === code ? 'bg-orange-500 text-white shadow-md' : 'bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300/50 dark:hover:bg-slate-800'}`}
                     >
                       {label}
