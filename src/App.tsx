@@ -2662,7 +2662,7 @@ export default function App() {
               </div>
 
               <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-                v1.91
+                v1.00
               </div>
             </div>
 
