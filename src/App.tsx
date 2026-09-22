@@ -2081,9 +2081,8 @@ export default function App() {
 
   useEffect(() => {
     const tg = (window as unknown as { Telegram?: { WebApp: TelegramWebApp } }).Telegram?.WebApp;
-    if (!tg?.BackButton) return;
 
-    // Функция-обработчик для кнопки Назад
+    // Функция-обработчик для кнопки Назад (системной или кнопки Telegram)
     const handleSystemBackButtonClick = () => {
       if (isProfileOpen) {
         setIsProfileOpen(false);
@@ -2091,22 +2090,33 @@ export default function App() {
         setIsMenuOpen(false);
       } else if (isLeaderboardOpen) {
         setIsLeaderboardOpen(false);
+      } else {
+        // Если все модальные экраны закрыты (находимся на главном экране игры),
+        // нажатие Назад закрывает приложение и выходит из бота
+        if (tg && typeof tg.close === 'function') {
+          tg.close();
+        }
       }
     };
 
-    // Если открыто либо Меню, либо Профиль — показываем нативную кнопку
-    if (isMenuOpen || isProfileOpen || isLeaderboardOpen) {
+    if (tg?.BackButton) {
+      // Всегда отображаем нативную кнопку Назад в Telegram
       tg.BackButton.show();
       tg.BackButton.onClick(handleSystemBackButtonClick);
-    } else {
-      // Если всё закрыто — прячем кнопку
-      tg.BackButton.hide();
     }
 
-    // Обязательная очистка при размонтировании эффекта
+    // Дополнительный обработчик жеста "Назад" в Android через popstate браузера
+    const handlePopState = () => {
+      handleSystemBackButtonClick();
+    };
+    window.addEventListener('popstate', handlePopState);
+
+    // Обязательная очистка при изменении состояния или размонтировании
     return () => {
-      tg.BackButton.offClick(handleSystemBackButtonClick);
-      tg.BackButton.hide();
+      if (tg?.BackButton) {
+        tg.BackButton.offClick(handleSystemBackButtonClick);
+      }
+      window.removeEventListener('popstate', handlePopState);
     };
   }, [isMenuOpen, isProfileOpen, isLeaderboardOpen]);
 
