@@ -1,4 +1,32 @@
 export interface TranslationData {
+  howToPlayTutorial: string;
+  tutorialSkip: string;
+  tutorialNext: string;
+  tutorialPrev: string;
+  tutorialFinish: string;
+  tutorialNextExample: string;
+  tutorialPressHere: string;
+  tutorialEx1Step1Title: string;
+  tutorialEx1Step1Desc: string;
+  tutorialEx1Step2Title: string;
+  tutorialEx1Step2Desc: string;
+  tutorialEx1Step3Title: string;
+  tutorialEx1Step3Desc: string;
+  tutorialEx1Step4Title: string;
+  tutorialEx1Step4Desc: string;
+  tutorialEx1Step5Title: string;
+  tutorialEx1Step5Desc: string;
+  tutorialEx2Step1Title: string;
+  tutorialEx2Step1Desc: string;
+  tutorialEx2Step2Title: string;
+  tutorialEx2Step2Desc: string;
+  tutorialEx2Step3Title: string;
+  tutorialEx2Step3Desc: string;
+  tutorialEx2Step4Title: string;
+  tutorialEx2Step4Desc: string;
+  tutorialEx2Step5Title: string;
+  tutorialEx2Step5Desc: string;
+
   title: string;
   player: string;
   gameMode: string;
