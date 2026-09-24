@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, HelpCircle, Sparkles } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
@@ -2386,15 +2386,6 @@ export default function App() {
                 title={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
-              </button>
-
-              {/* Кнопка быстрого запуска обучения (?) */}
-              <button 
-                onClick={() => { setShowTutorial(true); playSound('click'); playVibration('light'); }}
-                className="p-2.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 text-zinc-600 dark:text-zinc-300 hover:text-orange-500 dark:hover:text-orange-400 shadow-sm active:scale-95 transition-all cursor-pointer"
-                title={t.howToPlayTutorial || "Обучение: Как играть"}
-              >
-                <HelpCircle size={20} />
               </button>
 
               {/* Кнопка открытия бокового меню */}
