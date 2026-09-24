@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
@@ -8,6 +8,7 @@ import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
 import { TicketCard } from './components/TicketCard';
 import { UserProfile } from "./components/UserProfile";
+import { InteractiveTutorial } from './components/InteractiveTutorial';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
@@ -559,169 +560,19 @@ const getTicketStyles = (t: any) => [
   }
 ];
 
-function DemoOverlay({ onComplete, t, isTgValidating }: { onComplete: () => void, t: typeof TRANSLATIONS['ru'], isTgValidating?: boolean }) {
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    let isMounted = true;
-    const sequence = async () => {
-      await new Promise(r => setTimeout(r, 2500));
-      if (!isMounted) return; setStep(1); // 98 _ 7 _ 6 _ 5 _ 4
-      await new Promise(r => setTimeout(r, 2500));
-      if (!isMounted) return; setStep(2); // 98 + 7 - 6 + 5 - 4 = 100
-      await new Promise(r => setTimeout(r, 3500));
-      if (!isMounted) return; setStep(3); // Fade out
-      await new Promise(r => setTimeout(r, 500));
-      if (!isMounted) return; setStep(4); // Fade in with 1 2 3 4 1 0
-      await new Promise(r => setTimeout(r, 2500));
-      if (!isMounted) return; setStep(5); // (1 + 2 + 3 + 4) * 10 = 100
-      await new Promise(r => setTimeout(r, 3500));
-      if (!isMounted) return; setStep(6); // Play button
-    };
-    sequence();
-    return () => { isMounted = false; };
-  }, []);
-
-  const messages = [
-    t.demo1,
-    t.demo2,
-    t.demo3,
-    t.demo4,
-    t.demo5
-  ];
-
-  const getMessageIndex = (s: number) => {
-    if (s === 0) return 0;
-    if (s === 1) return 1;
-    if (s === 2) return 2;
-    if (s >= 3 && s <= 5) return 3;
-    return 4;
-  };
-
+function TelegramLoadingOverlay({ t }: { t: TranslationData }) {
   return (
-    <motion.div 
-      key="demo"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-2 sm:p-4"
-      style={{
-        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 16px)',
-        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 16px)'
-      }}
-    >
-      <div className="w-full max-w-lg flex flex-col items-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mb-6 text-center">{t.demoTitle}</h2>
-        
-        <div className="bg-zinc-50 dark:bg-zinc-900 p-4 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full flex flex-col items-center relative overflow-hidden">
-          <p className="text-zinc-600 dark:text-zinc-400 text-center h-12 mb-4 font-medium text-sm sm:text-base px-4 transition-opacity duration-300">
-            {messages[getMessageIndex(step)]}
-          </p>
-
-          <div className={`flex items-center justify-center gap-0.5 sm:gap-1.5 text-2xl sm:text-4xl font-mono font-black text-zinc-900 dark:text-white mb-6 h-16 w-full px-2 transition-opacity duration-500 ${step === 3 ? 'opacity-0' : 'opacity-100'}`}>
-             {step >= 4 && <div className="text-orange-500 font-black text-3xl sm:text-4xl mr-1">(</div>}
-             
-             <span>{step >= 4 ? '1' : '9'}</span>
-             
-             {/* Gap 1 */}
-             <div className={`h-8 sm:h-12 border-2 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 overflow-hidden ${
-               step === 0 ? 'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800' : 
-               step === 4 ? 'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800' :
-               step >= 5 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' :
-               'w-0 border-0 opacity-0 mx-[-2px] sm:mx-[-4px]'
-             }`}>
-                {step >= 5 && <span className="text-orange-500">+</span>}
-             </div>
-             
-             <span>{step >= 4 ? '2' : '8'}</span>
-             
-             {/* Gap 2 */}
-             <div className={`h-8 sm:h-12 border-2 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 overflow-hidden ${
-               step === 2 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' : 
-               step >= 5 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' : 
-               'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800'
-             }`}>
-                {step === 2 && <span className="text-orange-500">+</span>}
-                {step >= 5 && <span className="text-orange-500">+</span>}
-             </div>
-             
-             <span>{step >= 4 ? '3' : '7'}</span>
-             
-             {/* Gap 3 */}
-             <div className={`h-8 sm:h-12 border-2 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 overflow-hidden ${
-               step === 2 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' :
-               step >= 5 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' :
-               'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800'
-             }`}>
-                {step === 2 && <span className="text-orange-500">-</span>}
-                {step >= 5 && <span className="text-orange-500">+</span>}
-             </div>
-             
-             <span>{step >= 4 ? '4' : '6'}</span>
-             
-             {/* Gap 4 */}
-             <div className={`h-8 sm:h-12 border-2 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 overflow-hidden ${
-               step === 2 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' :
-               step >= 5 ? 'w-10 sm:w-14 border-orange-500 bg-orange-500/20 scale-110' :
-               'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800'
-             }`}>
-                {step === 2 && <span className="text-orange-500">+</span>}
-                {step >= 5 && <span className="text-orange-500 tracking-tighter">)*</span>}
-             </div>
-             
-             <span>{step >= 4 ? '1' : '5'}</span>
-             
-             {/* Gap 5 */}
-             <div className={`h-8 sm:h-12 border-2 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 overflow-hidden ${
-               step === 2 ? 'w-6 sm:w-10 border-orange-500 bg-orange-500/20 scale-110' :
-               step >= 4 ? 'w-0 border-0 opacity-0 mx-[-2px] sm:mx-[-4px]' :
-               'w-6 sm:w-10 border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800'
-             }`}>
-                {step === 2 && <span className="text-orange-500">-</span>}
-             </div>
-             
-             <span>{step >= 4 ? '0' : '4'}</span>
-          </div>
-
-          <div className={`text-4xl sm:text-6xl font-black font-mono transition-all duration-500 h-16 flex items-center justify-center ${step === 3 ? 'opacity-0' : 'opacity-100'}`}>
-              {step === 2 || step >= 5 ? <span className="text-green-500 drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]">= 100</span> : <span className="text-zinc-400 dark:text-zinc-700">= ?</span>}
-          </div>
-
-          <div className="h-16 mt-6 flex items-center justify-center w-full">
-            {isTgValidating ? (
-              <div className="w-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-lg sm:text-xl flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-800 opacity-65">
-                <RefreshCw size={18} className="animate-spin text-orange-500" />
-                <span>{t.authorizing}</span>
-              </div>
-            ) : step >= 6 ? (
-              <motion.div initial={{scale: 0}} animate={{scale: 1}} className="w-full">
-                <button onClick={onComplete} className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-lg sm:text-xl transition-all shadow-[0_8px_20px_rgba(249,115,22,0.25)]">
-                  {t.play}
-                </button>
-              </motion.div>
-            ) : (
-              <div className="flex gap-1.5 sm:gap-2 w-full justify-center opacity-60 pointer-events-none">
-                 <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"><Plus size={20} className="text-zinc-500 dark:text-zinc-400"/></div>
-                 <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"><Minus size={20} className="text-zinc-500 dark:text-zinc-400"/></div>
-                 <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"><X size={20} className="text-zinc-500 dark:text-zinc-400"/></div>
-                 <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"><Divide size={20} className="text-zinc-500 dark:text-zinc-400"/></div>
-              </div>
-            )}
-          </div>
+    <div className="fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
+      <div className="flex flex-col items-center max-w-xs text-center">
+        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-500 flex items-center justify-center mb-4">
+          <RefreshCw size={28} className="animate-spin text-orange-500" />
         </div>
-        
-        {isTgValidating ? (
-          <div className="mt-4 flex items-center gap-2 text-zinc-500 font-medium text-sm sm:text-base">
-            <RefreshCw size={16} className="animate-spin text-orange-500" />
-            <span>{t.authorizingTg}</span>
-          </div>
-        ) : (
-          step < 6 && (
-            <button onClick={onComplete} className="mt-4 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 font-bold px-6 py-2 transition-colors text-sm sm:text-base">
-              {t.skipDemo}
-            </button>
-          )
-        )}
+        <h2 className="text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight">Make 100</h2>
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          {t.authorizingTg || 'Авторизация в Telegram...'}
+        </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1323,8 +1174,22 @@ export default function App() {
     }
   }, [vibrationEnabled]);
 
-  const completeDemo = () => {
-    setShowDemo(false);
+  // Interactive Tutorial State
+  // По требованию: запускается один раз у ВСЕХ игроков (так как новый ключ отсутствует),
+  // а после прохождения/пропуска сохраняется в localStorage и больше не навязывается.
+  const [showTutorial, setShowTutorial] = useState(() => {
+    try {
+      return localStorage.getItem('make100_tutorial_completed_v2') !== 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const completeTutorial = () => {
+    setShowTutorial(false);
+    try {
+      localStorage.setItem('make100_tutorial_completed_v2', 'true');
+    } catch (e) {}
     setHasSeenOnboarding(true);
     setGameState('playing');
   };
@@ -1346,25 +1211,14 @@ export default function App() {
     statsRef.current = stats;
   }, [stats]);
 
-
-
   const isGameInitializedRef = useRef(false);
-
-  // Demo State
-  const [showDemo, setShowDemo] = useState(true);
 
   useEffect(() => {
     // Если статистика загружена и мы ЕЩЕ НЕ инициализировали игру
     if (statsLoaded && stats && !isGameInitializedRef.current) {
-      // Помечаем, что первичная инициализация успешно пройдена
       isGameInitializedRef.current = true;
-      
-      // Здесь оставляем твою стандартную логику настройки начального экрана
-      if (hasSeenOnboarding || solvedCount > 0) {
-        setShowDemo(false);
-      }
     }
-  }, [stats, statsLoaded, hasSeenOnboarding, solvedCount]);
+  }, [stats, statsLoaded]);
 
 
   const [user, setUser] = useState<any>(null);
@@ -2362,11 +2216,7 @@ export default function App() {
 
   if (isTgValidating) {
     return (
-      <DemoOverlay 
-        onComplete={() => {}} 
-        t={t} 
-        isTgValidating={true} 
-      />
+      <TelegramLoadingOverlay t={t} />
     );
   }
 
@@ -2605,6 +2455,20 @@ export default function App() {
                 paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
               }}
             >
+              {/* Кнопка запуска интерактивного обучения */}
+              <button 
+                onClick={() => { 
+                  setShowTutorial(true); 
+                  setIsMenuOpen(false); 
+                  playSound('click'); 
+                  playVibration('light'); 
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 active:scale-95 transition-all cursor-pointer"
+              >
+                <Sparkles size={18} />
+                <span>{t.howToPlayTutorial || '🎓 Обучение: Как играть'}</span>
+              </button>
+
               {/* Game Mode */}
               <div className="flex flex-col gap-3">
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t.gameMode}</span>
@@ -3043,9 +2907,19 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
-        {showDemo && <DemoOverlay onComplete={completeDemo} t={t} />}
+        <AnimatePresence>
+          {showTutorial && (
+            <InteractiveTutorial
+              onComplete={completeTutorial}
+              t={t}
+              theme={theme}
+              playSound={playSound}
+              playVibration={playVibration}
+            />
+          )}
+        </AnimatePresence>
 
-        {gameState === 'idle' && !won && !showDemo && (
+        {gameState === 'idle' && !won && !showTutorial && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
