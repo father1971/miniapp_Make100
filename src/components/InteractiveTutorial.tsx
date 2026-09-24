@@ -234,77 +234,77 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         return {
           title: t?.tEx1Step0Title || 'Цель игры Make 100',
           desc: t?.tEx1Step0Desc || 'Расставьте математические знаки между цифрами, чтобы в итоге получилось ровно 100!',
-          badge: 'Пример 1/2 • Введение',
-          btnText: t?.tutorialNext || 'Начать ➡️',
+          badge: t?.tutorialBadgeEx1Intro || 'Пример 1/2 • Введение',
+          btnText: t?.tutorialStart || t?.tutorialNext || 'Начать ➡️',
         };
       case 1:
         return {
           title: t?.tEx1Step1Title || 'Секрет: склейка цифр',
           desc: t?.tEx1Step1Desc || 'Пустой слот между цифрами объединяет их в одно число! Первые цифры 9 и 8 образуют 98.',
-          badge: 'Пример 1/2 • Склейка',
+          badge: t?.tutorialBadgeEx1Merge || 'Пример 1/2 • Склейка',
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 2:
         return {
           title: t?.tEx1Step2Title || 'Слот между 8 и 7',
           desc: t?.tEx1Step2Desc || 'Нажмите на кружок между 8 и 7, чтобы выбрать его.',
-          badge: 'Пример 1/2 • Шаг 1',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '1'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 3:
         return {
           title: t?.tEx1Step3Title || 'Ставим знак +',
           desc: t?.tEx1Step3Desc || 'Теперь нажмите на кнопку «+» на клавиатуре внизу.',
-          badge: 'Пример 1/2 • Шаг 2',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '2'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 4:
         return {
           title: t?.tEx1Step4Title || 'Слот между 7 и 6',
           desc: t?.tEx1Step4Desc || 'Отлично! Теперь нажмите на кружок между 7 и 6.',
-          badge: 'Пример 1/2 • Шаг 3',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '3'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 5:
         return {
           title: t?.tEx1Step5Title || 'Ставим знак -',
           desc: t?.tEx1Step5Desc || 'Нажмите знак «-» на клавиатуре внизу.',
-          badge: 'Пример 1/2 • Шаг 4',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '4'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 6:
         return {
           title: t?.tEx1Step6Title || 'Слот между 6 и 5',
           desc: t?.tEx1Step6Desc || 'Хорошо! Теперь выберите кружок между 6 и 5.',
-          badge: 'Пример 1/2 • Шаг 5',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '5'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 7:
         return {
           title: t?.tEx1Step7Title || 'Ставим знак +',
           desc: t?.tEx1Step7Desc || 'Нажмите знак «+» на клавиатуре внизу.',
-          badge: 'Пример 1/2 • Шаг 6',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '6'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 8:
         return {
           title: t?.tEx1Step8Title || 'Слот между 5 и 4',
           desc: t?.tEx1Step8Desc || 'Нажмите на последний кружок между 5 и 4.',
-          badge: 'Пример 1/2 • Шаг 7',
+          badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '7'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 9:
         return {
           title: t?.tEx1Step9Title || 'Финальный знак -',
           desc: t?.tEx1Step9Desc || 'Нажмите знак «-» на клавиатуре: 98 + 7 - 6 + 5 - 4 = 100!',
-          badge: 'Пример 1/2 • Финал',
+          badge: t?.tutorialBadgeEx1Final || 'Пример 1/2 • Финал',
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 10:
         return {
           title: t?.tEx1SuccessTitle || '🎉 Браво! Первый пример решён!',
           desc: t?.tEx1SuccessDesc || 'Вы сами расставили все знаки и получили 100. Перейдём ко второму примеру со скобками!',
-          badge: 'Пример 1/2 • Победа!',
+          badge: t?.tutorialBadgeEx1Win || 'Пример 1/2 • Победа!',
           btnText: t?.tutorialNextExample || 'Пример 2: Скобки ➡️',
         };
 
@@ -313,91 +313,91 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         return {
           title: t?.tEx2Step0Title || 'Пример 2: Скобки и умножение',
           desc: t?.tEx2Step0Desc || 'Умножение выполняется первым. Чтобы сначала сложить числа, используем скобки ( )!',
-          badge: 'Пример 2/2 • Введение',
-          btnText: t?.tutorialNext || 'Начать ➡️',
+          badge: t?.tutorialBadgeEx2Intro || 'Пример 2/2 • Введение',
+          btnText: t?.tutorialStart || t?.tutorialNext || 'Начать ➡️',
         };
       case 12:
         return {
           title: t?.tEx2Step1Title || 'Слот перед цифрой 1',
           desc: t?.tEx2Step1Desc || 'Нажмите на первый кружок перед цифрой 1.',
-          badge: 'Пример 2/2 • Шаг 1',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '1'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 13:
         return {
           title: t?.tEx2Step2Title || 'Открываем скобку (',
           desc: t?.tEx2Step2Desc || 'Нажмите на скобку «(» на клавиатуре внизу.',
-          badge: 'Пример 2/2 • Шаг 2',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '2'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 14:
         return {
           title: t?.tEx2Step3Title || 'Слот между 1 и 2',
           desc: t?.tEx2Step3Desc || 'Нажмите на кружок между 1 и 2.',
-          badge: 'Пример 2/2 • Шаг 3',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '3'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 15:
         return {
           title: t?.tEx2Step4Title || 'Ставим знак +',
           desc: t?.tEx2Step4Desc || 'Нажмите «+» на клавиатуре.',
-          badge: 'Пример 2/2 • Шаг 4',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '4'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 16:
         return {
           title: t?.tEx2Step5Title || 'Слот между 2 и 3',
           desc: t?.tEx2Step5Desc || 'Нажмите на кружок между 2 и 3.',
-          badge: 'Пример 2/2 • Шаг 5',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '5'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 17:
         return {
           title: t?.tEx2Step6Title || 'Ставим знак +',
           desc: t?.tEx2Step6Desc || 'Нажмите «+» на клавиатуре.',
-          badge: 'Пример 2/2 • Шаг 6',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '6'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 18:
         return {
           title: t?.tEx2Step7Title || 'Слот между 3 и 4',
           desc: t?.tEx2Step7Desc || 'Нажмите на кружок между 3 и 4.',
-          badge: 'Пример 2/2 • Шаг 7',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '7'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 19:
         return {
           title: t?.tEx2Step8Title || 'Ставим знак +',
           desc: t?.tEx2Step8Desc || 'Нажмите «+». Внутри скобок получилось: 1 + 2 + 3 + 4 = 10!',
-          badge: 'Пример 2/2 • Шаг 8',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '8'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 20:
         return {
           title: t?.tEx2Step9Title || 'Слот после цифры 4',
           desc: t?.tEx2Step9Desc || 'Нажмите на кружок после цифры 4, чтобы закрыть скобку.',
-          badge: 'Пример 2/2 • Шаг 9',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '9'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 21:
         return {
           title: t?.tEx2Step10Title || 'Закрываем скобку )',
           desc: t?.tEx2Step10Desc || 'Нажмите скобку «)» на клавиатуре.',
-          badge: 'Пример 2/2 • Шаг 10',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '10'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 22:
         return {
           title: t?.tEx2Step11Title || 'Умножаем *',
           desc: t?.tEx2Step11Desc || 'В этот же слот нажмите знак «*», чтобы умножить сумму скобок!',
-          badge: 'Пример 2/2 • Шаг 11',
+          badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '11'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 23:
         return {
           title: t?.tEx2SuccessTitle || '🏆 Великолепно! Вы освоили Make 100!',
           desc: t?.tEx2SuccessDesc || 'Теперь вы умеете объединять цифры, ставить знаки и применять скобки. Приятной игры!',
-          badge: 'Пример 2/2 • Финал!',
+          badge: t?.tutorialBadgeEx2Win || 'Пример 2/2 • Победа!',
           btnText: t?.tutorialFinish || 'Понятно, играть!',
         };
       default:
