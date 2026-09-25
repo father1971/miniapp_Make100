@@ -2806,20 +2806,23 @@ export default function App() {
           </div>
         </div>
 
-        {/* Keypad */}
-        <div className="flex gap-1 sm:gap-2 flex-nowrap justify-between sm:justify-center w-full max-w-3xl px-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <OperatorButton op="+" icon={<Plus size={20} strokeWidth={3} />} onClick={() => handleOp('+')} />
-          <OperatorButton op="-" icon={<Minus size={20} strokeWidth={3} />} onClick={() => handleOp('-')} />
-          <OperatorButton op="*" icon={<X size={20} strokeWidth={3} />} onClick={() => handleOp('*')} />
-          <OperatorButton op="/" icon={<Divide size={20} strokeWidth={3} />} onClick={() => handleOp('/')} />
+        {/* Keypad: Вариант А (эргономичная сетка 4x2) */}
+        <div className="w-full max-w-md px-2 sm:px-4 grid grid-cols-4 gap-1.5 sm:gap-2">
+          {/* Ряд 1: Основные арифметические операторы */}
+          <OperatorButton op="+" icon={<Plus size={22} strokeWidth={3} />} onClick={() => handleOp('+')} variant="operator" />
+          <OperatorButton op="-" icon={<Minus size={22} strokeWidth={3} />} onClick={() => handleOp('-')} variant="operator" />
+          <OperatorButton op="*" icon={<X size={22} strokeWidth={3} />} onClick={() => handleOp('*')} variant="operator" />
+          <OperatorButton op="/" icon={<Divide size={22} strokeWidth={3} />} onClick={() => handleOp('/')} variant="operator" />
+
+          {/* Ряд 2: Скобки, запятая и Backspace */}
           <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
           <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
           <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
-          <OperatorButton op="Backspace" icon={<Delete size={20} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+          <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-1 sm:mt-2 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
+        <div className="mt-1.5 sm:mt-2 w-full max-w-md px-2 sm:px-4 grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
@@ -3095,11 +3098,17 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
   );
 }
 
-function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger' }) {
+function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'operator' | 'danger' }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${variant === 'danger' ? 'bg-red-50/60 dark:bg-red-500/30 backdrop-blur-md text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm' : 'bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'}`}
+      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-bold transition-all active:scale-95 border-2 cursor-pointer shadow-sm touch-manipulation select-none ${
+        variant === 'operator'
+          ? 'bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30 dark:border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50'
+          : variant === 'danger'
+          ? 'bg-red-50/70 dark:bg-red-500/20 backdrop-blur-md text-red-500 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/30'
+          : 'bg-white/70 dark:bg-zinc-800/70 backdrop-blur-md text-zinc-800 dark:text-zinc-200 border-zinc-200/80 dark:border-zinc-700/80 hover:bg-white dark:hover:bg-zinc-700'
+      }`}
     >
       {icon}
     </button>
