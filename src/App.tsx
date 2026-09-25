@@ -2030,6 +2030,13 @@ export default function App() {
     setGaps(newGaps);
   }, [selectedSlot, gaps, won, isVisualReady, playSound, playVibration]);
 
+  const handleSlotClick = useCallback((idx: number) => {
+    if (!isVisualReady || won) return;
+    setSelectedSlot(idx);
+    playSound('click');
+    playVibration('light');
+  }, [isVisualReady, won, playSound, playVibration]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState !== 'playing' || !isVisualReady) return;
@@ -2780,14 +2787,14 @@ export default function App() {
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
         <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1.5 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.65rem,7.0vw,2.55rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
-            <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
+            <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
             {digits.map((digit, idx) => (
               <React.Fragment key={idx}>
                 <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none transition-all duration-300 ${isVisualReady ? 'text-zinc-800 dark:text-zinc-100 opacity-100 scale-100' : 'text-zinc-400/50 dark:text-zinc-600/50 opacity-40 scale-90 animate-pulse'}`}>
                   {isVisualReady ? digit : '•'}
                 </span>
-                <Gap idx={idx + 1} value={isVisualReady ? gaps[idx + 1] : ''} selected={isVisualReady && selectedSlot === idx + 1} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
+                <Gap idx={idx + 1} value={isVisualReady ? gaps[idx + 1] : ''} selected={isVisualReady && selectedSlot === idx + 1} onClick={handleSlotClick}  />
               </React.Fragment>
             ))}
           </div>
