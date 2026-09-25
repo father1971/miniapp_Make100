@@ -2806,27 +2806,29 @@ export default function App() {
           </div>
         </div>
 
-        {/* Keypad: Вариант А (эргономичная сетка 4x2) */}
-        <div className="w-full max-w-md px-2 sm:px-4 grid grid-cols-4 gap-1.5 sm:gap-2">
-          {/* Ряд 1: Основные арифметические операторы */}
-          <OperatorButton op="+" icon={<Plus size={22} strokeWidth={3} />} onClick={() => handleOp('+')} variant="operator" />
-          <OperatorButton op="-" icon={<Minus size={22} strokeWidth={3} />} onClick={() => handleOp('-')} variant="operator" />
-          <OperatorButton op="*" icon={<X size={22} strokeWidth={3} />} onClick={() => handleOp('*')} variant="operator" />
-          <OperatorButton op="/" icon={<Divide size={22} strokeWidth={3} />} onClick={() => handleOp('/')} variant="operator" />
+        {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью) */}
+        <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/60 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 shadow-lg">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+            {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
+            <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} variant="operator" />
+            <OperatorButton op="-" icon={<Minus size={24} strokeWidth={3.5} />} onClick={() => handleOp('-')} variant="operator" />
+            <OperatorButton op="*" icon={<X size={24} strokeWidth={3.5} />} onClick={() => handleOp('*')} variant="operator" />
+            <OperatorButton op="/" icon={<Divide size={24} strokeWidth={3.5} />} onClick={() => handleOp('/')} variant="operator" />
 
-          {/* Ряд 2: Скобки, запятая и Backspace */}
-          <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
-          <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
-          <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
-          <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+            {/* Ряд 2: Скобки, запятая и Backspace */}
+            <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
+            <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
+            <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
+            <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-1.5 sm:mt-2 w-full max-w-md px-2 sm:px-4 grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
+        <div className="mt-1.5 sm:mt-2 w-full max-w-md grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2834,7 +2836,7 @@ export default function App() {
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/50 backdrop-blur-md' : 'bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -3102,12 +3104,12 @@ function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, ic
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-bold transition-all active:scale-95 border-2 cursor-pointer shadow-sm touch-manipulation select-none ${
+      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all active:scale-95 border-2 cursor-pointer shadow-md touch-manipulation select-none ${
         variant === 'operator'
-          ? 'bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30 dark:border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50'
+          ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400 dark:border-orange-400 shadow-orange-500/25 text-2xl'
           : variant === 'danger'
-          ? 'bg-red-50/70 dark:bg-red-500/20 backdrop-blur-md text-red-500 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/30'
-          : 'bg-white/70 dark:bg-zinc-800/70 backdrop-blur-md text-zinc-800 dark:text-zinc-200 border-zinc-200/80 dark:border-zinc-700/80 hover:bg-white dark:hover:bg-zinc-700'
+          ? 'bg-red-500 hover:bg-red-600 text-white border-red-400 dark:border-red-400 shadow-red-500/20'
+          : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 shadow-sm text-xl'
       }`}
     >
       {icon}
