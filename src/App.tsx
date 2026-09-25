@@ -2778,7 +2778,7 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
-        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1.5 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/75 dark:bg-zinc-900/75 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80`}>
+        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1.5 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.65rem,7.0vw,2.55rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
             
@@ -2807,7 +2807,7 @@ export default function App() {
         </div>
 
         {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью) */}
-        <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/60 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 shadow-lg">
+        <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
             <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} variant="operator" />
@@ -2828,7 +2828,7 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2836,7 +2836,7 @@ export default function App() {
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/50 backdrop-blur-md' : 'bg-white/70 dark:bg-zinc-900/70 border-zinc-300/70 dark:border-zinc-800/70 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 backdrop-blur-md shadow-sm'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -3091,10 +3091,10 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
       style={{ width: dynamicWidth }}
       className={`relative h-[clamp(2.05rem,8.5vw,2.95rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
         selected
-          ? 'border-orange-500 bg-orange-500/20 dark:bg-orange-500/30 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
+          ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
           : value
-          ? 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10'
-          : 'border-dashed border-zinc-400/80 dark:border-zinc-600/80 hover:border-orange-400 text-zinc-400 dark:text-zinc-500 bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md z-10'
+          ? 'border-zinc-800/80 dark:border-zinc-200/80 bg-zinc-800/70 dark:bg-zinc-200/80 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10'
+          : 'border-dashed border-zinc-400/70 dark:border-zinc-500/60 hover:border-orange-400 text-zinc-400 dark:text-zinc-500 bg-white/30 dark:bg-zinc-800/30 backdrop-blur-md z-10'
       }`}
     >
       {value ? (
@@ -3110,12 +3110,12 @@ function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, ic
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all active:scale-95 border-2 cursor-pointer shadow-md touch-manipulation select-none ${
+      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all active:scale-95 border-2 cursor-pointer shadow-md touch-manipulation select-none backdrop-blur-md ${
         variant === 'operator'
-          ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400 dark:border-orange-400 shadow-orange-500/25 text-2xl'
+          ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
           : variant === 'danger'
-          ? 'bg-red-500 hover:bg-red-600 text-white border-red-400 dark:border-red-400 shadow-red-500/20'
-          : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/80 shadow-sm text-xl'
+          ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
+          : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
       }`}
     >
       {icon}
