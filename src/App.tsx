@@ -2785,8 +2785,8 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
-        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1.5 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.65rem,7.0vw,2.55rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
+        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1 sm:px-2.5 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
             {digits.map((digit, idx) => (
@@ -2798,17 +2798,17 @@ export default function App() {
               </React.Fragment>
             ))}
           </div>
-          <div className="h-7 sm:h-9 mt-1 sm:mt-1.5 flex items-center justify-center w-full">
+          <div className="h-8 sm:h-10 mt-1 sm:mt-1.5 flex items-center justify-center w-full">
             {!isVisualReady ? (
-              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-xs sm:text-sm animate-pulse">
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-base animate-pulse">
                 <span>{t.loading}</span>
               </div>
             ) : gaps.some(g => g !== '') ? (
-              <div className={`font-mono text-xl sm:text-2xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-500 dark:text-zinc-400'}`}>
+              <div className={`font-mono text-2xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
             ) : (
-              <p className="text-center text-xs sm:text-sm font-bold text-zinc-600 dark:text-zinc-400">{t.tapGaps}</p>
+              <p className="text-center text-sm sm:text-base font-black text-zinc-700 dark:text-zinc-300">{t.tapGaps}</p>
             )}
           </div>
         </div>
@@ -3083,9 +3083,9 @@ export default function App() {
 }
 function Gap({ idx, value, selected, onClick }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void }) {
   const charCount = value.length;
-  const baseWidthRem = 1.25;
-  const baseWidthVw = 6.2;
-  const baseWidthMaxRem = 2.0;
+  const baseWidthRem = 1.35;
+  const baseWidthVw = 6.6;
+  const baseWidthMaxRem = 2.15;
   const extraWidthPerCharRem = 0.55;
   const extraWidthPerCharVw = 1.8;
   const extraWidthPerCharMaxRem = 0.9;
@@ -3096,7 +3096,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
-      className={`relative h-[clamp(2.05rem,8.5vw,2.95rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
+      className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
         selected
           ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
           : value
@@ -3105,7 +3105,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
       }`}
     >
       {value ? (
-        <span className="text-[clamp(1.05rem,4.4vw,1.45rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
+        <span className="text-[clamp(1.15rem,4.8vw,1.6rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
       ) : (
         <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-zinc-400 dark:bg-zinc-600"></span>
       )}
