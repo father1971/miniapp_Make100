@@ -2361,20 +2361,20 @@ export default function App() {
               </div>
             </button>
 
-            {/* Блок баланса монет, подсказок и меню */}
+            {/* Блок баланса монет, подсказок и меню (единый стандарт 50% матового стекла) */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
               {/* Плашка монет */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.coinsLabel || "Монеты"}>
-                <span className="text-lg">🪙</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                <span className="text-lg drop-shadow-sm">🪙</span>
+                <span className="text-sm font-black tracking-tight">
                   {stats.coins}
                 </span>
               </div>
 
               {/* Плашка подсказок */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.hintsLabel || "Подсказки"}>
-                <span className="text-lg">💡</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                <span className="text-lg drop-shadow-sm">💡</span>
+                <span className="text-sm font-black tracking-tight">
                   {stats.hintsCount}
                 </span>
               </div>
@@ -2382,7 +2382,7 @@ export default function App() {
               {/* Кнопка лидерборда (Кубок) */}
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500/60 to-yellow-400/60 text-white backdrop-blur-md flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
+                className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse"
                 title={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
@@ -2391,7 +2391,7 @@ export default function App() {
               {/* Кнопка открытия бокового меню */}
               <button 
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-                className="p-2.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="p-2.5 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl active:scale-95 transition-all cursor-pointer"
                 title={t.settingsMenu || "Меню настроек"}
               >
                 <Menu size={20} />
@@ -2399,9 +2399,9 @@ export default function App() {
             </div>
           </header>
 
-      {/* Live Stopwatch & Character Counter (Top Bar) */}
+      {/* Live Stopwatch & Character Counter (единый стандарт 50% матового стекла) */}
       <div className="w-full max-w-md mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
-        <div className="flex justify-center items-center gap-4 sm:gap-6 py-1.5 sm:py-2 px-4 sm:px-6 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
+        <div className="flex justify-center items-center gap-4 sm:gap-6 py-2 px-5 sm:px-6 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
@@ -2411,13 +2411,13 @@ export default function App() {
           </div>
           
           {/* Вертикальный разделитель */}
-          <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-200 dark:bg-slate-800"></div>
+          <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
 
           {/* Счётчик символов в текущем вводе */}
           <div className="flex items-center gap-2">
             <span className="text-lg sm:text-xl">✍️</span>
             <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-tight">
-              {currentInput.length} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+              {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
             </span>
           </div>
         </div>
