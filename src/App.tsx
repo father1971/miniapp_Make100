@@ -2005,6 +2005,7 @@ export default function App() {
               onClick={() => setIsProfileOpen(true)}
               className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
               title={t.openProfile || "Открыть профиль"}
+              aria-label={t.openProfile || "Открыть профиль"}
             >
               {/* Пульсирующая внешняя рамка */}
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
@@ -2049,6 +2050,7 @@ export default function App() {
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
                 className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse"
                 title={t.leaderboard || 'Зал славы'}
+                aria-label={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
@@ -2058,6 +2060,7 @@ export default function App() {
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
                 className="p-2.5 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl active:scale-95 transition-all cursor-pointer"
                 title={t.settingsMenu || "Меню настроек"}
+                aria-label={t.settingsMenu || "Меню настроек"}
               >
                 <Menu size={20} />
               </button>
@@ -2102,6 +2105,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+                aria-label={t.back || 'Назад'}
               >
                 ⬅️ {t.back || 'Назад'}
               </button>
@@ -2255,6 +2259,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+                aria-label={t.back || 'Назад'}
               >
                 ⬅️ {t.back || 'Назад'}
               </button>
@@ -2491,6 +2496,7 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
+            aria-label={t.hint || "Подсказка"}
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
@@ -2499,6 +2505,7 @@ export default function App() {
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
+            aria-label={hintUsed ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar) : (gameMode === 'ticket' ? t.skipTicket : t.skipCar)}
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
@@ -2714,6 +2721,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
+      aria-label={`Слот ${idx + 1}: ${value || 'пусто'}`}
       className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
         selected
           ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
@@ -2732,6 +2740,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
 }
 
 function OperatorButton({ 
+  op,
   icon, 
   onClick, 
   variant = 'default',
@@ -2747,6 +2756,7 @@ function OperatorButton({
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={op}
       className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
         disabled
           ? 'opacity-25 cursor-not-allowed pointer-events-none border-transparent bg-zinc-200/40 dark:bg-zinc-800/20 text-zinc-400 dark:text-zinc-600 shadow-none'

@@ -9,6 +9,9 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 3000,
   },
+  esbuild: {
+    pure: ['console.log'],
+  },
   build: {
     chunkSizeWarningLimit: 600,
     rollupOptions: {
