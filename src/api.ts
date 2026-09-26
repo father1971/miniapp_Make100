@@ -1,198 +1,163 @@
-export interface ModeDetail {
-  solvedCount?: number;
-  skippedCount?: number;
-  bestTimeMs: number | null;
-  minCharacters: number | null;
-  totalTimeMs?: number;
-  totalCharacters?: number;
-}
+import {
+  UserStats,
+  LeaderboardResponse,
+  GameSolvePayload,
+  GameSkipPayload,
+  HintOperationResponse,
+  RandomTicketResponse,
+} from './types';
 
-export interface UserStats {
-  id?: number;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  avatarUrl?: string;
-  solvedCount?: number;
-  skippedCount?: number;
-  bestTimeMs?: number | null;
-  minCharacters?: number | null;
-  totalTimeMs?: number;
-  totalCharacters?: number;
-  coins?: number;
-  hintsCount?: number;
-  referredBy?: number | null;
-  referralCount?: number;
-  gamesStarted?: number;
-  createdAt?: number;
-  settings: {
-    currentMode?: 'tickets' | 'car';
-    [key: string]: any;
-  };
-  modeStats?: {
-    tickets?: ModeDetail;
-    car?: ModeDetail;
-    [key: string]: any;
-  };
-}
+export * from './types';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'https://make100-backend.rotanovav.workers.dev';
 
 export function getAuthHeader(): Record<string, string> {
-  const initData = (window as any).Telegram?.WebApp?.initData;
-  return initData ? { 'Authorization': `Bearer ${initData}` } : {};
-}
-
-export async function fetchUserStats(): Promise<UserStats | null> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
   try {
-    const res = await fetch(`${API_URL}/api/user`, { headers });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
+    const initData = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp?.initData : undefined;
+    return initData ? { 'Authorization': `Bearer ${initData}` } : {};
   } catch (e) {
-    console.error("Failed to fetch user stats", e);
-    return null;
+    return {};
   }
 }
 
-export async function saveUserStats(stats: UserStats): Promise<any> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
-      body: JSON.stringify(stats)
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (e) {
-    console.error("Failed to save user stats", e);
-    return null;
-  }
+interface FetchOptions extends RequestInit {
+  timeoutMs?: number;
+  retries?: number;
 }
 
-export interface LeaderboardResponse {
-  leaderboard: UserStats[];
-  myRank?: number;
-  myScore?: number;
+/**
+ * Единый HTTP-клиент с AbortController, тайм-аутом и возможностью retry для идемпотентных запросов.
+ */
+export async function apiRequest<T>(endpoint: string, options: FetchOptions = {}): Promise<T | null> {
+  const { timeoutMs = 15000, retries = (options.method === 'GET' || !options.method ? 2 : 0), ...fetchOptions } = options;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+
+  let lastError: any = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const authHeader = getAuthHeader();
+      const res = await fetch(url, {
+        ...fetchOptions,
+        headers: {
+          ...authHeader,
+          ...(fetchOptions.headers || {}),
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        // Если сервер вернул 5xx ошибку и это попытка с retry, пробуем еще раз
+        if (res.status >= 500 && attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+          continue;
+        }
+        console.warn(`API request to ${endpoint} failed with status: ${res.status}`);
+        return null;
+      }
+
+      return (await res.json()) as T;
+    } catch (e: any) {
+      clearTimeout(timeoutId);
+      lastError = e;
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+      }
+    }
+  }
+
+  console.error(`API request to ${endpoint} completely failed:`, lastError);
+  return null;
+}
+
+export async function fetchUserStats(userId?: number | null): Promise<UserStats | null> {
+  const query = userId ? `?userId=${userId}` : '';
+  return apiRequest<UserStats>(`/api/user${query}`, { method: 'GET' });
+}
+
+export async function saveUserStats(stats: UserStats): Promise<{ success: boolean; stats?: UserStats } | null> {
+  return apiRequest<{ success: boolean; stats?: UserStats }>(`/api/user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(stats),
+  });
 }
 
 export async function fetchLeaderboard(userId?: number | null): Promise<LeaderboardResponse> {
-  try {
-    const headers = getAuthHeader();
-    const query = userId ? `?userId=${userId}` : '';
-    const res = await fetch(`${API_URL}/api/leaderboard${query}`, { headers });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        return { leaderboard: data };
-      }
-      return {
-        leaderboard: data.leaderboard || [],
-        myRank: data.myRank,
-        myScore: data.myScore
-      };
-    }
-    return { leaderboard: [] };
-  } catch (e) {
-    console.error("Failed to fetch leaderboard", e);
+  const query = userId ? `?userId=${userId}` : '';
+  const data = await apiRequest<any>(`/api/leaderboard${query}`, { method: 'GET' });
+  if (!data) {
     return { leaderboard: [] };
   }
+  if (Array.isArray(data)) {
+    return { leaderboard: data };
+  }
+  return {
+    leaderboard: data.leaderboard || [],
+    myRank: data.myRank,
+    myScore: data.myScore,
+  };
 }
 
-export async function submitGameSolve(payload: { formula: string, digits: string[], elapsedTimeMs: number, gameMode: string }): Promise<any> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/game/solve`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (e) {
-    console.error("Failed to submit game solve", e);
-    return null;
-  }
+export async function submitGameSolve(payload: GameSolvePayload): Promise<any> {
+  return apiRequest<any>(`/api/game/solve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function submitGameSkip(payload: { gameMode: string }): Promise<any> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/game/skip`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (e) {
-    console.error("Failed to submit game skip", e);
-    return null;
-  }
+export async function submitGameSkip(payload: GameSkipPayload): Promise<any> {
+  return apiRequest<any>(`/api/game/skip`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function buyHint(): Promise<{ success: boolean; coins?: number; hintsCount?: number; error?: string } | null> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/user/buy-hint`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (e) {
-    console.error("Failed to buy hint", e);
-    return null;
-  }
+export async function buyHint(): Promise<HintOperationResponse | null> {
+  return apiRequest<HintOperationResponse>(`/api/user/buy-hint`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 }
 
-export async function consumeHint(): Promise<{ success: boolean; hintsCount?: number; error?: string } | null> {
-  const headers = getAuthHeader();
-  if (!headers.Authorization) return null;
-  try {
-    const res = await fetch(`${API_URL}/api/user/use-hint`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-    return null;
-  } catch (e) {
-    console.error("Failed to use hint", e);
-    return null;
-  }
+export async function consumeHint(): Promise<HintOperationResponse | null> {
+  return apiRequest<HintOperationResponse>(`/api/user/use-hint`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+export async function fetchRandomTicketApi(): Promise<RandomTicketResponse | null> {
+  return apiRequest<RandomTicketResponse>(`/api/tickets/random`, { method: 'GET' });
+}
+
+export async function fetchCarsPoolApi(): Promise<string[] | null> {
+  const data = await apiRequest<any>(`/api/cars/pool`, { method: 'GET' });
+  if (!data) return null;
+  return Array.isArray(data) ? data : data.images || data.pool || null;
+}
+
+export async function fetchTicketsPoolApi(): Promise<any[] | null> {
+  const data = await apiRequest<any>(`/api/tickets/pool`, { method: 'GET' });
+  if (!data) return null;
+  return Array.isArray(data) ? data : data.images || data.pool || null;
 }
 
 export { consumeHint as useHint };

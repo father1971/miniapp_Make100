@@ -2,7 +2,23 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { ModeDetail, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, consumeHint } from './api';
+import {
+  ModeDetail,
+  UserStats,
+  TelegramUser,
+  TelegramWebApp,
+  saveUserStats,
+  fetchLeaderboard as fetchLeaderboardApi,
+  API_URL,
+  getAuthHeader,
+  submitGameSolve,
+  submitGameSkip,
+  buyHint,
+  consumeHint,
+  fetchRandomTicketApi,
+  fetchCarsPoolApi,
+  fetchTicketsPoolApi
+} from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
@@ -48,53 +64,6 @@ const formatTotalPlayTime = (timeMs: number | null | undefined, t?: TranslationD
   }
   return `${seconds} ${t?.secondsShort || 'сек.'}`;
 };
-
-interface TelegramUser {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  language_code?: string;
-  photo_url?: string;
-}
-
-interface TelegramWebApp {
-  initData?: string;
-  initDataUnsafe?: {
-    user?: TelegramUser;
-    start_param?: string;
-  };
-  version?: string;
-  isVersionAtLeast?: (version: string) => boolean;
-  ready: () => void;
-  expand: () => void;
-  close: () => void;
-  requestFullscreen?: () => void;
-  exitFullscreen?: () => void;
-  disableVerticalSwipes?: () => void;
-  enableVerticalSwipes?: () => void;
-  isFullscreen?: boolean;
-  isVerticalSwipesEnabled?: boolean;
-  setHeaderColor: (color: string) => void;
-  setBackgroundColor: (color: string) => void;
-  HapticFeedback?: {
-    impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
-    notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
-  };
-  CloudStorage?: {
-    setItem: (key: string, value: string, callback?: (err: Error | null, success: boolean) => void) => void;
-    getItem: (key: string, callback: (err: Error | null, value: string) => void) => void;
-  };
-  BackButton: {
-    show: () => void;
-    hide: () => void;
-    onClick: (callback: () => void) => void;
-    offClick: (callback: () => void) => void;
-  };
-  colorScheme?: 'light' | 'dark';
-  onEvent?: (eventType: string, eventHandler: () => void) => void;
-  offEvent?: (eventType: string, eventHandler: () => void) => void;
-}
 
 declare global {
   interface Window {
@@ -867,43 +836,37 @@ export default function App() {
 
     // 3. Fallback, если пул пуст
     try {
-      const response = await fetch(`${API_URL}/api/tickets/random`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.ticket) {
-          const chosenUrl = data.ticket.imageUrl || data.ticket.url;
-          setRecentTicketUrls(prev => {
-            const updatedUrls = [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6);
-            return updatedUrls;
+      const data = await fetchRandomTicketApi();
+      if (data && data.imageUrl) {
+        const chosenUrl = data.imageUrl;
+        setRecentTicketUrls(prev => {
+          const updatedUrls = [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6);
+          return updatedUrls;
+        });
+        const img = new Image();
+        let isDone = false;
+        const handleDone = () => {
+          if (isDone) return;
+          isDone = true;
+          setTicketBg({
+            imageUrl: chosenUrl,
+            category: data.category || 'default',
+            categoryName: data.categoryName || ''
           });
-          const img = new Image();
-          let isDone = false;
-          const handleDone = () => {
-            if (isDone) return;
-            isDone = true;
-            setTicketBg({
-              imageUrl: chosenUrl,
-              category: data.ticket.category || 'default',
-              categoryName: data.ticket.categoryName || ''
-            });
-            setIsVisualReady(true);
-          };
-          img.onload = handleDone;
-          img.onerror = handleDone;
-          setTimeout(handleDone, 5000);
-          img.src = chosenUrl;
-          if (img.complete) {
-            handleDone();
-          }
-        } else {
           setIsVisualReady(true);
+        };
+        img.onload = handleDone;
+        img.onerror = handleDone;
+        setTimeout(handleDone, 5000);
+        img.src = chosenUrl;
+        if (img.complete) {
+          handleDone();
         }
       } else {
         setIsVisualReady(true);
       }
     } catch (e) {
       console.warn('Failed to fetch random ticket:', e);
-      setIsVisualReady(true);
     }
   }, []);
 
@@ -915,6 +878,7 @@ export default function App() {
   const [isVisualReady, setIsVisualReady] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
+  const [isSubmittingHint, setIsSubmittingHint] = useState(false);
 
   const elapsedTimeRef = useRef<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -1107,29 +1071,21 @@ export default function App() {
     const fetchImages = async () => {
       // 1. Пул картинок автомобилей
       try {
-        const response = await fetch(`${API_URL}/api/cars/pool`);
-        if (response.ok) {
-          const data = await response.json();
-          const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
-          
-          const imageUrls = images.map((item: any) => typeof item === 'string' ? item : (item.imageUrl || item.url || item.dataUrl || ''));
-          const validUrls = imageUrls.filter(Boolean);
-          
-          if (validUrls.length > 0) {
-            carImagesListRef.current = validUrls;
-            if (!carImage) {
-              const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
-              const img = new Image();
-              img.onload = () => setCarImage(newUrl);
-              img.src = newUrl;
-            }
-            try {
-              localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
-            } catch (e) {
-              console.warn('Failed to cache KV images:', e);
-            }
-            preloadImagePool(validUrls);
+        const validUrls = await fetchCarsPoolApi();
+        if (validUrls && validUrls.length > 0) {
+          carImagesListRef.current = validUrls;
+          if (!carImage) {
+            const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
+            const img = new Image();
+            img.onload = () => setCarImage(newUrl);
+            img.src = newUrl;
           }
+          try {
+            localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
+          } catch (e) {
+            console.warn('Failed to cache KV images:', e);
+          }
+          preloadImagePool(validUrls);
         }
       } catch (err) {
         console.warn('Ошибка при получении картинок с бэкенда:', err);
@@ -1137,37 +1093,33 @@ export default function App() {
 
       // 2. Пул фонов билетов
       try {
-        const response = await fetch(`${API_URL}/api/tickets/pool`);
-        if (response.ok) {
-          const data = await response.json();
-          const tickets = Array.isArray(data) ? data : (data.tickets || data.pool || []);
-          if (tickets && tickets.length > 0) {
-            const formattedTickets = tickets.map((t: any) => ({
-              id: t.id,
-              category: t.category || 'default',
-              categoryName: t.categoryName || '',
-              imageUrl: t.imageUrl || t.url || ''
-            })).filter((t: any) => Boolean(t.imageUrl));
+        const rawTickets = await fetchTicketsPoolApi();
+        if (rawTickets && rawTickets.length > 0) {
+          const formattedTickets = rawTickets.map((t: any) => ({
+            id: t.id,
+            category: t.category || 'default',
+            categoryName: t.categoryName || '',
+            imageUrl: t.imageUrl || t.url || ''
+          })).filter((t: any) => Boolean(t.imageUrl));
 
-            if (formattedTickets.length > 0) {
-              ticketImagesListRef.current = formattedTickets;
-              try {
-                localStorage.setItem('make100_kv_ticket_images', JSON.stringify(formattedTickets));
-              } catch (e) {
-                console.warn('Failed to cache KV ticket images:', e);
-              }
-              setTicketBg(prev => {
-                if (prev && prev.imageUrl) return prev;
-                const initialTicket = formattedTickets[Math.floor(Math.random() * formattedTickets.length)];
-                return {
-                  imageUrl: initialTicket.imageUrl,
-                  category: initialTicket.category,
-                  categoryName: initialTicket.categoryName
-                };
-              });
-              const ticketUrls = formattedTickets.map((t: any) => t.imageUrl);
-              preloadImagePool(ticketUrls);
+          if (formattedTickets.length > 0) {
+            ticketImagesListRef.current = formattedTickets;
+            try {
+              localStorage.setItem('make100_kv_ticket_images', JSON.stringify(formattedTickets));
+            } catch (e) {
+              console.warn('Failed to cache KV ticket images:', e);
             }
+            setTicketBg(prev => {
+              if (prev && prev.imageUrl) return prev;
+              const initialTicket = formattedTickets[Math.floor(Math.random() * formattedTickets.length)];
+              return {
+                imageUrl: initialTicket.imageUrl,
+                category: initialTicket.category,
+                categoryName: initialTicket.categoryName
+              };
+            });
+            const ticketUrls = formattedTickets.map((t: any) => t.imageUrl);
+            preloadImagePool(ticketUrls);
           }
         }
       } catch (err) {
@@ -1337,7 +1289,7 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
-  const [stats, setStats] = useState<any>({ coins: 0, hintsCount: 0, referralCount: 0 });
+  const [stats, setStats] = useState<UserStats>({ coins: 0, hintsCount: 0, referralCount: 0 });
   const statsRef = useRef(stats);
 
   useEffect(() => {
@@ -1707,22 +1659,32 @@ export default function App() {
     }
   };
 
-  const showHint = () => {
-    if (isHinting || won || !isVisualReady) return;
+  const showHint = async () => {
+    if (isHinting || won || !isVisualReady || isSubmittingHint) return;
     
     const currentStats = statsRef.current;
     
-    if (currentStats.hintsCount > 0) {
-      setStats((prev: any) => {
-        const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
-        return newStats;
-      });
+    if ((currentStats.hintsCount ?? 0) > 0) {
+      setIsSubmittingHint(true);
+      // Оптимистично уменьшаем локальный счётчик
+      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
+      
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        consumeHint().then(res => {
+        try {
+          const res = await consumeHint();
           if (res && res.success && res.hintsCount !== undefined) {
             setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
+          } else if (res && !res.success) {
+            // Если сервер сообщил об ошибке (например, подсказок на самом деле 0), восстанавливаем
+            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
           }
-        }).catch(err => console.error("useHint error", err));
+        } catch (err) {
+          console.error("useHint error", err);
+        } finally {
+          setIsSubmittingHint(false);
+        }
+      } else {
+        setIsSubmittingHint(false);
       }
       showHintOnScreen();
     } else {
@@ -2436,19 +2398,33 @@ export default function App() {
     return solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
   }, [won, digits]);
 
-  const handleWatchOptimal = () => {
+  const handleWatchOptimal = async () => {
+    if (isSubmittingHint) return;
+    const currentStats = statsRef.current;
+    
     // Проверяем баланс подсказок
-    if (stats.hintsCount > 0) {
+    if ((currentStats.hintsCount ?? 0) > 0) {
+      setIsSubmittingHint(true);
       // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
       setWon(false);
       setGameState('playing');
-      setStats((prev: any) => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
+      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
+      
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        consumeHint().then(res => {
+        try {
+          const res = await consumeHint();
           if (res && res.success && res.hintsCount !== undefined) {
             setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
+          } else if (res && !res.success) {
+            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
           }
-        }).catch(err => console.error("useHint error", err));
+        } catch (err) {
+          console.error("useHint error", err);
+        } finally {
+          setIsSubmittingHint(false);
+        }
+      } else {
+        setIsSubmittingHint(false);
       }
       showHintOnScreen();
       playSound('click');
@@ -3029,32 +3005,47 @@ export default function App() {
               <div className="w-full flex flex-col gap-3">
                 <button
                   onClick={async () => {
-                    if (stats.coins >= 20) {
+                    const currentCoins = stats.coins ?? 0;
+                    if (isSubmittingHint || currentCoins < 20) return;
+                    setIsSubmittingHint(true);
+                    const prevCoins = currentCoins;
+                    
+                    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+                      try {
+                        const res = await buyHint();
+                        if (res && res.success) {
+                          setStats((prev: any) => ({
+                            ...prev,
+                            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
+                            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
+                          }));
+                          setShowBuyHintModal(false);
+                          setWon(false);
+                          setGameState('playing');
+                          showHintOnScreen();
+                        } else {
+                          // Покупка не удалась на сервере
+                          console.warn("Buy hint rejected by server:", res?.error);
+                        }
+                      } catch (e) {
+                        console.error("buyHint error", e);
+                      } finally {
+                        setIsSubmittingHint(false);
+                      }
+                    } else {
+                      // Гостевой режим (оффлайн/dev)
                       setShowBuyHintModal(false);
                       setWon(false);
                       setGameState('playing');
                       setStats((prev: any) => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
-                      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-                        try {
-                          const res = await buyHint();
-                          if (res && res.success) {
-                            setStats((prev: any) => ({
-                              ...prev,
-                              coins: res.coins !== undefined ? res.coins : prev.coins,
-                              hintsCount: res.hintsCount !== undefined ? res.hintsCount : prev.hintsCount
-                            }));
-                          }
-                        } catch (e) {
-                          console.error("buyHint error", e);
-                        }
-                      }
+                      setIsSubmittingHint(false);
                       showHintOnScreen();
                     }
                   }}
-                  disabled={stats.coins < 20}
-                  className={`w-full py-3.5 rounded-2xl font-bold transition-all text-sm sm:text-base flex justify-center items-center gap-2 ${stats.coins >= 20 ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 cursor-not-allowed'}`}
+                  disabled={isSubmittingHint || (stats.coins ?? 0) < 20}
+                  className={`w-full py-3.5 rounded-2xl font-bold transition-all text-sm sm:text-base flex justify-center items-center gap-2 ${(!isSubmittingHint && (stats.coins ?? 0) >= 20) ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 cursor-not-allowed'}`}
                 >
-                  {t.buyForCoins ? t.buyForCoins.replace('{cost}', '20') : 'Купить за 20 🪙'}
+                  {isSubmittingHint ? (t.loading || 'Загрузка...') : (t.buyForCoins ? t.buyForCoins.replace('{cost}', '20') : 'Купить за 20 🪙')}
                 </button>
                 <button
                   onClick={() => setShowBuyHintModal(false)}
@@ -3270,7 +3261,7 @@ export default function App() {
                     >
                       👁️ {t.viewSolution || 'Посмотреть решение'}
                       <span className="text-[10px] py-0.5 px-1.5 rounded-md bg-white/20 font-bold ml-1">
-                        {stats.hintsCount > 0 ? "1 🧠" : "20 🪙"}
+                        {(stats.hintsCount ?? 0) > 0 ? "1 🧠" : "20 🪙"}
                       </span>
                     </button>
                   </div>
