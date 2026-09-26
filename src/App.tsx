@@ -19,13 +19,16 @@ import {
   fetchCarsPoolApi,
   fetchTicketsPoolApi
 } from './api';
-import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
+import { TRANSLATIONS, LANGUAGES, Language } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
 import { TicketCard } from './components/TicketCard';
 import { UserProfile } from "./components/UserProfile";
 import { InteractiveTutorial } from './components/InteractiveTutorial';
 import { Stopwatch } from './components/Stopwatch';
+import { TelegramLoadingOverlay } from './components/TelegramLoadingOverlay';
+import { SaveBotModal } from './components/SaveBotModal';
+import { BuyHintModal } from './components/BuyHintModal';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
@@ -53,21 +56,7 @@ declare global {
 
 
 
-function TelegramLoadingOverlay({ t }: { t: TranslationData }) {
-  return (
-    <div className="fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
-      <div className="flex flex-col items-center max-w-xs text-center">
-        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-500 flex items-center justify-center mb-4">
-          <RefreshCw size={28} className="animate-spin text-orange-500" />
-        </div>
-        <h2 className="text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight">Make 100</h2>
-        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          {t.authorizingTg || 'Авторизация в Telegram...'}
-        </p>
-      </div>
-    </div>
-  );
-}
+
 
 
 // Безопасная инициализация Telegram WebApp с проверкой версии Bot API
@@ -1943,6 +1932,43 @@ export default function App() {
     }
   };
 
+  const handleConfirmBuyHint = async () => {
+    const currentCoins = stats.coins ?? 0;
+    if (isSubmittingHint || currentCoins < 20) return;
+    setIsSubmittingHint(true);
+    const prevCoins = currentCoins;
+    
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+      try {
+        const res = await buyHint();
+        if (res && res.success) {
+          setStats((prev: any) => ({
+            ...prev,
+            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
+            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
+          }));
+          setShowBuyHintModal(false);
+          setWon(false);
+          setGameState('playing');
+          showHintOnScreen();
+        } else {
+          console.warn("Buy hint rejected by server:", res?.error);
+        }
+      } catch (e) {
+        console.error("buyHint error", e);
+      } finally {
+        setIsSubmittingHint(false);
+      }
+    } else {
+      setShowBuyHintModal(false);
+      setWon(false);
+      setGameState('playing');
+      setStats((prev: any) => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
+      setIsSubmittingHint(false);
+      showHintOnScreen();
+    }
+  };
+
   const isCarMode = gameMode === 'car';
   
   return (
@@ -2489,166 +2515,22 @@ export default function App() {
 
       {/* Modals */}
       <AnimatePresence>
-        {showBuyHintModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4"
-            onClick={() => setShowBuyHintModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-zinc-100 dark:border-zinc-800 relative flex flex-col items-center"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full flex items-center justify-center mb-4">
-                <Lightbulb size={32} />
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-center mb-2">{t.outOfHints || 'Подсказки закончились'}</h2>
-              <p className="text-center text-sm sm:text-base text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-                {t.outOfHintsDesc || 'Ваш лимит подсказок исчерпан. Вы можете приобрести 1 подсказку за 20 монет.'}
-                <br/><br/>
-                {t.balance || 'Баланс:'} <span className="font-bold text-yellow-600 dark:text-yellow-500">{stats.coins} 🪙</span>
-              </p>
-              <div className="w-full flex flex-col gap-3">
-                <button
-                  onClick={async () => {
-                    const currentCoins = stats.coins ?? 0;
-                    if (isSubmittingHint || currentCoins < 20) return;
-                    setIsSubmittingHint(true);
-                    const prevCoins = currentCoins;
-                    
-                    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-                      try {
-                        const res = await buyHint();
-                        if (res && res.success) {
-                          setStats((prev: any) => ({
-                            ...prev,
-                            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
-                            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
-                          }));
-                          setShowBuyHintModal(false);
-                          setWon(false);
-                          setGameState('playing');
-                          showHintOnScreen();
-                        } else {
-                          // Покупка не удалась на сервере
-                          console.warn("Buy hint rejected by server:", res?.error);
-                        }
-                      } catch (e) {
-                        console.error("buyHint error", e);
-                      } finally {
-                        setIsSubmittingHint(false);
-                      }
-                    } else {
-                      // Гостевой режим (оффлайн/dev)
-                      setShowBuyHintModal(false);
-                      setWon(false);
-                      setGameState('playing');
-                      setStats((prev: any) => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
-                      setIsSubmittingHint(false);
-                      showHintOnScreen();
-                    }
-                  }}
-                  disabled={isSubmittingHint || (stats.coins ?? 0) < 20}
-                  className={`w-full py-3.5 rounded-2xl font-bold transition-all text-sm sm:text-base flex justify-center items-center gap-2 ${(!isSubmittingHint && (stats.coins ?? 0) >= 20) ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 cursor-not-allowed'}`}
-                >
-                  {isSubmittingHint ? (t.loading || 'Загрузка...') : (t.buyForCoins ? t.buyForCoins.replace('{cost}', '20') : 'Купить за 20 🪙')}
-                </button>
-                <button
-                  onClick={() => setShowBuyHintModal(false)}
-                  className="w-full py-3.5 rounded-2xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm sm:text-base"
-                >
-                  {t.cancel || 'Отмена'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+        <BuyHintModal
+          isOpen={showBuyHintModal}
+          onClose={() => setShowBuyHintModal(false)}
+          onBuy={handleConfirmBuyHint}
+          coins={stats.coins ?? 0}
+          isSubmitting={isSubmittingHint}
+          t={t}
+        />
 
-        {showSaveBotModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-md flex items-center justify-center z-[310] p-4"
-            onClick={() => {
-              setShowSaveBotModal(false);
-              try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-              animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-white/40 dark:border-zinc-700/40 relative flex flex-col items-center"
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                onClick={() => {
-                  playVibration?.('light');
-                  playSound?.('click');
-                  setShowSaveBotModal(false);
-                  try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1 rounded-full cursor-pointer"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 animate-bounce">
-                <Sparkles size={32} />
-              </div>
-
-              <h2 className="text-xl font-black text-center mb-2 leading-snug">
-                {t.saveBotModalTitle || 'Не потеряй игру Make 100! 🧩'}
-              </h2>
-
-              <p className="text-center text-sm text-zinc-600 dark:text-zinc-300 mb-6 leading-relaxed whitespace-pre-line">
-                {t.saveBotModalDesc || 'Закрепи бота в списке своих чатов, чтобы возвращаться к игре в любое время и сохранить свои рекорды и монеты.\n\nЗапусти бота прямо сейчас и получи бонус +250 🪙 монет!'}
-              </p>
-
-              <div className="w-full flex flex-col gap-2.5">
-                <button
-                  onClick={() => {
-                    playVibration?.('success');
-                    playSound?.('success');
-                    setShowSaveBotModal(false);
-                    try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                    
-                    const botName = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-                    const botUrl = `https://t.me/${botName}?start=save_game`;
-                    const tg = (window as any).Telegram?.WebApp;
-                    if (tg && typeof tg.openTelegramLink === 'function') {
-                      try {
-                        tg.openTelegramLink(botUrl);
-                      } catch (e) {
-                        window.open(botUrl, '_blank');
-                      }
-                    } else {
-                      window.open(botUrl, '_blank');
-                    }
-                  }}
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-95 text-white rounded-2xl font-black transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer text-base"
-                >
-                  {t.saveBotModalBtn || '🤖 Запустить бота (+250 🪙)'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    playVibration?.('light');
-                    playSound?.('click');
-                    setShowSaveBotModal(false);
-                    try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                  }}
-                  className="w-full py-2.5 rounded-xl font-bold text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors text-sm cursor-pointer"
-                >
-                  {t.saveBotModalLater || 'Позже'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+        <SaveBotModal
+          isOpen={showSaveBotModal}
+          onClose={() => setShowSaveBotModal(false)}
+          t={t}
+          playSound={playSound}
+          playVibration={playVibration}
+        />
         <AnimatePresence>
           {showTutorial && (
             <InteractiveTutorial
