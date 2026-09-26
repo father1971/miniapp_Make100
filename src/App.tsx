@@ -1447,11 +1447,14 @@ export default function App() {
         }
       }
 
-      // 2. Резервный поиск в URL-параметрах окна
+      // 2. Резервный поиск в URL-параметрах окна (search и hash)
       if (!referrerId && typeof window !== 'undefined' && window.location) {
         try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const rawParam = urlParams.get('tgWebAppStartParam') || urlParams.get('startapp') || urlParams.get('start_param') || urlParams.get('ref');
+          const searchParams = new URLSearchParams(window.location.search);
+          const hashString = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+          const hashParams = new URLSearchParams(hashString);
+          const rawParam = searchParams.get('tgWebAppStartParam') || searchParams.get('startapp') || searchParams.get('start_param') || searchParams.get('ref') || searchParams.get('start')
+            || hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start_param') || hashParams.get('ref') || hashParams.get('start');
           if (rawParam) {
             const parsedId = parseInt(rawParam, 10);
             if (!isNaN(parsedId)) {
@@ -1729,7 +1732,7 @@ export default function App() {
     
     // Наша рабочая реферальная ссылка на бота
     const botUsername = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-    const referralLink = `https://t.me/${botUsername}/app?startapp=${userId}`;
+    const referralLink = `https://t.me/${botUsername}?start=${userId}`;
     
     // Красивый пригласительный текст для друзей
     const shareText = t.inviteShareText || `Привет! Прокачай логику в игре Make 100! 🧩🎯 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
