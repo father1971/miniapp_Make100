@@ -1,118 +1,49 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
-import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
+import {
+  ModeDetail,
+  UserStats,
+  TelegramUser,
+  TelegramWebApp,
+  saveUserStats,
+  fetchLeaderboard as fetchLeaderboardApi,
+  API_URL,
+  getAuthHeader,
+  submitGameSolve,
+  submitGameSkip,
+  buyHint,
+  consumeHint,
+  fetchRandomTicketApi,
+  fetchCarsPoolApi,
+  fetchTicketsPoolApi
+} from './api';
+import { TRANSLATIONS, LANGUAGES, Language } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
 import { TicketCard } from './components/TicketCard';
-import { UserProfile } from "./components/UserProfile";
-import { InteractiveTutorial } from './components/InteractiveTutorial';
+const UserProfile = React.lazy(() => import("./components/UserProfile").then(m => ({ default: m.UserProfile })));
+const InteractiveTutorial = React.lazy(() => import('./components/InteractiveTutorial').then(m => ({ default: m.InteractiveTutorial })));
+import { Stopwatch } from './components/Stopwatch';
+import { TelegramLoadingOverlay } from './components/TelegramLoadingOverlay';
+import { SaveBotModal } from './components/SaveBotModal';
+import { BuyHintModal } from './components/BuyHintModal';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
-const getLevelInfo = (solved: number) => {
-  const milestones = [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
-  let level = 1;
-  let nextMilestone = milestones[1];
-  let prevMilestone = milestones[0];
-  
-  for (let i = 0; i < milestones.length; i++) {
-    if (solved >= milestones[i]) {
-      level = i + 1;
-      prevMilestone = milestones[i];
-      nextMilestone = milestones[i + 1] || milestones[i];
-    }
-  }
-  
-  const progress = nextMilestone === prevMilestone ? 100 : ((solved - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
-  
-  return { level, prevMilestone, nextMilestone, progress };
-};
-
-const formatRegistrationDate = (timestamp: number | null | undefined, lang: string = 'ru', t?: TranslationData) => {
-  if (!timestamp) return t?.unknownDate || 'Неизвестно';
-  try {
-    const localeMap: Record<string, string> = {
-      ru: 'ru-RU', en: 'en-US', de: 'de-DE', fr: 'fr-FR', pt: 'pt-BR', es: 'es-ES',
-      zh: 'zh-CN', ja: 'ja-JP', it: 'it-IT', ko: 'ko-KR', tr: 'tr-TR', he: 'he-IL',
-      ar: 'ar-SA', hi: 'hi-IN', la: 'la', eo: 'eo', elvish: 'en-GB', klingon: 'en-GB',
-      dothraki: 'en-GB', valyrian: 'en-GB'
-    };
-    return new Date(timestamp).toLocaleDateString(localeMap[lang] || 'ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  } catch (e) {
-    return new Date(timestamp).toLocaleDateString();
-  }
-};
-
-const formatBestTime = (timeMs: number | null | undefined, t?: TranslationData) => {
-  if (!timeMs) return t?.noRecord || 'Нет рекорда';
-  return `${(timeMs / 1000).toFixed(2)} ${t?.secondsShort || 'сек'}`;
-};
-
-const formatTotalPlayTime = (timeMs: number | null | undefined, t?: TranslationData) => {
-  if (!timeMs) return `0 ${t?.secondsShort || 'сек'}`;
-  const totalSeconds = Math.floor(timeMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  
-  if (minutes > 0) {
-    return `${minutes} ${t?.minutesShort || 'мин.'} ${seconds} ${t?.secondsShort || 'сек.'}`;
-  }
-  return `${seconds} ${t?.secondsShort || 'сек.'}`;
-};
-
-interface TelegramUser {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  language_code?: string;
-  photo_url?: string;
-}
-
-interface TelegramWebApp {
-  initData?: string;
-  initDataUnsafe?: {
-    user?: TelegramUser;
-    start_param?: string;
-  };
-  version?: string;
-  isVersionAtLeast?: (version: string) => boolean;
-  ready: () => void;
-  expand: () => void;
-  close: () => void;
-  requestFullscreen?: () => void;
-  exitFullscreen?: () => void;
-  disableVerticalSwipes?: () => void;
-  enableVerticalSwipes?: () => void;
-  isFullscreen?: boolean;
-  isVerticalSwipesEnabled?: boolean;
-  setHeaderColor: (color: string) => void;
-  setBackgroundColor: (color: string) => void;
-  HapticFeedback?: {
-    impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
-    notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
-  };
-  CloudStorage?: {
-    setItem: (key: string, value: string, callback?: (err: Error | null, success: boolean) => void) => void;
-    getItem: (key: string, callback: (err: Error | null, value: string) => void) => void;
-  };
-  BackButton: {
-    show: () => void;
-    hide: () => void;
-    onClick: (callback: () => void) => void;
-    offClick: (callback: () => void) => void;
-  };
-  colorScheme?: 'light' | 'dark';
-  onEvent?: (eventType: string, eventHandler: () => void) => void;
-  offEvent?: (eventType: string, eventHandler: () => void) => void;
-}
+import {
+  calculateResult,
+  findSolution,
+  isOpAllowed,
+} from './utils/mathEngine';
+import {
+  formatRegistrationDate,
+  formatBestTime,
+  formatTotalPlayTime,
+  formatSolveTime,
+  getPlayerDisplayName,
+} from './utils/formatters';
 
 declare global {
   interface Window {
@@ -123,634 +54,10 @@ declare global {
 }
 
 
-function gcd(a: number, b: number): number {
-    a = Math.abs(a);
-    b = Math.abs(b);
-    while (b > 0) {
-      const temp = b;
-      b = a % b;
-      a = temp;
-    }
-    return a;
-  }
 
-  class Frac {
-    n: number;
-    d: number;
-    constructor(n: number, d: number) {
-      const g = gcd(n, d);
-      this.n = n / g;
-      this.d = d / g;
-      if (this.d < 0) {
-        this.n = -this.n;
-        this.d = -this.d;
-      }
-    }
-    add(o: Frac) { return new Frac(this.n * o.d + o.n * this.d, this.d * o.d); }
-    sub(o: Frac) { return new Frac(this.n * o.d - o.n * this.d, this.d * o.d); }
-    mul(o: Frac) { return new Frac(this.n * o.n, this.d * o.d); }
-    div(o: Frac) { return new Frac(this.n * o.d, this.d * o.n); }
-    isTerm() {
-      let d = this.d;
-      while (d % 2 === 0) d /= 2;
-      while (d % 5 === 0) d /= 5;
-      return d === 1;
-    }
-  }
 
-  function parseFrac(str: string) {
-    if (str.includes('.')) {
-      const parts = str.split('.');
-      if (parts.length > 2) throw new Error("Invalid number");
-      const decLen = parts[1].length;
-      const n = parseInt(parts[0] + parts[1], 10);
-      const d = Math.pow(10, decLen);
-      return new Frac(n, d);
-    }
-    return new Frac(parseInt(str, 10), 1);
-  }
 
-function calculateResult(digits: string[], gaps: string[]): number {
-  let expr = gaps[0];
-  for (let i = 0; i < digits.length; i++) {
-    expr += digits[i];
-    if (i < gaps.length - 1) {
-      expr += gaps[i + 1];
-    }
-  }
-  expr = expr.replace(/,/g, '.');
-  
-  try {
-    const openParens = (expr.match(/\(/g) || []).length;
-    const closeParens = (expr.match(/\)/g) || []).length;
-    if (openParens !== closeParens) return NaN;
-    
-    // Prevent empty parentheses
-    if (/\(\s*\)/.test(expr)) return NaN;
 
-    // Prevent multi-digit numbers starting with 0 (e.g., 025)
-    if (/\b0[0-9]/.test(expr)) return NaN;
-    
-    if (!expr.trim()) return NaN;
-    if (/[^0-9+\-\*/().\s]/.test(expr)) return NaN;
-
-    // Handle unary plus/minus
-    expr = expr.replace(/(^|\()(\s*)([+-])/g, '$1$20$3');
-
-    // Evaluate strict
-    const tokens: (Frac | string)[] = [];
-    let num = '';
-    for (let i = 0; i < expr.length; i++) {
-      const c = expr[i];
-      if (/[0-9.]/.test(c)) {
-        num += c;
-      } else if (/[+\-*/()]/.test(c)) {
-        if (num) {
-          tokens.push(parseFrac(num));
-          num = '';
-        }
-        tokens.push(c);
-      }
-    }
-    if (num) tokens.push(parseFrac(num));
-
-    const output: (Frac | string)[] = [];
-    const ops: string[] = [];
-    const prec: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
-    for (const t of tokens) {
-      if (t instanceof Frac) {
-        output.push(t);
-      } else if (t === '(') {
-        ops.push(t as string);
-      } else if (t === ')') {
-        while (ops.length && ops[ops.length - 1] !== '(') {
-          output.push(ops.pop()!);
-        }
-        ops.pop();
-      } else {
-        while (ops.length && prec[ops[ops.length - 1]] >= prec[t as string]) {
-          output.push(ops.pop()!);
-        }
-        ops.push(t as string);
-      }
-    }
-    while (ops.length) output.push(ops.pop()!);
-
-    const stack: Frac[] = [];
-    for (const t of output) {
-      if (t instanceof Frac) {
-        stack.push(t);
-      } else {
-        const b = stack.pop()!;
-        const a = stack.pop()!;
-        if (t === '+') stack.push(a.add(b));
-        if (t === '-') stack.push(a.sub(b));
-        if (t === '*') stack.push(a.mul(b));
-        if (t === '/') {
-          if (b.n === 0) return NaN;
-          const res = a.div(b);
-          if (!res.isTerm()) return NaN;
-          stack.push(res);
-        }
-      }
-    }
-    
-    if (stack.length !== 1) return NaN;
-    
-    const finalRes = stack[0];
-    if (finalRes.d === 1) return finalRes.n;
-    return finalRes.n / finalRes.d;
-  } catch (e) {
-    return NaN;
-  }
-}
-
-function findSolution(digits: string[]): string[] | null {
-  function getNumbers(arr: string[]) {
-    const str = arr.join('');
-    const res = [];
-    
-    if (str.length === 1 || str[0] !== '0') {
-      res.push({ val: parseFrac(str), expr: str });
-    }
-    
-    for (let i = 1; i < str.length; i++) {
-      const intPart = str.slice(0, i);
-      if (intPart.length > 1 && intPart[0] === '0') continue;
-      
-      const decStr = str.slice(0, i) + '.' + str.slice(i);
-      const exprStr = str.slice(0, i) + ',' + str.slice(i);
-      res.push({ val: parseFrac(decStr), expr: exprStr });
-    }
-    return res;
-  }
-
-  function getPartitions(arr: string[]): any[] {
-    if (arr.length === 0) return [[]];
-    const result = [];
-    for (let i = 1; i <= arr.length; i++) {
-      const firsts = getNumbers(arr.slice(0, i));
-      const rests = getPartitions(arr.slice(i));
-      for (const f of firsts) {
-        for (const r of rests) {
-          result.push([f, ...r]);
-        }
-      }
-    }
-    return result;
-  }
-
-  const exprMemo = new Map<string, any[]>();
-  function generateExpressions(nums: any[]): any[] {
-    const key = nums.map(n => n.expr).join('|');
-    if (exprMemo.has(key)) return exprMemo.get(key)!;
-
-    if (nums.length === 1) return [{ val: nums[0].val, expr: nums[0].expr, prec: 3 }];
-    const results = [];
-    for (let i = 1; i < nums.length; i++) {
-      const lefts = generateExpressions(nums.slice(0, i));
-      const rights = generateExpressions(nums.slice(i));
-      for (const l of lefts) {
-        for (const r of rights) {
-          // +
-          const valAdd = l.val.add(r.val);
-          const exprAdd = (l.prec < 1 ? '(' + l.expr + ')' : l.expr) + '+' + (r.prec < 1 ? '(' + r.expr + ')' : r.expr);
-          results.push({ val: valAdd, expr: exprAdd, prec: 1 });
-          
-          // -
-          const valSub = l.val.sub(r.val);
-          const exprSub = (l.prec < 1 ? '(' + l.expr + ')' : l.expr) + '-' + (r.prec <= 1 ? '(' + r.expr + ')' : r.expr);
-          results.push({ val: valSub, expr: exprSub, prec: 1 });
-          
-          // *
-          const valMul = l.val.mul(r.val);
-          const exprMul = (l.prec < 2 ? '(' + l.expr + ')' : l.expr) + '*' + (r.prec < 2 ? '(' + r.expr + ')' : r.expr);
-          results.push({ val: valMul, expr: exprMul, prec: 2 });
-          
-          // /
-          if (r.val.n !== 0) {
-            const valDiv = l.val.div(r.val);
-            if (valDiv.isTerm()) {
-              const exprDiv = (l.prec < 2 ? '(' + l.expr + ')' : l.expr) + '/' + (r.prec <= 2 ? '(' + r.expr + ')' : r.expr);
-              results.push({ val: valDiv, expr: exprDiv, prec: 2 });
-            }
-          }
-        }
-      }
-    }
-    exprMemo.set(key, results);
-    return results;
-  }
-
-  function scoreExpression(expr: string): number {
-    let score = 0;
-    for (const char of expr) {
-      if (char === '+' || char === '-') score += 10;
-      if (char === '*' || char === '/') score += 12;
-      if (char === '(') score += 5;
-    }
-    score += expr.length;
-    return score;
-  }
-
-  const partitions = getPartitions(digits);
-  const validExprs: string[] = [];
-
-  for (const part of partitions) {
-    const exprs = generateExpressions(part);
-    for (const e of exprs) {
-      if (e.val.n === 100 && e.val.d === 1) {
-        validExprs.push(e.expr);
-      }
-    }
-  }
-
-  if (validExprs.length === 0) return null;
-
-  validExprs.sort((a, b) => scoreExpression(a) - scoreExpression(b));
-  const bestExpr = validExprs[0];
-
-  // Map the expression back to the gaps array
-  let gaps = Array(digits.length + 1).fill('');
-  let exprIdx = 0;
-  for (let i = 0; i < digits.length; i++) {
-    const digit = digits[i];
-    const digitIdx = bestExpr.indexOf(digit, exprIdx);
-    gaps[i] = bestExpr.slice(exprIdx, digitIdx);
-    exprIdx = digitIdx + 1;
-  }
-  gaps[digits.length] = bestExpr.slice(exprIdx);
-
-  // Clean up unnecessary outer parentheses if they exist
-  while (gaps[0].startsWith('(') && gaps[digits.length].endsWith(')')) {
-    // Check if removing them keeps the expression valid
-    const tempGaps = [...gaps];
-    tempGaps[0] = tempGaps[0].substring(1);
-    tempGaps[digits.length] = tempGaps[digits.length].slice(0, -1);
-    if (calculateResult(digits, tempGaps) === 100) {
-      gaps = tempGaps;
-    } else {
-      break;
-    }
-  }
-
-  return gaps;
-}
-
-/**
- * Умная защитная клавиатура (Smart Button Guard):
- * Подсчет незакрытых открывающих скобок '(' в выражении до указанного слота
- */
-function getUnclosedParenCount(gaps: string[], upToSlotIdx: number): number {
-  let count = 0;
-  for (let i = 0; i <= upToSlotIdx; i++) {
-    const s = gaps[i] || '';
-    for (let c = 0; c < s.length; c++) {
-      if (s[c] === '(') count++;
-      else if (s[c] === ')') count--;
-    }
-  }
-  return Math.max(0, count);
-}
-
-/**
- * Умная защитная клавиатура: общий баланс скобок во всем выражении
- */
-function getTotalParenBalance(gaps: string[]): { totalOpen: number; totalClosed: number } {
-  let totalOpen = 0;
-  let totalClosed = 0;
-  for (const s of gaps) {
-    if (!s) continue;
-    for (let c = 0; c < s.length; c++) {
-      if (s[c] === '(') totalOpen++;
-      else if (s[c] === ')') totalClosed++;
-    }
-  }
-  return { totalOpen, totalClosed };
-}
-
-/**
- * Умная защитная клавиатура (Smart Button Guard):
- * Проверка допустимости нажатия клавиши в текущем активном слоте
- */
-function isOpAllowed(
-  op: string,
-  selectedSlot: number | null,
-  digits: string[],
-  gaps: string[],
-  won: boolean,
-  isVisualReady: boolean
-): boolean {
-  if (selectedSlot === null || won || !isVisualReady) return false;
-  if (selectedSlot < 0 || selectedSlot > digits.length) return false;
-
-  const curr = gaps[selectedSlot] || '';
-  const lastChar = curr.length > 0 ? curr[curr.length - 1] : null;
-
-  // 1. Backspace (стереть)
-  if (op === 'Backspace') {
-    return curr.length > 0;
-  }
-
-  // Ограничение емкости слота (максимум 5 символов, если это не замена оператора)
-  const isReplacingOp = ['+', '-', '*', '/'].includes(op) && (['+', '-', '*', '/'].includes(lastChar || '') || lastChar === ',');
-  if (!isReplacingOp && curr.length >= 5) {
-    return false;
-  }
-
-  // 2. Слот 6 (после самой последней цифры)
-  if (selectedSlot === digits.length) {
-    if (op !== ')') return false;
-    const unclosedToLeft = getUnclosedParenCount(gaps, selectedSlot);
-    const { totalOpen, totalClosed } = getTotalParenBalance(gaps);
-    if (unclosedToLeft <= 0 || totalOpen <= totalClosed) return false;
-    if (curr.length > 0 && !curr.endsWith(')')) return false;
-    return true;
-  }
-
-  // 3. Слот 0 (перед первой цифрой)
-  if (selectedSlot === 0) {
-    // Бинарные операторы +, *, /, закрывающая скобка и запятая запрещены
-    if (['+', '*', '/', ')', ','].includes(op)) return false;
-
-    if (op === '-') {
-      // Унарный минус допустим в пустом слоте, после '(' или как замена существующего '-'
-      if (curr === '' || curr.endsWith('(') || curr === '-') return true;
-      return false;
-    }
-
-    if (op === '(') {
-      // Открывающая скобка допустима в пустом слоте, после '(' или после '-'
-      if (curr === '' || curr.endsWith('(') || curr.endsWith('-')) return true;
-      return false;
-    }
-
-    return false;
-  }
-
-  // 4. Промежуточные слоты (1..5)
-  // --- Десятичная запятая ',' ---
-  if (op === ',') {
-    if (curr.length > 0) return false;
-
-    // Проверяем, нет ли уже запятой в этом непрерывном числе (поиск влево)
-    for (let i = selectedSlot - 1; i >= 0; i--) {
-      const g = gaps[i] || '';
-      if (g.includes(',') || g.includes('.')) return false;
-      if (/[+\-*/()]/.test(g)) break;
-    }
-
-    // Поиск вправо
-    for (let i = selectedSlot + 1; i <= digits.length; i++) {
-      const g = gaps[i] || '';
-      if (g.includes(',') || g.includes('.')) return false;
-      if (/[+\-*/()]/.test(g)) break;
-    }
-
-    return true;
-  }
-
-  // --- Закрывающая скобка ')' ---
-  if (op === ')') {
-    const unclosedToLeft = getUnclosedParenCount(gaps, selectedSlot);
-    const { totalOpen, totalClosed } = getTotalParenBalance(gaps);
-    if (unclosedToLeft <= 0 || totalOpen <= totalClosed) return false;
-
-    // Нельзя закрывать сразу после оператора, '(' или ','
-    if (curr.length > 0) {
-      return curr.endsWith(')');
-    }
-    // Если слот пустой, перед ним стоит цифра digits[selectedSlot - 1]
-    return true;
-  }
-
-  // --- Открывающая скобка '(' (Вариант А) ---
-  if (op === '(') {
-    // В пустом промежуточном слоте '(' неактивна, пока не нажат оператор!
-    if (curr === '') return false;
-    // Разрешена после оператора (+, -, *, /) или после другой '('
-    if (['+', '-', '*', '/'].includes(lastChar || '') || lastChar === '(') {
-      return true;
-    }
-    return false;
-  }
-
-  // --- Арифметические операторы (+, -, *, /) ---
-  if (['+', '-', '*', '/'].includes(op)) {
-    // Если в слоте стоит запятая, оператор заменяет ее
-    if (curr === ',') return true;
-
-    // Если последний символ — оператор:
-    if (['+', '-', '*', '/'].includes(lastChar || '')) {
-      const prevChar = curr.length > 1 ? curr[curr.length - 2] : null;
-      if (prevChar === '(') {
-        return op === '-'; // После '(' разрешен только унарный минус '-'
-      }
-      return true; // Замена оператора (+, -, *, /)
-    }
-
-    // В пустом слоте (перед ним цифра)
-    if (curr === '') return true;
-
-    // После закрывающей скобки ')'
-    if (lastChar === ')') return true;
-
-    // Сразу после '(' допустим только унарный минус '-'
-    if (lastChar === '(') {
-      return op === '-';
-    }
-
-    return false;
-  }
-
-  return true;
-}
-
-const getTicketStyles = (t: any) => [
-  {
-    id: 'flight',
-    containerClass: 'bg-white rounded-xl shadow-2xl border-l-[12px] border-blue-600 p-5 sm:p-6',
-    icon: Plane,
-    iconClass: 'text-blue-600',
-    title: t.tickets.flight.title || 'BOARDING PASS',
-    subtitle: t.tickets.flight.subtitle || 'FIRST CLASS',
-    labelClass: 'text-slate-400 font-bold uppercase tracking-wider text-xs',
-    numberContainerClass: 'border-y-2 border-dashed border-slate-200 my-2',
-    numberClass: 'text-slate-800',
-    footerLeft: t.tickets.flight.footerLeft || 'GATE 14',
-    footerRight: t.tickets.flight.footerRight || 'SEAT 2A',
-    footerClass: 'text-slate-800 font-black uppercase text-sm',
-    hasBarcode: true,
-    pattern: 'radial-gradient(#e2e8f0 1px, transparent 1px)'
-  },
-  {
-    id: 'concert',
-    containerClass: 'bg-gradient-to-br from-purple-900 via-indigo-900 to-black rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.4)] p-5 sm:p-6 border border-purple-500/30 text-white',
-    icon: Music,
-    iconClass: 'text-pink-400',
-    title: t.tickets.concert.title || 'LIVE CONCERT',
-    subtitle: t.tickets.concert.subtitle || 'VIP ACCESS',
-    labelClass: 'text-purple-300/70 font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-black/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-inner my-2',
-    numberClass: 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]',
-    footerLeft: t.tickets.concert.footerLeft || 'WORLD TOUR',
-    footerRight: t.tickets.concert.footerRight || 'ROW 1',
-    footerClass: 'text-white font-bold uppercase tracking-widest text-xs opacity-80',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)'
-  },
-  {
-    id: 'cinema',
-    containerClass: 'bg-[#fdf6e3] rounded-sm shadow-xl p-5 sm:p-6 border-4 border-double border-[#d4af37] relative overflow-hidden',
-    icon: Film,
-    iconClass: 'text-[#d4af37]',
-    title: t.tickets.cinema.title || 'CINEMA TICKET',
-    subtitle: t.tickets.cinema.subtitle || 'ADMIT ONE',
-    labelClass: 'text-[#8b7322] font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'my-4',
-    numberClass: 'text-[#2c3e50] drop-shadow-sm',
-    footerLeft: t.tickets.cinema.footerLeft || 'ROW F',
-    footerRight: t.tickets.cinema.footerRight || 'SEAT 12',
-    footerClass: 'text-[#2c3e50] font-black uppercase text-sm',
-    hasBarcode: true,
-    pattern: 'radial-gradient(rgba(212,175,55,0.1) 1px, transparent 1px)'
-  },
-  {
-    id: 'train',
-    containerClass: 'bg-[#e8dcc5] rounded-sm shadow-md p-5 sm:p-6 border-x-[16px] border-dashed border-[#5c4033]',
-    icon: Train,
-    iconClass: 'text-[#5c4033]',
-    title: t.tickets.train.title || 'EXPRESS TRAIN',
-    subtitle: t.tickets.train.subtitle || 'ONE WAY',
-    labelClass: 'text-[#8b6b53] font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y border-[#5c4033]/30 my-2',
-    numberClass: 'text-[#8b0000] opacity-90',
-    footerLeft: t.tickets.train.footerLeft || 'PLATFORM 9',
-    footerRight: t.tickets.train.footerRight || 'CARRIAGE 4',
-    footerClass: 'text-[#5c4033] font-bold uppercase tracking-widest text-xs',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(92,64,51,0.1) 1px, transparent 1px)'
-  },
-  {
-    id: 'vintage-bus',
-    containerClass: 'bg-[#e4d5b7] rounded-sm shadow-xl p-5 sm:p-6 border-2 border-[#8b7355] relative overflow-hidden',
-    icon: Bus,
-    iconClass: 'text-[#5c4a3d]',
-    title: t.tickets['vintage-bus'].title || 'АВТОБУСНЫЙ БИЛЕТ',
-    subtitle: t.tickets['vintage-bus'].subtitle || 'СЕРИЯ АВ',
-    labelClass: 'text-[#5c4a3d] font-serif font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y-2 border-dashed border-[#8b7355] my-4 py-4',
-    numberClass: 'text-[#8b0000] font-serif tracking-[0.2em]',
-    footerLeft: t.tickets['vintage-bus'].footerLeft || 'КОНТРОЛЬНЫЙ',
-    footerRight: t.tickets['vintage-bus'].footerRight || 'БИЛЕТ',
-    footerClass: 'text-[#5c4a3d] font-serif font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(139,115,85,0.05) 10px, rgba(139,115,85,0.05) 20px)'
-  },
-  {
-    id: 'vintage-tram',
-    containerClass: 'bg-[#d9cbb8] rounded-none shadow-md p-4 sm:p-6 border-x-[12px] border-dotted border-[#6b5b4e] relative',
-    icon: TramFront,
-    iconClass: 'text-[#3e322b]',
-    title: t.tickets['vintage-tram'].title || 'ТРАМВАЙ',
-    subtitle: t.tickets['vintage-tram'].subtitle || 'РАЗОВЫЙ',
-    labelClass: 'text-[#3e322b] font-serif font-bold uppercase tracking-widest text-[10px] sm:text-xs',
-    numberContainerClass: 'my-5 bg-[#cbbda8] p-3 rounded-sm shadow-inner border border-[#a89a85]',
-    numberClass: 'text-[#2c241f] font-serif tracking-[0.25em]',
-    footerLeft: t.tickets['vintage-tram'].footerLeft || 'БЕЗ КОМПОСТЕРА',
-    footerRight: t.tickets['vintage-tram'].footerRight || 'НЕДЕЙСТВИТЕЛЕН',
-    footerClass: 'text-[#3e322b] font-serif font-bold uppercase text-[9px] sm:text-[10px] tracking-wider',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(0,0,0,0.04) 2px, transparent 2px)'
-  },
-  {
-    id: 'soviet-trolleybus',
-    containerClass: 'bg-[#c2d1c0] rounded-sm shadow-lg p-5 sm:p-6 border border-[#4a5d4e] relative',
-    icon: CableCar,
-    iconClass: 'text-[#2f3e33]',
-    title: t.tickets['soviet-trolleybus'].title || 'ТРОЛЛЕЙБУС',
-    subtitle: t.tickets['soviet-trolleybus'].subtitle || 'ГОРТРАНС',
-    labelClass: 'text-[#2f3e33] font-serif font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-4 border-double border-[#4a5d4e] my-4 py-4 bg-[#b3c2b1]',
-    numberClass: 'text-[#8b0000] font-serif tracking-[0.15em]',
-    footerLeft: t.tickets['soviet-trolleybus'].footerLeft || 'СОХРАНЯТЬ ДО',
-    footerRight: t.tickets['soviet-trolleybus'].footerRight || 'КОНЦА ПОЕЗДКИ',
-    footerClass: 'text-[#2f3e33] font-serif font-bold uppercase text-[9px] sm:text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'none'
-  },
-  {
-    id: 'golden-ticket',
-    containerClass: 'bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 rounded-lg shadow-[0_0_40px_rgba(234,179,8,0.5)] p-5 sm:p-6 border-4 border-yellow-200 relative overflow-hidden',
-    icon: Star,
-    iconClass: 'text-yellow-100',
-    title: t.tickets['golden-ticket'].title || 'GOLDEN TICKET',
-    subtitle: t.tickets['golden-ticket'].subtitle || 'LUCKY WINNER',
-    labelClass: 'text-yellow-900 font-serif font-black uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y-4 border-double border-yellow-700/30 my-4 py-4 bg-yellow-400/20',
-    numberClass: 'text-yellow-900 font-serif tracking-[0.2em] drop-shadow-md',
-    footerLeft: t.tickets['golden-ticket'].footerLeft || 'ADMIT 1',
-    footerRight: t.tickets['golden-ticket'].footerRight || 'FACTORY TOUR',
-    footerClass: 'text-yellow-900 font-serif font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(255,255,255,0.2) 2px, transparent 2px)'
-  },
-  {
-    id: 'metro-pass',
-    containerClass: 'bg-blue-600 rounded-2xl shadow-lg p-5 sm:p-6 border-2 border-blue-400 relative overflow-hidden text-white',
-    icon: CreditCard,
-    iconClass: 'text-blue-200',
-    title: t.tickets['metro-pass'].title || 'METRO PASS',
-    subtitle: t.tickets['metro-pass'].subtitle || 'MONTHLY',
-    labelClass: 'text-blue-100 font-sans font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-white rounded-lg my-4 py-4 shadow-inner',
-    numberClass: 'text-blue-900 font-mono tracking-[0.2em]',
-    footerLeft: t.tickets['metro-pass'].footerLeft || 'ZONE 1-3',
-    footerRight: t.tickets['metro-pass'].footerRight || 'UNLIMITED',
-    footerClass: 'text-blue-200 font-sans font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: true,
-    pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)'
-  },
-  {
-    id: 'lottery',
-    containerClass: 'bg-emerald-50 rounded-lg shadow-xl p-5 sm:p-6 border-4 border-emerald-500 relative overflow-hidden',
-    icon: Coins,
-    iconClass: 'text-emerald-600',
-    title: t.tickets.lottery.title || 'LOTTERY TICKET',
-    subtitle: t.tickets.lottery.subtitle || 'JACKPOT',
-    labelClass: 'text-emerald-800 font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-emerald-100 rounded-full my-4 py-3 border-2 border-emerald-300 shadow-inner',
-    numberClass: 'text-emerald-700 font-mono tracking-[0.3em]',
-    footerLeft: t.tickets.lottery.footerLeft || 'DRAW 42',
-    footerRight: t.tickets.lottery.footerRight || 'GOOD LUCK',
-    footerClass: 'text-emerald-600 font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: true,
-    pattern: 'radial-gradient(rgba(16,185,129,0.1) 2px, transparent 2px)'
-  }
-];
-
-function TelegramLoadingOverlay({ t }: { t: TranslationData }) {
-  return (
-    <div className="fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
-      <div className="flex flex-col items-center max-w-xs text-center">
-        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-500 flex items-center justify-center mb-4">
-          <RefreshCw size={28} className="animate-spin text-orange-500" />
-        </div>
-        <h2 className="text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight">Make 100</h2>
-        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          {t.authorizingTg || 'Авторизация в Telegram...'}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-const getPlayerDisplayName = (player: { username?: string; firstName?: string }, t?: any) => {
-  if (player.username && player.username.trim() !== '') {
-    return `@${player.username}`;
-  }
-  return player.firstName || (t?.player || 'Игрок');
-};
 
 // Безопасная инициализация Telegram WebApp с проверкой версии Bot API
 const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
@@ -1048,43 +355,37 @@ export default function App() {
 
     // 3. Fallback, если пул пуст
     try {
-      const response = await fetch(`${API_URL}/api/tickets/random`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.ticket) {
-          const chosenUrl = data.ticket.imageUrl || data.ticket.url;
-          setRecentTicketUrls(prev => {
-            const updatedUrls = [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6);
-            return updatedUrls;
+      const data = await fetchRandomTicketApi();
+      if (data && data.imageUrl) {
+        const chosenUrl = data.imageUrl;
+        setRecentTicketUrls(prev => {
+          const updatedUrls = [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6);
+          return updatedUrls;
+        });
+        const img = new Image();
+        let isDone = false;
+        const handleDone = () => {
+          if (isDone) return;
+          isDone = true;
+          setTicketBg({
+            imageUrl: chosenUrl,
+            category: data.category || 'default',
+            categoryName: data.categoryName || ''
           });
-          const img = new Image();
-          let isDone = false;
-          const handleDone = () => {
-            if (isDone) return;
-            isDone = true;
-            setTicketBg({
-              imageUrl: chosenUrl,
-              category: data.ticket.category || 'default',
-              categoryName: data.ticket.categoryName || ''
-            });
-            setIsVisualReady(true);
-          };
-          img.onload = handleDone;
-          img.onerror = handleDone;
-          setTimeout(handleDone, 5000);
-          img.src = chosenUrl;
-          if (img.complete) {
-            handleDone();
-          }
-        } else {
           setIsVisualReady(true);
+        };
+        img.onload = handleDone;
+        img.onerror = handleDone;
+        setTimeout(handleDone, 5000);
+        img.src = chosenUrl;
+        if (img.complete) {
+          handleDone();
         }
       } else {
         setIsVisualReady(true);
       }
     } catch (e) {
       console.warn('Failed to fetch random ticket:', e);
-      setIsVisualReady(true);
     }
   }, []);
 
@@ -1096,66 +397,29 @@ export default function App() {
   const [isVisualReady, setIsVisualReady] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
+  const [isSubmittingHint, setIsSubmittingHint] = useState(false);
 
-  const [ticketStyleId, setTicketStyleId] = useState('flight');
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const timerIntervalRef = useRef<NodeJS.Timeout | number | null>(null);
+  const elapsedTimeRef = useRef<number>(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [stopwatchResetKey, setStopwatchResetKey] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
 
+  const handleStopwatchTick = useCallback((elapsedMs: number) => {
+    elapsedTimeRef.current = elapsedMs / 1000;
+  }, []);
+
   const startTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current as any);
-      timerIntervalRef.current = null;
-    }
-    
-    timerIntervalRef.current = setInterval(() => {
-      if (roundStartTimeRef.current) {
-        const diffMs = Math.max(0, Date.now() - roundStartTimeRef.current);
-        setElapsedTime(diffMs / 1000);
-      }
-    }, 50);
+    roundStartTimeRef.current = Date.now();
+    setStopwatchResetKey(prev => prev + 1);
+    setIsTimerRunning(true);
   }, []);
 
   const stopTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current as any);
-      timerIntervalRef.current = null;
-    }
+    setIsTimerRunning(false);
   }, []);
 
-  const formatLiveStopwatch = (sec: number) => {
-    const totalMs = Math.max(0, Math.floor(sec * 1000));
-    const mins = Math.floor(totalMs / 60000);
-    const secs = Math.floor((totalMs % 60000) / 1000);
-    const ms = Math.floor((totalMs % 1000) / 10); // сотые доли (00..99)
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}:${String(ms).padStart(2, '0')}`;
-  };
-
-  const formatSolveTime = (timeMs: number) => {
-    const secStr = t?.secondsShort || 'сек.';
-    const minStr = t?.minutesShort || 'мин.';
-    if (!timeMs) return `0.0 ${secStr}`;
-    const totalSeconds = timeMs / 1000;
-    
-    if (totalSeconds < 60) {
-      // Если меньше минуты — просто выводим секунды с одной цифрой после запятой
-      return `${totalSeconds.toFixed(1)} ${secStr}`;
-    }
-    
-    // Если больше минуты — рассчитываем минуты и секунды
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    
-    // Форматируем секунды, чтобы всегда была одна цифра после запятой
-    const formattedSeconds = seconds.toFixed(1);
-    
-    // Добавляем лидирующий ноль, если секунд меньше 10 (например, "09.3" вместо "9.3")
-    const paddedSeconds = seconds < 10 ? `0${formattedSeconds}` : formattedSeconds;
-    
-    return `${minutes} ${minStr} ${paddedSeconds} ${secStr}`;
-  };
 
   const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
@@ -1168,7 +432,7 @@ export default function App() {
   });
   
   // Предзагрузка изображений машин
-  const imagesLoaded = useImagePreloader(carImagesListRef.current);
+  useImagePreloader(carImagesListRef.current);
 
   const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>(() => {
     return (typeof window !== 'undefined' ? (localStorage.getItem('make100_theme_preference') as 'auto' | 'dark' | 'light') : null) || 'auto';
@@ -1204,7 +468,6 @@ export default function App() {
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [showSaveBotModal, setShowSaveBotModal] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
-  const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [myRank, setMyRank] = useState<number>(0);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -1304,29 +567,21 @@ export default function App() {
     const fetchImages = async () => {
       // 1. Пул картинок автомобилей
       try {
-        const response = await fetch(`${API_URL}/api/cars/pool`);
-        if (response.ok) {
-          const data = await response.json();
-          const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
-          
-          const imageUrls = images.map((item: any) => typeof item === 'string' ? item : (item.imageUrl || item.url || item.dataUrl || ''));
-          const validUrls = imageUrls.filter(Boolean);
-          
-          if (validUrls.length > 0) {
-            carImagesListRef.current = validUrls;
-            if (!carImage) {
-              const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
-              const img = new Image();
-              img.onload = () => setCarImage(newUrl);
-              img.src = newUrl;
-            }
-            try {
-              localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
-            } catch (e) {
-              console.warn('Failed to cache KV images:', e);
-            }
-            preloadImagePool(validUrls);
+        const validUrls = await fetchCarsPoolApi();
+        if (validUrls && validUrls.length > 0) {
+          carImagesListRef.current = validUrls;
+          if (!carImage) {
+            const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
+            const img = new Image();
+            img.onload = () => setCarImage(newUrl);
+            img.src = newUrl;
           }
+          try {
+            localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
+          } catch (e) {
+            console.warn('Failed to cache KV images:', e);
+          }
+          preloadImagePool(validUrls);
         }
       } catch (err) {
         console.warn('Ошибка при получении картинок с бэкенда:', err);
@@ -1334,37 +589,33 @@ export default function App() {
 
       // 2. Пул фонов билетов
       try {
-        const response = await fetch(`${API_URL}/api/tickets/pool`);
-        if (response.ok) {
-          const data = await response.json();
-          const tickets = Array.isArray(data) ? data : (data.tickets || data.pool || []);
-          if (tickets && tickets.length > 0) {
-            const formattedTickets = tickets.map((t: any) => ({
-              id: t.id,
-              category: t.category || 'default',
-              categoryName: t.categoryName || '',
-              imageUrl: t.imageUrl || t.url || ''
-            })).filter((t: any) => Boolean(t.imageUrl));
+        const rawTickets = await fetchTicketsPoolApi();
+        if (rawTickets && rawTickets.length > 0) {
+          const formattedTickets = rawTickets.map((t: any) => ({
+            id: t.id,
+            category: t.category || 'default',
+            categoryName: t.categoryName || '',
+            imageUrl: t.imageUrl || t.url || ''
+          })).filter((t: any) => Boolean(t.imageUrl));
 
-            if (formattedTickets.length > 0) {
-              ticketImagesListRef.current = formattedTickets;
-              try {
-                localStorage.setItem('make100_kv_ticket_images', JSON.stringify(formattedTickets));
-              } catch (e) {
-                console.warn('Failed to cache KV ticket images:', e);
-              }
-              setTicketBg(prev => {
-                if (prev && prev.imageUrl) return prev;
-                const initialTicket = formattedTickets[Math.floor(Math.random() * formattedTickets.length)];
-                return {
-                  imageUrl: initialTicket.imageUrl,
-                  category: initialTicket.category,
-                  categoryName: initialTicket.categoryName
-                };
-              });
-              const ticketUrls = formattedTickets.map((t: any) => t.imageUrl);
-              preloadImagePool(ticketUrls);
+          if (formattedTickets.length > 0) {
+            ticketImagesListRef.current = formattedTickets;
+            try {
+              localStorage.setItem('make100_kv_ticket_images', JSON.stringify(formattedTickets));
+            } catch (e) {
+              console.warn('Failed to cache KV ticket images:', e);
             }
+            setTicketBg(prev => {
+              if (prev && prev.imageUrl) return prev;
+              const initialTicket = formattedTickets[Math.floor(Math.random() * formattedTickets.length)];
+              return {
+                imageUrl: initialTicket.imageUrl,
+                category: initialTicket.category,
+                categoryName: initialTicket.categoryName
+              };
+            });
+            const ticketUrls = formattedTickets.map((t: any) => t.imageUrl);
+            preloadImagePool(ticketUrls);
           }
         }
       } catch (err) {
@@ -1534,7 +785,7 @@ export default function App() {
   const [modeStats, setModeStats] = useState<Record<string, ModeDetail>>({});
   const [statsLoaded, setStatsLoaded] = useState(false);
 
-  const [stats, setStats] = useState<any>({ coins: 0, hintsCount: 0, referralCount: 0 });
+  const [stats, setStats] = useState<UserStats>({ coins: 0, hintsCount: 0, referralCount: 0 });
   const statsRef = useRef(stats);
 
   useEffect(() => {
@@ -1551,13 +802,10 @@ export default function App() {
   }, [stats, statsLoaded]);
 
 
-  const [user, setUser] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     // Auth is handled by telegram token logic below.
-    // If we're not in TG, we can mock it
-    setUser({ id: 1 });
     setIsAuthReady(true);
   }, []);
 
@@ -1883,9 +1131,6 @@ export default function App() {
     }
   }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount, (stats as any)?.referralCount]);
 
-  useEffect(() => {
-    setPlayerRank(null);
-  }, [isAuthReady, user, solvedCount]);
 
   const handleInviteFriend = () => {
     const userId = tgUser?.id || (stats as any)?.id;
@@ -1910,22 +1155,32 @@ export default function App() {
     }
   };
 
-  const showHint = () => {
-    if (isHinting || won || !isVisualReady) return;
+  const showHint = async () => {
+    if (isHinting || won || !isVisualReady || isSubmittingHint) return;
     
     const currentStats = statsRef.current;
     
-    if (currentStats.hintsCount > 0) {
-      setStats(prev => {
-        const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
-        return newStats;
-      });
+    if ((currentStats.hintsCount ?? 0) > 0) {
+      setIsSubmittingHint(true);
+      // Оптимистично уменьшаем локальный счётчик
+      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
+      
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        useHint().then(res => {
+        try {
+          const res = await consumeHint();
           if (res && res.success && res.hintsCount !== undefined) {
-            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
+          } else if (res && !res.success) {
+            // Если сервер сообщил об ошибке (например, подсказок на самом деле 0), восстанавливаем
+            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
           }
-        }).catch(err => console.error("useHint error", err));
+        } catch (err) {
+          console.error("useHint error", err);
+        } finally {
+          setIsSubmittingHint(false);
+        }
+      } else {
+        setIsSubmittingHint(false);
       }
       showHintOnScreen();
     } else {
@@ -1961,37 +1216,6 @@ export default function App() {
     setIsHinting(false);
   };
 
-  const calculateRoundScore = (expr: string, solveTimeMs: number): number => {
-    let roundScore = 10; // Базовые очки
-
-    // Бонус за Скорость
-    const sec = solveTimeMs / 1000;
-    if (sec < 10) {
-      roundScore += 10;
-    } else if (sec >= 10 && sec <= 15) {
-      roundScore += 5;
-    }
-
-    // Бонус за Краткость (все не-цифровые символы: знаки, скобки, запятые)
-    const nonDigits = expr.replace(/\d/g, '').length;
-    if (nonDigits === 1) {
-      roundScore += 150;
-    } else if (nonDigits === 2) {
-      roundScore += 60;
-    } else if (nonDigits === 3) {
-      roundScore += 30;
-    } else if (nonDigits === 4) {
-      roundScore += 15;
-    } else if (nonDigits === 5) {
-      roundScore += 5;
-    }
-
-    return roundScore;
-  };
-
-  
-
-
   const handleSkip = async () => {
     if (isHinting || isPending || !isVisualReady) return;
     setIsPending(true);
@@ -2000,7 +1224,7 @@ export default function App() {
     try {
       const res = await submitGameSkip({ gameMode });
       if (res && res.success) {
-        setStats(prev => {
+        setStats((prev: any) => {
           if (!prev) return prev;
           return {
             ...prev,
@@ -2028,9 +1252,6 @@ export default function App() {
     setIsVisualReady(false);
     setNoSolutionMessage(false);
     if (isSkip) {
-      const now = Date.now();
-      const calculatedMs = now - roundStartTimeRef.current;
-      const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
       
       playSound('skip');
       playVibration('medium');
@@ -2110,14 +1331,13 @@ export default function App() {
     setWon(false);
     setHintUsed(false);
     
-    const styles = getTicketStyles(TRANSLATIONS[language] || TRANSLATIONS['ru']);
-    setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
-    setElapsedTime(0);
+    elapsedTimeRef.current = 0;
+    setStopwatchResetKey(prev => prev + 1);
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
     stopTimer();
-  }, [playSound, playVibration, language, elapsedTime, stopTimer, gameMode, fetchRandomTicket]);
+  }, [playSound, playVibration, language, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
     let attempts = 0;
@@ -2363,7 +1583,7 @@ export default function App() {
   useEffect(() => {
     if (gameState === 'playing' && !won && isVisualReady) {
       roundStartTimeRef.current = Date.now();
-      setElapsedTime(0);
+      elapsedTimeRef.current = 0;
       startTimer();
     } else {
       stopTimer();
@@ -2463,7 +1683,7 @@ export default function App() {
       stopTimer();
       const exactSolveTimeMs = Date.now() - roundStartTimeRef.current;
       const exactSolveTimeSec = exactSolveTimeMs / 1000;
-      setElapsedTime(exactSolveTimeSec);
+      elapsedTimeRef.current = exactSolveTimeSec;
       setWon(true);
       setGameState('idle');
       playSound('success');
@@ -2489,7 +1709,7 @@ export default function App() {
         gameMode: gameMode
       }).then(res => {
         if (res && res.success) {
-          setStats(prev => {
+          setStats((prev: any) => {
             if (!prev) return prev;
             return {
               ...prev,
@@ -2531,6 +1751,92 @@ export default function App() {
       setSelectedSlot(null);
     }
   }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, bestTimeMs, stopTimer]);
+
+  // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
+  const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
+  
+  // Получаем оптимальное решение только когда игра выиграна (кешируем через useMemo)
+  // ВАЖНО: хук должен вызываться безусловно в начале компонента (Rules of Hooks)
+  const aiSignsCount = React.useMemo(() => {
+    if (!won) return 0;
+    const solution = findSolution(digits);
+    return solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
+  }, [won, digits]);
+
+  const handleWatchOptimal = async () => {
+    if (isSubmittingHint) return;
+    const currentStats = statsRef.current;
+    
+    // Проверяем баланс подсказок
+    if ((currentStats.hintsCount ?? 0) > 0) {
+      setIsSubmittingHint(true);
+      // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
+      setWon(false);
+      setGameState('playing');
+      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
+      
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        try {
+          const res = await consumeHint();
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
+          } else if (res && !res.success) {
+            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
+          }
+        } catch (err) {
+          console.error("useHint error", err);
+        } finally {
+          setIsSubmittingHint(false);
+        }
+      } else {
+        setIsSubmittingHint(false);
+      }
+      showHintOnScreen();
+      playSound('click');
+      playVibration('light');
+    } else {
+      // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
+      setShowBuyHintModal(true);
+      playSound('error');
+    }
+  };
+
+  const handleConfirmBuyHint = async () => {
+    const currentCoins = stats?.coins ?? 0;
+    if (isSubmittingHint || currentCoins < 20) return;
+    setIsSubmittingHint(true);
+    const prevCoins = currentCoins;
+    
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+      try {
+        const res = await buyHint();
+        if (res && res.success) {
+          setStats((prev: any) => ({
+            ...prev,
+            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
+            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
+          }));
+          setShowBuyHintModal(false);
+          setWon(false);
+          setGameState('playing');
+          showHintOnScreen();
+        } else {
+          console.warn("Buy hint rejected by server:", res?.error);
+        }
+      } catch (e) {
+        console.error("buyHint error", e);
+      } finally {
+        setIsSubmittingHint(false);
+      }
+    } else {
+      setShowBuyHintModal(false);
+      setWon(false);
+      setGameState('playing');
+      setStats((prev: any) => ({ ...prev, coins: Math.max(0, (prev?.coins || 0) - 20) }));
+      setIsSubmittingHint(false);
+      showHintOnScreen();
+    }
+  };
 
   // 🌟 Полноэкранный экран блокировки (Guard Clause)
   if (isBanned) {
@@ -2663,41 +1969,6 @@ export default function App() {
     );
   }
 
-  const levelInfo = getLevelInfo((stats as any)?.solvedCount ?? solvedCount);
-
-  // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
-  const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
-  
-  // Получаем оптимальное решение только когда игра выиграна, чтобы не нагружать рендер
-  let aiSignsCount = 0;
-  if (won) {
-    const solution = findSolution(digits);
-    aiSignsCount = solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
-  }
-
-  const handleWatchOptimal = () => {
-    // Проверяем баланс подсказок
-    if (stats.hintsCount > 0) {
-      // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
-      setWon(false);
-      setGameState('playing');
-      setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
-      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        useHint().then(res => {
-          if (res && res.success && res.hintsCount !== undefined) {
-            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
-          }
-        }).catch(err => console.error("useHint error", err));
-      }
-      showHintOnScreen();
-      playSound('click');
-      playVibration('light');
-    } else {
-      // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
-      setShowBuyHintModal(true);
-      playSound('warning');
-    }
-  };
 
   const isCarMode = gameMode === 'car';
   
@@ -2735,6 +2006,7 @@ export default function App() {
               onClick={() => setIsProfileOpen(true)}
               className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
               title={t.openProfile || "Открыть профиль"}
+              aria-label={t.openProfile || "Открыть профиль"}
             >
               {/* Пульсирующая внешняя рамка */}
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
@@ -2779,6 +2051,7 @@ export default function App() {
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
                 className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse"
                 title={t.leaderboard || 'Зал славы'}
+                aria-label={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
@@ -2788,6 +2061,7 @@ export default function App() {
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
                 className="p-2.5 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl active:scale-95 transition-all cursor-pointer"
                 title={t.settingsMenu || "Меню настроек"}
+                aria-label={t.settingsMenu || "Меню настроек"}
               >
                 <Menu size={20} />
               </button>
@@ -2800,9 +2074,7 @@ export default function App() {
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono">
-              {formatLiveStopwatch(elapsedTime)}
-            </span>
+            <Stopwatch isRunning={isTimerRunning} onTick={handleStopwatchTick} resetKey={stopwatchResetKey} />
           </div>
           
           {/* Вертикальный разделитель */}
@@ -2834,6 +2106,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+                aria-label={t.back || 'Назад'}
               >
                 ⬅️ {t.back || 'Назад'}
               </button>
@@ -2987,6 +2260,7 @@ export default function App() {
               <button 
                 onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
                 className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
+                aria-label={t.back || 'Назад'}
               >
                 ⬅️ {t.back || 'Назад'}
               </button>
@@ -3223,6 +2497,7 @@ export default function App() {
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
+            aria-label={t.hint || "Подсказка"}
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
@@ -3231,6 +2506,7 @@ export default function App() {
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
+            aria-label={hintUsed ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar) : (gameMode === 'ticket' ? t.skipTicket : t.skipCar)}
             className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
@@ -3247,160 +2523,33 @@ export default function App() {
 
       {/* Modals */}
       <AnimatePresence>
-        {showBuyHintModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4"
-            onClick={() => setShowBuyHintModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-zinc-100 dark:border-zinc-800 relative flex flex-col items-center"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full flex items-center justify-center mb-4">
-                <Lightbulb size={32} />
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-center mb-2">{t.outOfHints || 'Подсказки закончились'}</h2>
-              <p className="text-center text-sm sm:text-base text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-                {t.outOfHintsDesc || 'Ваш лимит подсказок исчерпан. Вы можете приобрести 1 подсказку за 20 монет.'}
-                <br/><br/>
-                {t.balance || 'Баланс:'} <span className="font-bold text-yellow-600 dark:text-yellow-500">{stats.coins} 🪙</span>
-              </p>
-              <div className="w-full flex flex-col gap-3">
-                <button
-                  onClick={async () => {
-                    if (stats.coins >= 20) {
-                      setShowBuyHintModal(false);
-                      setWon(false);
-                      setGameState('playing');
-                      setStats(prev => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
-                      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-                        try {
-                          const res = await buyHint();
-                          if (res && res.success) {
-                            setStats(prev => ({
-                              ...prev,
-                              coins: res.coins !== undefined ? res.coins : prev.coins,
-                              hintsCount: res.hintsCount !== undefined ? res.hintsCount : prev.hintsCount
-                            }));
-                          }
-                        } catch (e) {
-                          console.error("buyHint error", e);
-                        }
-                      }
-                      showHintOnScreen();
-                    }
-                  }}
-                  disabled={stats.coins < 20}
-                  className={`w-full py-3.5 rounded-2xl font-bold transition-all text-sm sm:text-base flex justify-center items-center gap-2 ${stats.coins >= 20 ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-zinc-200 dark:bg-zinc-800/50 text-zinc-400 cursor-not-allowed'}`}
-                >
-                  {t.buyForCoins ? t.buyForCoins.replace('{cost}', '20') : 'Купить за 20 🪙'}
-                </button>
-                <button
-                  onClick={() => setShowBuyHintModal(false)}
-                  className="w-full py-3.5 rounded-2xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm sm:text-base"
-                >
-                  {t.cancel || 'Отмена'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+        <BuyHintModal
+          isOpen={showBuyHintModal}
+          onClose={() => setShowBuyHintModal(false)}
+          onBuy={handleConfirmBuyHint}
+          coins={stats.coins ?? 0}
+          isSubmitting={isSubmittingHint}
+          t={t}
+        />
 
-        {showSaveBotModal && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-md flex items-center justify-center z-[310] p-4"
-            onClick={() => {
-              setShowSaveBotModal(false);
-              try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }} 
-              animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl text-zinc-900 dark:text-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-white/40 dark:border-zinc-700/40 relative flex flex-col items-center"
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                onClick={() => {
-                  playVibration?.('light');
-                  playSound?.('click');
-                  setShowSaveBotModal(false);
-                  try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                }}
-                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1 rounded-full cursor-pointer"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 animate-bounce">
-                <Sparkles size={32} />
-              </div>
-
-              <h2 className="text-xl font-black text-center mb-2 leading-snug">
-                {t.saveBotModalTitle || 'Не потеряй игру Make 100! 🧩'}
-              </h2>
-
-              <p className="text-center text-sm text-zinc-600 dark:text-zinc-300 mb-6 leading-relaxed whitespace-pre-line">
-                {t.saveBotModalDesc || 'Закрепи бота в списке своих чатов, чтобы возвращаться к игре в любое время и сохранить свои рекорды и монеты.\n\nЗапусти бота прямо сейчас и получи бонус +250 🪙 монет!'}
-              </p>
-
-              <div className="w-full flex flex-col gap-2.5">
-                <button
-                  onClick={() => {
-                    playVibration?.('success');
-                    playSound?.('success');
-                    setShowSaveBotModal(false);
-                    try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                    
-                    const botName = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-                    const botUrl = `https://t.me/${botName}?start=save_game`;
-                    const tg = (window as any).Telegram?.WebApp;
-                    if (tg && typeof tg.openTelegramLink === 'function') {
-                      try {
-                        tg.openTelegramLink(botUrl);
-                      } catch (e) {
-                        window.open(botUrl, '_blank');
-                      }
-                    } else {
-                      window.open(botUrl, '_blank');
-                    }
-                  }}
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-95 text-white rounded-2xl font-black transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer text-base"
-                >
-                  {t.saveBotModalBtn || '🤖 Запустить бота (+250 🪙)'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    playVibration?.('light');
-                    playSound?.('click');
-                    setShowSaveBotModal(false);
-                    try { localStorage.setItem('make100_save_bot_dismissed', 'true'); } catch (e) {}
-                  }}
-                  className="w-full py-2.5 rounded-xl font-bold text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors text-sm cursor-pointer"
-                >
-                  {t.saveBotModalLater || 'Позже'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+        <SaveBotModal
+          isOpen={showSaveBotModal}
+          onClose={() => setShowSaveBotModal(false)}
+          t={t}
+          playSound={playSound}
+          playVibration={playVibration}
+        />
         <AnimatePresence>
           {showTutorial && (
-            <InteractiveTutorial
-              onComplete={completeTutorial}
-              t={t}
-              theme={theme}
-              playSound={playSound}
-              playVibration={playVibration}
-            />
+            <React.Suspense fallback={null}>
+              <InteractiveTutorial
+                onComplete={completeTutorial}
+                t={t}
+                theme={theme}
+                playSound={playSound}
+                playVibration={playVibration}
+              />
+            </React.Suspense>
           )}
         </AnimatePresence>
 
@@ -3468,7 +2617,7 @@ export default function App() {
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-1 mb-8">
-                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTime * 1000))}</span></p>
+                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTimeRef.current * 1000), t)}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
                 
                 <div className="text-center py-2 mt-2 flex flex-wrap justify-center gap-2">
@@ -3511,7 +2660,7 @@ export default function App() {
                     >
                       👁️ {t.viewSolution || 'Посмотреть решение'}
                       <span className="text-[10px] py-0.5 px-1.5 rounded-md bg-white/20 font-bold ml-1">
-                        {stats.hintsCount > 0 ? "1 🧠" : "20 🪙"}
+                        {(stats.hintsCount ?? 0) > 0 ? "1 🧠" : "20 🪙"}
                       </span>
                     </button>
                   </div>
@@ -3532,25 +2681,29 @@ export default function App() {
       </AnimatePresence>
 
       {/* Profile Modal (Full-Screen Overlay) */}
-      <UserProfile 
-        isOpen={isProfileOpen}
-        onClose={() => { setIsProfileOpen(false); playSound('click'); playVibration('light'); }}
-        stats={stats}
-        tgUser={tgUser}
-        language={language}
-        t={t}
-        solvedCount={solvedCount}
-        unsolvedCount={unsolvedCount}
-        totalSolveTime={totalSolveTime}
-        bestTimeMs={bestTimeMs}
-        minCharacters={minCharacters}
-        formatBestTime={formatBestTime}
-        formatTotalPlayTime={formatTotalPlayTime}
-        formatRegistrationDate={formatRegistrationDate}
-        handleInviteFriend={handleInviteFriend}
-        playSound={playSound}
-        playVibration={playVibration}
-      />
+      {isProfileOpen && (
+        <React.Suspense fallback={null}>
+          <UserProfile 
+            isOpen={isProfileOpen}
+            onClose={() => { setIsProfileOpen(false); playSound('click'); playVibration('light'); }}
+            stats={stats}
+            tgUser={tgUser}
+            language={language}
+            t={t}
+            solvedCount={solvedCount}
+            unsolvedCount={unsolvedCount}
+            totalSolveTime={totalSolveTime}
+            bestTimeMs={bestTimeMs}
+            minCharacters={minCharacters}
+            formatBestTime={formatBestTime}
+            formatTotalPlayTime={formatTotalPlayTime}
+            formatRegistrationDate={formatRegistrationDate}
+            handleInviteFriend={handleInviteFriend}
+            playSound={playSound}
+            playVibration={playVibration}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 }
@@ -3569,6 +2722,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
+      aria-label={`Слот ${idx + 1}: ${value || 'пусто'}`}
       className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
         selected
           ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
@@ -3587,6 +2741,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
 }
 
 function OperatorButton({ 
+  op,
   icon, 
   onClick, 
   variant = 'default',
@@ -3602,6 +2757,7 @@ function OperatorButton({
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={op}
       className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
         disabled
           ? 'opacity-25 cursor-not-allowed pointer-events-none border-transparent bg-zinc-200/40 dark:bg-zinc-800/20 text-zinc-400 dark:text-zinc-600 shadow-none'

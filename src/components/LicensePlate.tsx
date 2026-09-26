@@ -5,13 +5,17 @@ interface LicensePlateProps {
   letters?: string[];
 }
 
-export const LicensePlate: React.FC<LicensePlateProps> = ({ ticketDigits, letters = ['A', 'B', 'C'] }) => {
+export const LicensePlate: React.FC<LicensePlateProps> = React.memo(({ ticketDigits = [], letters = ['A', 'B', 'C'] }) => {
+  const safeDigits = Array.isArray(ticketDigits) && ticketDigits.length >= 6
+    ? ticketDigits
+    : ['0', '0', '0', '0', '0', '0'];
+
   const l1 = letters[0] || 'A';
   const l2 = letters[1] || 'B';
   const l3 = letters[2] || 'C';
 
-  const d13 = ticketDigits.slice(0, 3).join('');
-  const d46 = ticketDigits.slice(3, 6).join('');
+  const d13 = safeDigits.slice(0, 3).join('');
+  const d46 = safeDigits.slice(3, 6).join('');
 
   return (
     <div className="absolute top-3 sm:top-3 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20" style={{ perspective: "800px" }}>
@@ -48,4 +52,4 @@ export const LicensePlate: React.FC<LicensePlateProps> = ({ ticketDigits, letter
       </div>
     </div>
   );
-};
+});

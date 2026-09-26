@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
-import { User, X } from 'lucide-react';
-import { UserStats } from '../api';
+import { useState } from 'react';
+import { UserStats, TelegramUser } from '../types';
 import { TranslationData, Language } from '../translations';
 
 export interface UserProfileProps {
   isOpen: boolean;
   onClose: () => void;
   stats: UserStats | null;
-  tgUser: any | null;
+  tgUser: TelegramUser | null;
   language: Language;
-  t: TranslationData | any;
+  t: TranslationData;
   solvedCount: number;
   unsolvedCount: number;
   totalSolveTime: number;
   bestTimeMs: number | null;
   minCharacters: number | null;
-  formatBestTime: (timeMs: number | null | undefined, t?: any) => string;
-  formatTotalPlayTime: (timeMs: number | null | undefined, t?: any) => string;
-  formatRegistrationDate: (timestamp: number | null | undefined, lang: string, t?: any) => string;
+  formatBestTime: (timeMs: number | null | undefined, t?: TranslationData) => string;
+  formatTotalPlayTime: (timeMs: number | null | undefined, t?: TranslationData) => string;
+  formatRegistrationDate: (timestamp: number | null | undefined, lang: string, t?: TranslationData) => string;
   handleInviteFriend: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'skip') => void;
   playVibration: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
@@ -43,8 +42,14 @@ export function UserProfile({
   playVibration
 }: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'stats' | 'referral'>('stats');
+  const [avatarError, setAvatarError] = useState(false);
 
   if (!isOpen) return null;
+
+  const avatarUrl = !avatarError ? (stats?.avatarUrl || tgUser?.photo_url) : undefined;
+  const displayName = `${stats?.firstName || tgUser?.first_name || t.player || 'Игрок'} ${stats?.lastName || tgUser?.last_name || ''}`.trim();
+  const displayUsername = stats?.username || tgUser?.username || 'user';
+  const initialLetter = String(stats?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-y-auto animate-fade-in select-none">
@@ -73,20 +78,26 @@ export function UserProfile({
         {/* Horizontal Avatar Block */}
         <div className="flex items-center gap-4 bg-white dark:bg-slate-900/40 p-4 rounded-3xl border border-slate-100 dark:border-slate-900/80 shadow-sm">
           <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-full overflow-hidden border-2 border-orange-500 shadow-lg shadow-orange-500/20">
-            {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
-              <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            {avatarUrl ? (
+              <img 
+                src={avatarUrl} 
+                alt="Avatar" 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
+              />
             ) : (
               <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-2xl sm:text-3xl">
-                {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
+                {initialLetter}
               </div>
             )}
           </div>
           <div className="flex flex-col overflow-hidden">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate">
-              {(stats as any)?.firstName || tgUser?.first_name || t.player} {(stats as any)?.lastName || tgUser?.last_name || ''}
+              {displayName}
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
-              @{ (stats as any)?.username || tgUser?.username || 'user' }
+              @{displayUsername}
             </p>
           </div>
         </div>
@@ -97,7 +108,7 @@ export function UserProfile({
           <div className="py-3 px-1 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
             <span className="text-xl mb-1">🏆</span>
             <span className="text-lg font-black text-slate-800 dark:text-slate-100">
-              {(stats as any)?.score || 0}
+              {stats?.score || 0}
             </span>
           </div>
           
@@ -105,7 +116,7 @@ export function UserProfile({
           <div className="py-3 px-1 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
             <span className="text-xl mb-1">✅</span>
             <span className="text-lg font-black text-slate-800 dark:text-slate-100">
-              {(stats as any)?.solvedCount ?? solvedCount}
+              {stats?.solvedCount ?? solvedCount}
             </span>
           </div>
 
@@ -113,7 +124,7 @@ export function UserProfile({
           <div className="py-3 px-1 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
             <span className="text-xl mb-1">🪙</span>
             <span className="text-lg font-black text-amber-500 dark:text-amber-400">
-              {(stats as any)?.coins || 0}
+              {stats?.coins || 0}
             </span>
           </div>
 
@@ -121,7 +132,7 @@ export function UserProfile({
           <div className="py-3 px-1 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-900/80 flex flex-col items-center justify-center text-center">
             <span className="text-xl mb-1">💡</span>
             <span className="text-lg font-black text-blue-500 dark:text-blue-400">
-              {(stats as any)?.hintsCount || 0}
+              {stats?.hintsCount || 0}
             </span>
           </div>
         </div>
@@ -155,7 +166,7 @@ export function UserProfile({
                     {t.lightningSpeed || 'Молния (Время)'}
                   </span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
-                    ⏱️ {formatBestTime((stats as any)?.bestTimeMs ?? bestTimeMs, t)}
+                    ⏱️ {formatBestTime(stats?.bestTimeMs ?? bestTimeMs, t)}
                   </span>
                 </div>
 
@@ -164,7 +175,7 @@ export function UserProfile({
                     {t.brevityChars || 'Краткость (Символы)'}
                   </span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
-                    ✍️ {((stats as any)?.minCharacters ?? minCharacters) ? `${(stats as any)?.minCharacters ?? minCharacters} ${t.charsShort || 'симв.'}` : (t.noRecord || 'Нет рекорда')}
+                    ✍️ {(stats?.minCharacters ?? minCharacters) ? `${stats?.minCharacters ?? minCharacters} ${t.charsShort || 'симв.'}` : (t.noRecord || 'Нет рекорда')}
                   </span>
                 </div>
               </div>
@@ -190,21 +201,21 @@ export function UserProfile({
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
                   <span className="text-slate-500 dark:text-slate-400">{t.solvedSkipped || 'Решено / Пропущено:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    ✅ {(stats as any)?.solvedCount ?? solvedCount} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> ❌ {(stats as any)?.skippedCount ?? (stats as any)?.unsolvedCount ?? unsolvedCount ?? 0}
+                    ✅ {stats?.solvedCount ?? solvedCount} <span className="text-slate-300 dark:text-slate-700 mx-1">|</span> ❌ {stats?.skippedCount ?? unsolvedCount ?? 0}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-2">
                   <span className="text-slate-500 dark:text-slate-400">{t.thinkingTime || 'Время размышлений:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {formatTotalPlayTime((stats as any)?.totalTimeMs ?? totalSolveTime, t)}
+                    {formatTotalPlayTime(stats?.totalTimeMs ?? totalSolveTime, t)}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-500 dark:text-slate-400">{t.firstGameDate || 'Дата первой игры:'}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    📅 {formatRegistrationDate((stats as any)?.createdAt, language, t)}
+                    📅 {formatRegistrationDate(stats?.createdAt, language, t)}
                   </span>
                 </div>
               </div>
@@ -216,14 +227,14 @@ export function UserProfile({
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-500 dark:text-slate-400">{t.friendsInvited || 'Приглашено друзей:'}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-100">
-                    {(stats as any)?.referralCount || 0} {t.peopleShort || 'чел.'}
+                    {stats?.referralCount || 0} {t.peopleShort || 'чел.'}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                   <span className="text-slate-500 dark:text-slate-400">{t.bonusesEarned || 'Получено бонусов:'}</span>
                   <span className="font-extrabold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
-                    🪙 +{((stats as any)?.referralCount || 0) * 500} {t.coinsCount || 'монет'}
+                    🪙 +{(stats?.referralCount || 0) * 500} {t.coinsCount || 'монет'}
                   </span>
                 </div>
 

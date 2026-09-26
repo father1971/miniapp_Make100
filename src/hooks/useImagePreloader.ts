@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 
+// Модульный кэш уже загруженных URL, предотвращающий повторные сетевые запросы
+const PRELOADED_CACHE = new Set<string>();
+
 /**
- * Хук для предзагрузки фоновых изображений автомобилей.
+ * Хук для предзагрузки фоновых изображений автомобилей и билетов.
  * Загружает все переданные URL-адреса изображений в кэш браузера,
  * чтобы предотвратить "мерцание" (мигание) при смене билетов.
  * 
@@ -9,48 +12,65 @@ import { useState, useEffect } from 'react';
  * @returns boolean Флаг imagesLoaded, равный true, когда все изображения загружены.
  */
 export function useImagePreloader(imageUrls: string[]) {
-  const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean>(() => {
+    if (!imageUrls || imageUrls.length === 0) return true;
+    return imageUrls.every(url => PRELOADED_CACHE.has(url));
+  });
+
+  const urlsKey = (imageUrls || []).join('|');
 
   useEffect(() => {
     let isMounted = true;
-    
+    const activeImages: HTMLImageElement[] = [];
+
     if (!imageUrls || imageUrls.length === 0) {
       setImagesLoaded(true);
       return;
     }
 
-    // Сбрасываем состояние при получении нового списка URL
+    const unmemoizedUrls = imageUrls.filter(url => Boolean(url) && !PRELOADED_CACHE.has(url));
+
+    if (unmemoizedUrls.length === 0) {
+      setImagesLoaded(true);
+      return;
+    }
+
     setImagesLoaded(false);
 
-    let loadedCount = 0;
-    const totalImages = imageUrls.length;
+    let completedCount = 0;
+    const totalToLoad = unmemoizedUrls.length;
 
-    imageUrls.forEach((url) => {
+    const checkDone = (url: string) => {
+      PRELOADED_CACHE.add(url);
+      completedCount++;
+      if (isMounted && completedCount === totalToLoad) {
+        setImagesLoaded(true);
+      }
+    };
+
+    unmemoizedUrls.forEach((url) => {
       const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        if (isMounted) {
-          loadedCount++;
-          if (loadedCount === totalImages) {
-            setImagesLoaded(true);
-          }
-        }
-      };
+      activeImages.push(img);
+
+      img.onload = () => checkDone(url);
       img.onerror = () => {
         // Даже если изображение не удалось загрузить, мы считаем его обработанным
-        if (isMounted) {
-          loadedCount++;
-          if (loadedCount === totalImages) {
-            setImagesLoaded(true);
-          }
-        }
+        checkDone(url);
       };
+
+      img.src = url;
     });
 
     return () => {
       isMounted = false;
+      // Очистка при размонтировании
+      activeImages.forEach(img => {
+        img.onload = null;
+        img.onerror = null;
+        img.src = '';
+      });
     };
-  }, [imageUrls]);
+  }, [urlsKey]);
 
   return imagesLoaded;
 }
