@@ -1752,6 +1752,92 @@ export default function App() {
     }
   }, [isWin, won, hintUsed, gaps, playSound, playVibration, tgUser, digits, bestTimeMs, stopTimer]);
 
+  // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
+  const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
+  
+  // Получаем оптимальное решение только когда игра выиграна (кешируем через useMemo)
+  // ВАЖНО: хук должен вызываться безусловно в начале компонента (Rules of Hooks)
+  const aiSignsCount = React.useMemo(() => {
+    if (!won) return 0;
+    const solution = findSolution(digits);
+    return solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
+  }, [won, digits]);
+
+  const handleWatchOptimal = async () => {
+    if (isSubmittingHint) return;
+    const currentStats = statsRef.current;
+    
+    // Проверяем баланс подсказок
+    if ((currentStats.hintsCount ?? 0) > 0) {
+      setIsSubmittingHint(true);
+      // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
+      setWon(false);
+      setGameState('playing');
+      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
+      
+      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+        try {
+          const res = await consumeHint();
+          if (res && res.success && res.hintsCount !== undefined) {
+            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
+          } else if (res && !res.success) {
+            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
+          }
+        } catch (err) {
+          console.error("useHint error", err);
+        } finally {
+          setIsSubmittingHint(false);
+        }
+      } else {
+        setIsSubmittingHint(false);
+      }
+      showHintOnScreen();
+      playSound('click');
+      playVibration('light');
+    } else {
+      // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
+      setShowBuyHintModal(true);
+      playSound('error');
+    }
+  };
+
+  const handleConfirmBuyHint = async () => {
+    const currentCoins = stats?.coins ?? 0;
+    if (isSubmittingHint || currentCoins < 20) return;
+    setIsSubmittingHint(true);
+    const prevCoins = currentCoins;
+    
+    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
+      try {
+        const res = await buyHint();
+        if (res && res.success) {
+          setStats((prev: any) => ({
+            ...prev,
+            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
+            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
+          }));
+          setShowBuyHintModal(false);
+          setWon(false);
+          setGameState('playing');
+          showHintOnScreen();
+        } else {
+          console.warn("Buy hint rejected by server:", res?.error);
+        }
+      } catch (e) {
+        console.error("buyHint error", e);
+      } finally {
+        setIsSubmittingHint(false);
+      }
+    } else {
+      setShowBuyHintModal(false);
+      setWon(false);
+      setGameState('playing');
+      setStats((prev: any) => ({ ...prev, coins: Math.max(0, (prev?.coins || 0) - 20) }));
+      setIsSubmittingHint(false);
+      showHintOnScreen();
+    }
+  };
+
   // 🌟 Полноэкранный экран блокировки (Guard Clause)
   if (isBanned) {
     return (
@@ -1883,91 +1969,6 @@ export default function App() {
     );
   }
 
-
-  // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
-  const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
-  
-  // Получаем оптимальное решение только когда игра выиграна (кешируем через useMemo)
-  const aiSignsCount = React.useMemo(() => {
-    if (!won) return 0;
-    const solution = findSolution(digits);
-    return solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
-  }, [won, digits]);
-
-  const handleWatchOptimal = async () => {
-    if (isSubmittingHint) return;
-    const currentStats = statsRef.current;
-    
-    // Проверяем баланс подсказок
-    if ((currentStats.hintsCount ?? 0) > 0) {
-      setIsSubmittingHint(true);
-      // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
-      setWon(false);
-      setGameState('playing');
-      setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
-      
-      if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        try {
-          const res = await consumeHint();
-          if (res && res.success && res.hintsCount !== undefined) {
-            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
-          } else if (res && !res.success) {
-            setStats((prev: any) => ({ ...prev, hintsCount: currentStats.hintsCount }));
-          }
-        } catch (err) {
-          console.error("useHint error", err);
-        } finally {
-          setIsSubmittingHint(false);
-        }
-      } else {
-        setIsSubmittingHint(false);
-      }
-      showHintOnScreen();
-      playSound('click');
-      playVibration('light');
-    } else {
-      // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
-      setShowBuyHintModal(true);
-      playSound('error');
-    }
-  };
-
-  const handleConfirmBuyHint = async () => {
-    const currentCoins = stats.coins ?? 0;
-    if (isSubmittingHint || currentCoins < 20) return;
-    setIsSubmittingHint(true);
-    const prevCoins = currentCoins;
-    
-    if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-      try {
-        const res = await buyHint();
-        if (res && res.success) {
-          setStats((prev: any) => ({
-            ...prev,
-            coins: res.coins !== undefined ? res.coins : Math.max(0, prevCoins - 20),
-            hintsCount: res.hintsCount !== undefined ? res.hintsCount : (prev?.hintsCount || 0) + 1
-          }));
-          setShowBuyHintModal(false);
-          setWon(false);
-          setGameState('playing');
-          showHintOnScreen();
-        } else {
-          console.warn("Buy hint rejected by server:", res?.error);
-        }
-      } catch (e) {
-        console.error("buyHint error", e);
-      } finally {
-        setIsSubmittingHint(false);
-      }
-    } else {
-      setShowBuyHintModal(false);
-      setWon(false);
-      setGameState('playing');
-      setStats((prev: any) => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
-      setIsSubmittingHint(false);
-      showHintOnScreen();
-    }
-  };
 
   const isCarMode = gameMode === 'car';
   
