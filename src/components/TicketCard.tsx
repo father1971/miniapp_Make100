@@ -334,16 +334,17 @@ const resolveCategory = (cat?: string, catName?: string): string => {
   return 'default';
 };
 
-export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, categoryName, t }) => {
+const BARCODE_BARS = [80, 40, 100, 60, 30, 90, 50, 100, 70, 40, 80, 100, 60, 40, 90, 100, 30, 50, 70, 40, 80];
+
+export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, category, categoryName, t }) => {
+  if (!digits) return null;
+
   // Safe extraction of base category from compound strings and names
   const baseCategory = resolveCategory(category, categoryName);
   
-  const displayDigits = digits && digits.length === 6 
+  const displayDigits = digits.length === 6 
     ? `${digits.slice(0, 3).join('')} ${digits.slice(3, 6).join('')}`
     : '••• •••';
-    
-  // Barcode visualization using pseudo-random heights based on the string
-  const barcodeBars = [80, 40, 100, 60, 30, 90, 50, 100, 70, 40, 80, 100, 60, 40, 90, 100, 30, 50, 70, 40, 80];
   
   const theme = THEMES[baseCategory] || THEMES.default;
   const CategoryIcon = theme.icon;
@@ -450,9 +451,9 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, catego
           </div>
           
           <div className="flex items-end justify-center gap-[1px] sm:gap-[1.5px] h-6 sm:h-7 w-full px-1.5 opacity-85">
-            {barcodeBars.map((height, i) => (
+            {BARCODE_BARS.map((height, i) => (
               <div 
-                key={i} 
+                key={`bar-${i}`} 
                 className="w-[1.5px] bg-current rounded-t-sm"
                 style={{ height: `${height}%` }}
               />
@@ -462,4 +463,4 @@ export const TicketCard: React.FC<TicketCardProps> = ({ digits, category, catego
       </div>
     </div>
   );
-};
+});

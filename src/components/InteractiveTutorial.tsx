@@ -50,7 +50,6 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   // 23: Финальный успех (кнопка "Понятно, играть!")
 
   const [step, setStep] = useState(0);
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
 
   const ex1Digits = ['9', '8', '7', '6', '5', '4'];
   const ex2Digits = ['1', '2', '3', '4', '1', '0'];
@@ -111,23 +110,22 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     }
   };
 
-  const [gaps, setGaps] = useState<string[]>(getGapsForStep(0));
+  const gaps = React.useMemo(() => getGapsForStep(step), [step]);
+
+  const selectedSlot = React.useMemo(() => {
+    if (step === 2 || step === 3) return 2;
+    if (step === 4 || step === 5) return 3;
+    if (step === 6 || step === 7) return 4;
+    if (step === 8 || step === 9) return 5;
+    if (step === 12 || step === 13) return 0;
+    if (step === 14 || step === 15) return 1;
+    if (step === 16 || step === 17) return 2;
+    if (step === 18 || step === 19) return 3;
+    if (step === 20 || step === 21 || step === 22) return 4;
+    return null;
+  }, [step]);
 
   useEffect(() => {
-    setGaps(getGapsForStep(step));
-
-    // Настройка активного слота
-    if (step === 2 || step === 3) setSelectedSlot(2);
-    else if (step === 4 || step === 5) setSelectedSlot(3);
-    else if (step === 6 || step === 7) setSelectedSlot(4);
-    else if (step === 8 || step === 9) setSelectedSlot(5);
-    else if (step === 12 || step === 13) setSelectedSlot(0);
-    else if (step === 14 || step === 15) setSelectedSlot(1);
-    else if (step === 16 || step === 17) setSelectedSlot(2);
-    else if (step === 18 || step === 19) setSelectedSlot(3);
-    else if (step === 20 || step === 21 || step === 22) setSelectedSlot(4);
-    else setSelectedSlot(null);
-
     // Эффект победы при решении примеров
     if (step === 10 || step === 23) {
       try {
@@ -138,9 +136,11 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         });
         playSound('success');
         playVibration('success');
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Confetti error:', e);
+      }
     }
-  }, [step]);
+  }, [step, playSound, playVibration]);
 
   // Target element for pulsating cue
   const getCue = () => {
@@ -195,7 +195,6 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   const handleSlotClick = (idx: number) => {
     playSound('click');
     playVibration('light');
-    setSelectedSlot(idx);
 
     // Проверяем, соответствует ли клик требуемому слоту
     if (step === 2 && idx === 2) setStep(3);
