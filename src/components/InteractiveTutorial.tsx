@@ -9,8 +9,8 @@ export interface InteractiveTutorialProps {
   onComplete: () => void;
   t: TranslationData;
   theme: 'light' | 'dark';
-  playSound?: (type: string) => void;
-  playVibration?: (type: string) => void;
+  playSound?: (type: 'click' | 'success' | 'error' | 'skip') => void;
+  playVibration?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
 }
 
 export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
@@ -136,7 +136,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           spread: 80,
           origin: { y: 0.6 }
         });
-        playSound('win');
+        playSound('success');
         playVibration('success');
       } catch (e) {}
     }

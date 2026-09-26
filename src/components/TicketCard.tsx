@@ -31,7 +31,7 @@ type ThemeDef = {
   titleKey: string;
   descKey: string;
   perforation: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number | string; className?: string }>;
   iconClass?: string;
   stampText: string;
   stampClass: string;

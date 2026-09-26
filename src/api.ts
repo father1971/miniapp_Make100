@@ -29,7 +29,7 @@ export interface UserStats {
     currentMode?: 'tickets' | 'car';
     [key: string]: any;
   };
-  modeStats: {
+  modeStats?: {
     tickets?: ModeDetail;
     car?: ModeDetail;
     [key: string]: any;
@@ -39,8 +39,7 @@ export interface UserStats {
 export const API_URL = import.meta.env.VITE_API_URL || 'https://make100-backend.rotanovav.workers.dev';
 
 export function getAuthHeader(): Record<string, string> {
-  // @ts-expect-error - Telegram WebApp is injected globally
-  const initData = window.Telegram?.WebApp?.initData;
+  const initData = (window as any).Telegram?.WebApp?.initData;
   return initData ? { 'Authorization': `Bearer ${initData}` } : {};
 }
 
@@ -175,7 +174,7 @@ export async function buyHint(): Promise<{ success: boolean; coins?: number; hin
   }
 }
 
-export async function useHint(): Promise<{ success: boolean; hintsCount?: number; error?: string } | null> {
+export async function consumeHint(): Promise<{ success: boolean; hintsCount?: number; error?: string } | null> {
   const headers = getAuthHeader();
   if (!headers.Authorization) return null;
   try {
@@ -195,3 +194,5 @@ export async function useHint(): Promise<{ success: boolean; hintsCount?: number
     return null;
   }
 }
+
+export { consumeHint as useHint };

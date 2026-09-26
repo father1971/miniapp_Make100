@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, Plane, Music, Film, Train, Bus, TramFront, CableCar, Star, CreditCard, Coins, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { fetchUserStats, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, useHint } from './api';
+import { ModeDetail, saveUserStats, fetchLeaderboard as fetchLeaderboardApi, API_URL, getAuthHeader, submitGameSolve, submitGameSkip, buyHint, consumeHint } from './api';
 import { TRANSLATIONS, LANGUAGES, Language, TranslationData } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
@@ -11,25 +11,6 @@ import { UserProfile } from "./components/UserProfile";
 import { InteractiveTutorial } from './components/InteractiveTutorial';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
-
-const getLevelInfo = (solved: number) => {
-  const milestones = [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
-  let level = 1;
-  let nextMilestone = milestones[1];
-  let prevMilestone = milestones[0];
-  
-  for (let i = 0; i < milestones.length; i++) {
-    if (solved >= milestones[i]) {
-      level = i + 1;
-      prevMilestone = milestones[i];
-      nextMilestone = milestones[i + 1] || milestones[i];
-    }
-  }
-  
-  const progress = nextMilestone === prevMilestone ? 100 : ((solved - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
-  
-  return { level, prevMilestone, nextMilestone, progress };
-};
 
 const formatRegistrationDate = (timestamp: number | null | undefined, lang: string = 'ru', t?: TranslationData) => {
   if (!timestamp) return t?.unknownDate || 'Неизвестно';
@@ -566,169 +547,6 @@ function isOpAllowed(
   return true;
 }
 
-const getTicketStyles = (t: any) => [
-  {
-    id: 'flight',
-    containerClass: 'bg-white rounded-xl shadow-2xl border-l-[12px] border-blue-600 p-5 sm:p-6',
-    icon: Plane,
-    iconClass: 'text-blue-600',
-    title: t.tickets.flight.title || 'BOARDING PASS',
-    subtitle: t.tickets.flight.subtitle || 'FIRST CLASS',
-    labelClass: 'text-slate-400 font-bold uppercase tracking-wider text-xs',
-    numberContainerClass: 'border-y-2 border-dashed border-slate-200 my-2',
-    numberClass: 'text-slate-800',
-    footerLeft: t.tickets.flight.footerLeft || 'GATE 14',
-    footerRight: t.tickets.flight.footerRight || 'SEAT 2A',
-    footerClass: 'text-slate-800 font-black uppercase text-sm',
-    hasBarcode: true,
-    pattern: 'radial-gradient(#e2e8f0 1px, transparent 1px)'
-  },
-  {
-    id: 'concert',
-    containerClass: 'bg-gradient-to-br from-purple-900 via-indigo-900 to-black rounded-2xl shadow-[0_0_30px_rgba(168,85,247,0.4)] p-5 sm:p-6 border border-purple-500/30 text-white',
-    icon: Music,
-    iconClass: 'text-pink-400',
-    title: t.tickets.concert.title || 'LIVE CONCERT',
-    subtitle: t.tickets.concert.subtitle || 'VIP ACCESS',
-    labelClass: 'text-purple-300/70 font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-black/40 rounded-xl backdrop-blur-sm border border-white/10 shadow-inner my-2',
-    numberClass: 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]',
-    footerLeft: t.tickets.concert.footerLeft || 'WORLD TOUR',
-    footerRight: t.tickets.concert.footerRight || 'ROW 1',
-    footerClass: 'text-white font-bold uppercase tracking-widest text-xs opacity-80',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)'
-  },
-  {
-    id: 'cinema',
-    containerClass: 'bg-[#fdf6e3] rounded-sm shadow-xl p-5 sm:p-6 border-4 border-double border-[#d4af37] relative overflow-hidden',
-    icon: Film,
-    iconClass: 'text-[#d4af37]',
-    title: t.tickets.cinema.title || 'CINEMA TICKET',
-    subtitle: t.tickets.cinema.subtitle || 'ADMIT ONE',
-    labelClass: 'text-[#8b7322] font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'my-4',
-    numberClass: 'text-[#2c3e50] drop-shadow-sm',
-    footerLeft: t.tickets.cinema.footerLeft || 'ROW F',
-    footerRight: t.tickets.cinema.footerRight || 'SEAT 12',
-    footerClass: 'text-[#2c3e50] font-black uppercase text-sm',
-    hasBarcode: true,
-    pattern: 'radial-gradient(rgba(212,175,55,0.1) 1px, transparent 1px)'
-  },
-  {
-    id: 'train',
-    containerClass: 'bg-[#e8dcc5] rounded-sm shadow-md p-5 sm:p-6 border-x-[16px] border-dashed border-[#5c4033]',
-    icon: Train,
-    iconClass: 'text-[#5c4033]',
-    title: t.tickets.train.title || 'EXPRESS TRAIN',
-    subtitle: t.tickets.train.subtitle || 'ONE WAY',
-    labelClass: 'text-[#8b6b53] font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y border-[#5c4033]/30 my-2',
-    numberClass: 'text-[#8b0000] opacity-90',
-    footerLeft: t.tickets.train.footerLeft || 'PLATFORM 9',
-    footerRight: t.tickets.train.footerRight || 'CARRIAGE 4',
-    footerClass: 'text-[#5c4033] font-bold uppercase tracking-widest text-xs',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(92,64,51,0.1) 1px, transparent 1px)'
-  },
-  {
-    id: 'vintage-bus',
-    containerClass: 'bg-[#e4d5b7] rounded-sm shadow-xl p-5 sm:p-6 border-2 border-[#8b7355] relative overflow-hidden',
-    icon: Bus,
-    iconClass: 'text-[#5c4a3d]',
-    title: t.tickets['vintage-bus'].title || 'АВТОБУСНЫЙ БИЛЕТ',
-    subtitle: t.tickets['vintage-bus'].subtitle || 'СЕРИЯ АВ',
-    labelClass: 'text-[#5c4a3d] font-serif font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y-2 border-dashed border-[#8b7355] my-4 py-4',
-    numberClass: 'text-[#8b0000] font-serif tracking-[0.2em]',
-    footerLeft: t.tickets['vintage-bus'].footerLeft || 'КОНТРОЛЬНЫЙ',
-    footerRight: t.tickets['vintage-bus'].footerRight || 'БИЛЕТ',
-    footerClass: 'text-[#5c4a3d] font-serif font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(139,115,85,0.05) 10px, rgba(139,115,85,0.05) 20px)'
-  },
-  {
-    id: 'vintage-tram',
-    containerClass: 'bg-[#d9cbb8] rounded-none shadow-md p-4 sm:p-6 border-x-[12px] border-dotted border-[#6b5b4e] relative',
-    icon: TramFront,
-    iconClass: 'text-[#3e322b]',
-    title: t.tickets['vintage-tram'].title || 'ТРАМВАЙ',
-    subtitle: t.tickets['vintage-tram'].subtitle || 'РАЗОВЫЙ',
-    labelClass: 'text-[#3e322b] font-serif font-bold uppercase tracking-widest text-[10px] sm:text-xs',
-    numberContainerClass: 'my-5 bg-[#cbbda8] p-3 rounded-sm shadow-inner border border-[#a89a85]',
-    numberClass: 'text-[#2c241f] font-serif tracking-[0.25em]',
-    footerLeft: t.tickets['vintage-tram'].footerLeft || 'БЕЗ КОМПОСТЕРА',
-    footerRight: t.tickets['vintage-tram'].footerRight || 'НЕДЕЙСТВИТЕЛЕН',
-    footerClass: 'text-[#3e322b] font-serif font-bold uppercase text-[9px] sm:text-[10px] tracking-wider',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(0,0,0,0.04) 2px, transparent 2px)'
-  },
-  {
-    id: 'soviet-trolleybus',
-    containerClass: 'bg-[#c2d1c0] rounded-sm shadow-lg p-5 sm:p-6 border border-[#4a5d4e] relative',
-    icon: CableCar,
-    iconClass: 'text-[#2f3e33]',
-    title: t.tickets['soviet-trolleybus'].title || 'ТРОЛЛЕЙБУС',
-    subtitle: t.tickets['soviet-trolleybus'].subtitle || 'ГОРТРАНС',
-    labelClass: 'text-[#2f3e33] font-serif font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-4 border-double border-[#4a5d4e] my-4 py-4 bg-[#b3c2b1]',
-    numberClass: 'text-[#8b0000] font-serif tracking-[0.15em]',
-    footerLeft: t.tickets['soviet-trolleybus'].footerLeft || 'СОХРАНЯТЬ ДО',
-    footerRight: t.tickets['soviet-trolleybus'].footerRight || 'КОНЦА ПОЕЗДКИ',
-    footerClass: 'text-[#2f3e33] font-serif font-bold uppercase text-[9px] sm:text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'none'
-  },
-  {
-    id: 'golden-ticket',
-    containerClass: 'bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 rounded-lg shadow-[0_0_40px_rgba(234,179,8,0.5)] p-5 sm:p-6 border-4 border-yellow-200 relative overflow-hidden',
-    icon: Star,
-    iconClass: 'text-yellow-100',
-    title: t.tickets['golden-ticket'].title || 'GOLDEN TICKET',
-    subtitle: t.tickets['golden-ticket'].subtitle || 'LUCKY WINNER',
-    labelClass: 'text-yellow-900 font-serif font-black uppercase tracking-widest text-xs',
-    numberContainerClass: 'border-y-4 border-double border-yellow-700/30 my-4 py-4 bg-yellow-400/20',
-    numberClass: 'text-yellow-900 font-serif tracking-[0.2em] drop-shadow-md',
-    footerLeft: t.tickets['golden-ticket'].footerLeft || 'ADMIT 1',
-    footerRight: t.tickets['golden-ticket'].footerRight || 'FACTORY TOUR',
-    footerClass: 'text-yellow-900 font-serif font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: false,
-    pattern: 'radial-gradient(rgba(255,255,255,0.2) 2px, transparent 2px)'
-  },
-  {
-    id: 'metro-pass',
-    containerClass: 'bg-blue-600 rounded-2xl shadow-lg p-5 sm:p-6 border-2 border-blue-400 relative overflow-hidden text-white',
-    icon: CreditCard,
-    iconClass: 'text-blue-200',
-    title: t.tickets['metro-pass'].title || 'METRO PASS',
-    subtitle: t.tickets['metro-pass'].subtitle || 'MONTHLY',
-    labelClass: 'text-blue-100 font-sans font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-white rounded-lg my-4 py-4 shadow-inner',
-    numberClass: 'text-blue-900 font-mono tracking-[0.2em]',
-    footerLeft: t.tickets['metro-pass'].footerLeft || 'ZONE 1-3',
-    footerRight: t.tickets['metro-pass'].footerRight || 'UNLIMITED',
-    footerClass: 'text-blue-200 font-sans font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: true,
-    pattern: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)'
-  },
-  {
-    id: 'lottery',
-    containerClass: 'bg-emerald-50 rounded-lg shadow-xl p-5 sm:p-6 border-4 border-emerald-500 relative overflow-hidden',
-    icon: Coins,
-    iconClass: 'text-emerald-600',
-    title: t.tickets.lottery.title || 'LOTTERY TICKET',
-    subtitle: t.tickets.lottery.subtitle || 'JACKPOT',
-    labelClass: 'text-emerald-800 font-bold uppercase tracking-widest text-xs',
-    numberContainerClass: 'bg-emerald-100 rounded-full my-4 py-3 border-2 border-emerald-300 shadow-inner',
-    numberClass: 'text-emerald-700 font-mono tracking-[0.3em]',
-    footerLeft: t.tickets.lottery.footerLeft || 'DRAW 42',
-    footerRight: t.tickets.lottery.footerRight || 'GOOD LUCK',
-    footerClass: 'text-emerald-600 font-bold uppercase text-[10px] tracking-widest',
-    hasBarcode: true,
-    pattern: 'radial-gradient(rgba(16,185,129,0.1) 2px, transparent 2px)'
-  }
-];
-
 function TelegramLoadingOverlay({ t }: { t: TranslationData }) {
   return (
     <div className="fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-4">
@@ -1097,7 +915,6 @@ export default function App() {
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
 
-  const [ticketStyleId, setTicketStyleId] = useState('flight');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | number | null>(null);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
@@ -1168,7 +985,7 @@ export default function App() {
   });
   
   // Предзагрузка изображений машин
-  const imagesLoaded = useImagePreloader(carImagesListRef.current);
+  useImagePreloader(carImagesListRef.current);
 
   const [themePreference, setThemePreference] = useState<'auto' | 'dark' | 'light'>(() => {
     return (typeof window !== 'undefined' ? (localStorage.getItem('make100_theme_preference') as 'auto' | 'dark' | 'light') : null) || 'auto';
@@ -1204,7 +1021,6 @@ export default function App() {
   const [showBuyHintModal, setShowBuyHintModal] = useState(false);
   const [showSaveBotModal, setShowSaveBotModal] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
-  const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [myRank, setMyRank] = useState<number>(0);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -1551,13 +1367,10 @@ export default function App() {
   }, [stats, statsLoaded]);
 
 
-  const [user, setUser] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     // Auth is handled by telegram token logic below.
-    // If we're not in TG, we can mock it
-    setUser({ id: 1 });
     setIsAuthReady(true);
   }, []);
 
@@ -1883,9 +1696,6 @@ export default function App() {
     }
   }, [solvedCount, unsolvedCount, totalSolveTime, totalOperatorsUsed, bestTimeMs, minCharacters, theme, language, gameMode, soundEnabled, vibrationEnabled, statsLoaded, tgUser, modeStats, stats.coins, stats.hintsCount, (stats as any)?.referralCount]);
 
-  useEffect(() => {
-    setPlayerRank(null);
-  }, [isAuthReady, user, solvedCount]);
 
   const handleInviteFriend = () => {
     const userId = tgUser?.id || (stats as any)?.id;
@@ -1916,14 +1726,14 @@ export default function App() {
     const currentStats = statsRef.current;
     
     if (currentStats.hintsCount > 0) {
-      setStats(prev => {
+      setStats((prev: any) => {
         const newStats = { ...prev, hintsCount: prev.hintsCount - 1 };
         return newStats;
       });
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        useHint().then(res => {
+        consumeHint().then(res => {
           if (res && res.success && res.hintsCount !== undefined) {
-            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
           }
         }).catch(err => console.error("useHint error", err));
       }
@@ -1961,37 +1771,6 @@ export default function App() {
     setIsHinting(false);
   };
 
-  const calculateRoundScore = (expr: string, solveTimeMs: number): number => {
-    let roundScore = 10; // Базовые очки
-
-    // Бонус за Скорость
-    const sec = solveTimeMs / 1000;
-    if (sec < 10) {
-      roundScore += 10;
-    } else if (sec >= 10 && sec <= 15) {
-      roundScore += 5;
-    }
-
-    // Бонус за Краткость (все не-цифровые символы: знаки, скобки, запятые)
-    const nonDigits = expr.replace(/\d/g, '').length;
-    if (nonDigits === 1) {
-      roundScore += 150;
-    } else if (nonDigits === 2) {
-      roundScore += 60;
-    } else if (nonDigits === 3) {
-      roundScore += 30;
-    } else if (nonDigits === 4) {
-      roundScore += 15;
-    } else if (nonDigits === 5) {
-      roundScore += 5;
-    }
-
-    return roundScore;
-  };
-
-  
-
-
   const handleSkip = async () => {
     if (isHinting || isPending || !isVisualReady) return;
     setIsPending(true);
@@ -2000,7 +1779,7 @@ export default function App() {
     try {
       const res = await submitGameSkip({ gameMode });
       if (res && res.success) {
-        setStats(prev => {
+        setStats((prev: any) => {
           if (!prev) return prev;
           return {
             ...prev,
@@ -2028,9 +1807,6 @@ export default function App() {
     setIsVisualReady(false);
     setNoSolutionMessage(false);
     if (isSkip) {
-      const now = Date.now();
-      const calculatedMs = now - roundStartTimeRef.current;
-      const timeSpentMs = calculatedMs > 0 && calculatedMs < 3600000 ? calculatedMs : (elapsedTime || 1) * 1000;
       
       playSound('skip');
       playVibration('medium');
@@ -2110,8 +1886,6 @@ export default function App() {
     setWon(false);
     setHintUsed(false);
     
-    const styles = getTicketStyles(TRANSLATIONS[language] || TRANSLATIONS['ru']);
-    setTicketStyleId(styles[Math.floor(Math.random() * styles.length)].id);
     setElapsedTime(0);
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
@@ -2489,7 +2263,7 @@ export default function App() {
         gameMode: gameMode
       }).then(res => {
         if (res && res.success) {
-          setStats(prev => {
+          setStats((prev: any) => {
             if (!prev) return prev;
             return {
               ...prev,
@@ -2663,7 +2437,6 @@ export default function App() {
     );
   }
 
-  const levelInfo = getLevelInfo((stats as any)?.solvedCount ?? solvedCount);
 
   // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
   const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
@@ -2681,11 +2454,11 @@ export default function App() {
       // Закрываем окно победы, чтобы игрок увидел игровое поле со знаками!
       setWon(false);
       setGameState('playing');
-      setStats(prev => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
+      setStats((prev: any) => ({ ...prev, hintsCount: prev.hintsCount - 1 }));
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
-        useHint().then(res => {
+        consumeHint().then(res => {
           if (res && res.success && res.hintsCount !== undefined) {
-            setStats(prev => ({ ...prev, hintsCount: res.hintsCount! }));
+            setStats((prev: any) => ({ ...prev, hintsCount: res.hintsCount! }));
           }
         }).catch(err => console.error("useHint error", err));
       }
@@ -2695,7 +2468,7 @@ export default function App() {
     } else {
       // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
       setShowBuyHintModal(true);
-      playSound('warning');
+      playSound('error');
     }
   };
 
@@ -3274,12 +3047,12 @@ export default function App() {
                       setShowBuyHintModal(false);
                       setWon(false);
                       setGameState('playing');
-                      setStats(prev => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
+                      setStats((prev: any) => ({ ...prev, coins: Math.max(0, prev.coins - 20) }));
                       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
                         try {
                           const res = await buyHint();
                           if (res && res.success) {
-                            setStats(prev => ({
+                            setStats((prev: any) => ({
                               ...prev,
                               coins: res.coins !== undefined ? res.coins : prev.coins,
                               hintsCount: res.hintsCount !== undefined ? res.hintsCount : prev.hintsCount

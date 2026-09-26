@@ -223,6 +223,10 @@ export interface TranslationData {
   stats: string;
   referral: string;
   coins: string;
+  saveBotModalTitle: string;
+  saveBotModalDesc: string;
+  saveBotModalBtn: string;
+  saveBotModalLater: string;
 }
 
 export const TRANSLATIONS: Record<string, TranslationData> = {
