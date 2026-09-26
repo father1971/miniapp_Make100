@@ -2212,12 +2212,14 @@ export default function App() {
   const renderTicket = () => {
     const baseCategory = ticketBg?.category ? ticketBg.category.split('_')[0] : 'default';
     return (
-      <TicketCard 
-        digits={digits} 
-        category={baseCategory} 
-        categoryName={ticketBg?.categoryName} 
-        t={t}
-      />
+      <div className="absolute top-3 sm:top-3 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20 w-full max-w-sm flex justify-center">
+        <TicketCard 
+          digits={digits} 
+          category={baseCategory} 
+          categoryName={ticketBg?.categoryName} 
+          t={t}
+        />
+      </div>
     );
   };
 
@@ -2756,9 +2758,9 @@ export default function App() {
             key={digits.join('') + gameMode}
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className={`relative w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end max-w-md' : 'items-center max-w-3xl'}`}
+            className={`relative w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-center max-w-md' : 'items-center max-w-3xl'}`}
           >
-            <div className={`origin-center w-full h-full flex justify-center ${gameMode === 'ticket' ? 'items-end pb-4 sm:pb-8' : 'items-center'} transition-all duration-300 ${isVisualReady ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+            <div className={`origin-center w-full h-full flex justify-center items-center transition-all duration-300 ${isVisualReady ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
               {gameMode === 'ticket' ? renderTicket() : renderLicensePlate()}
             </div>
             
