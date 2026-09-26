@@ -2030,6 +2030,13 @@ export default function App() {
     setGaps(newGaps);
   }, [selectedSlot, gaps, won, isVisualReady, playSound, playVibration]);
 
+  const handleSlotClick = useCallback((idx: number) => {
+    if (!isVisualReady || won) return;
+    setSelectedSlot(idx);
+    playSound('click');
+    playVibration('light');
+  }, [isVisualReady, won, playSound, playVibration]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState !== 'playing' || !isVisualReady) return;
@@ -2361,20 +2368,20 @@ export default function App() {
               </div>
             </button>
 
-            {/* Блок баланса монет, подсказок и меню */}
+            {/* Блок баланса монет, подсказок и меню (единый стандарт 50% матового стекла) */}
             <div className="flex items-center gap-2 flex-1 justify-end font-mono">
               {/* Плашка монет */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.coinsLabel || "Монеты"}>
-                <span className="text-lg">🪙</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                <span className="text-lg drop-shadow-sm">🪙</span>
+                <span className="text-sm font-black tracking-tight">
                   {stats.coins}
                 </span>
               </div>
 
               {/* Плашка подсказок */}
-              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md" title={t.hintsLabel || "Подсказки"}>
-                <span className="text-lg">💡</span>
-                <span className="text-sm font-black text-slate-800 dark:text-slate-100">
+              <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                <span className="text-lg drop-shadow-sm">💡</span>
+                <span className="text-sm font-black tracking-tight">
                   {stats.hintsCount}
                 </span>
               </div>
@@ -2382,7 +2389,7 @@ export default function App() {
               {/* Кнопка лидерборда (Кубок) */}
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500/60 to-yellow-400/60 text-white backdrop-blur-md flex items-center justify-center shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-transform active:scale-90 duration-150 cursor-pointer animate-pulse"
+                className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse"
                 title={t.leaderboard || 'Зал славы'}
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
@@ -2391,7 +2398,7 @@ export default function App() {
               {/* Кнопка открытия бокового меню */}
               <button 
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-                className="p-2.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shadow-sm active:scale-95 transition-all cursor-pointer"
+                className="p-2.5 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl active:scale-95 transition-all cursor-pointer"
                 title={t.settingsMenu || "Меню настроек"}
               >
                 <Menu size={20} />
@@ -2399,9 +2406,9 @@ export default function App() {
             </div>
           </header>
 
-      {/* Live Stopwatch & Character Counter (Top Bar) */}
+      {/* Live Stopwatch & Character Counter (единый стандарт 50% матового стекла) */}
       <div className="w-full max-w-md mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
-        <div className="flex justify-center items-center gap-4 sm:gap-6 py-1.5 sm:py-2 px-4 sm:px-6 rounded-full font-mono bg-white/60 dark:bg-slate-900/60 border border-zinc-200/60 dark:border-slate-800/60 backdrop-blur-md shadow-md">
+        <div className="flex justify-center items-center gap-4 sm:gap-6 py-2 px-5 sm:px-6 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
@@ -2411,13 +2418,13 @@ export default function App() {
           </div>
           
           {/* Вертикальный разделитель */}
-          <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-200 dark:bg-slate-800"></div>
+          <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
 
           {/* Счётчик символов в текущем вводе */}
           <div className="flex items-center gap-2">
             <span className="text-lg sm:text-xl">✍️</span>
             <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-tight">
-              {currentInput.length} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+              {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
             </span>
           </div>
         </div>
@@ -2777,53 +2784,58 @@ export default function App() {
       </div>
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
-        {/* Expression Builder */}
-        <div className={`w-full max-w-5xl p-1 sm:p-4 md:p-6 rounded-xl sm:rounded-[2rem] shadow-2xl mb-1 sm:mb-2 transition-colors flex flex-col items-center overflow-hidden bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md dark:backdrop-blur-2xl border border-zinc-200/60 dark:border-zinc-800/60`}>
-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.1rem,0.4vw,0.35rem)] text-[clamp(1.35rem,5.5vw,2.25rem)] font-mono font-black py-1 sm:py-2 w-full text-zinc-900 dark:text-white`}>
-            <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
+        {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
+        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1 sm:px-2.5 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
+            <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
             {digits.map((digit, idx) => (
               <React.Fragment key={idx}>
-                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none transition-all duration-300 ${isVisualReady ? 'text-zinc-800 dark:text-zinc-200 opacity-100 scale-100' : 'text-zinc-400/50 dark:text-zinc-600/50 opacity-40 scale-90 animate-pulse'}`}>
+                <span className={`drop-shadow-sm select-none flex-shrink-0 leading-none transition-all duration-300 ${isVisualReady ? 'text-zinc-800 dark:text-zinc-100 opacity-100 scale-100' : 'text-zinc-400/50 dark:text-zinc-600/50 opacity-40 scale-90 animate-pulse'}`}>
                   {isVisualReady ? digit : '•'}
                 </span>
-                <Gap idx={idx + 1} value={isVisualReady ? gaps[idx + 1] : ''} selected={isVisualReady && selectedSlot === idx + 1} onClick={isVisualReady ? setSelectedSlot : () => {}}  />
+                <Gap idx={idx + 1} value={isVisualReady ? gaps[idx + 1] : ''} selected={isVisualReady && selectedSlot === idx + 1} onClick={handleSlotClick}  />
               </React.Fragment>
             ))}
           </div>
-          <div className="h-6 sm:h-8 md:h-10 mt-1 sm:mt-2 flex items-center justify-center w-full">
+          <div className="h-8 sm:h-10 mt-1 sm:mt-1.5 flex items-center justify-center w-full">
             {!isVisualReady ? (
-              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-xs sm:text-sm md:text-base animate-pulse">
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-base animate-pulse">
                 <span>{t.loading}</span>
               </div>
             ) : gaps.some(g => g !== '') ? (
-              <div className={`font-mono text-lg sm:text-xl md:text-2xl font-bold ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-500 dark:text-zinc-400'}`}>
+              <div className={`font-mono text-2xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
             ) : (
-              <p className="text-center text-xs sm:text-sm md:text-base font-bold text-zinc-700 dark:text-zinc-400">{t.tapGaps}</p>
+              <p className="text-center text-sm sm:text-base font-black text-zinc-700 dark:text-zinc-300">{t.tapGaps}</p>
             )}
           </div>
         </div>
 
-        {/* Keypad */}
-        <div className="flex gap-1 sm:gap-2 flex-nowrap justify-between sm:justify-center w-full max-w-3xl px-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <OperatorButton op="+" icon={<Plus size={20} strokeWidth={3} />} onClick={() => handleOp('+')} />
-          <OperatorButton op="-" icon={<Minus size={20} strokeWidth={3} />} onClick={() => handleOp('-')} />
-          <OperatorButton op="*" icon={<X size={20} strokeWidth={3} />} onClick={() => handleOp('*')} />
-          <OperatorButton op="/" icon={<Divide size={20} strokeWidth={3} />} onClick={() => handleOp('/')} />
-          <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
-          <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
-          <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
-          <OperatorButton op="Backspace" icon={<Delete size={20} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+        {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью) */}
+        <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+            {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
+            <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} variant="operator" />
+            <OperatorButton op="-" icon={<Minus size={24} strokeWidth={3.5} />} onClick={() => handleOp('-')} variant="operator" />
+            <OperatorButton op="*" icon={<X size={24} strokeWidth={3.5} />} onClick={() => handleOp('*')} variant="operator" />
+            <OperatorButton op="/" icon={<Divide size={24} strokeWidth={3.5} />} onClick={() => handleOp('/')} variant="operator" />
+
+            {/* Ряд 2: Скобки, запятая и Backspace */}
+            <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
+            <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
+            <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
+            <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-1 sm:mt-2 w-full max-w-lg grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
+        <div className="mt-1.5 sm:mt-2 w-full max-w-md grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2831,7 +2843,7 @@ export default function App() {
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/60 dark:bg-zinc-900/60 border-zinc-300 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 backdrop-blur-md' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-50/60 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 backdrop-blur-md' : 'bg-white/60 dark:bg-zinc-900/60 border-zinc-300/60 dark:border-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 backdrop-blur-md'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -3071,12 +3083,12 @@ export default function App() {
 }
 function Gap({ idx, value, selected, onClick }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void }) {
   const charCount = value.length;
-  const baseWidthRem = 1.1;
-  const baseWidthVw = 6;
-  const baseWidthMaxRem = 1.75;
-  const extraWidthPerCharRem = 0.5;
-  const extraWidthPerCharVw = 1.5;
-  const extraWidthPerCharMaxRem = 0.8;
+  const baseWidthRem = 1.35;
+  const baseWidthVw = 6.6;
+  const baseWidthMaxRem = 2.15;
+  const extraWidthPerCharRem = 0.55;
+  const extraWidthPerCharVw = 1.8;
+  const extraWidthPerCharMaxRem = 0.9;
   const extraChars = Math.max(0, charCount - 1);
   const dynamicWidth = `clamp(${baseWidthRem + (extraChars * extraWidthPerCharRem)}rem, ${baseWidthVw + (extraChars * extraWidthPerCharVw)}vw, ${baseWidthMaxRem + (extraChars * extraWidthPerCharMaxRem)}rem)`;
 
@@ -3084,22 +3096,34 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
     <button
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
-      className={`h-[clamp(1.65rem,7.5vw,2.5rem)] rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold flex-shrink-0 ${selected ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-500/30 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.15)] scale-110 z-20' : value ? 'border-zinc-800/60 dark:border-zinc-200/60 bg-zinc-800/60 dark:bg-zinc-200/60 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10' : 'border-dashed border-zinc-300/60 dark:border-zinc-700/60 hover:border-zinc-400/60 dark:hover:border-zinc-500/60 text-zinc-400 dark:text-zinc-500 bg-zinc-50/60 dark:bg-zinc-900/60 backdrop-blur-md z-10'}`}
+      className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
+        selected
+          ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
+          : value
+          ? 'border-zinc-800/80 dark:border-zinc-200/80 bg-zinc-800/70 dark:bg-zinc-200/80 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10'
+          : 'border-dashed border-zinc-400/70 dark:border-zinc-500/60 hover:border-orange-400 text-zinc-400 dark:text-zinc-500 bg-white/30 dark:bg-zinc-800/30 backdrop-blur-md z-10'
+      }`}
     >
       {value ? (
-        <span className="text-[clamp(0.85rem,3.8vw,1.25rem)] whitespace-nowrap px-0.5">{value}</span>
+        <span className="text-[clamp(1.15rem,4.8vw,1.6rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
       ) : (
-        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700`}></span>
+        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-zinc-400 dark:bg-zinc-600"></span>
       )}
     </button>
   );
 }
 
-function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'danger' }) {
+function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'operator' | 'danger' }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center flex-1 min-w-[2rem] sm:min-w-[2.5rem] max-w-[3rem] sm:max-w-[3.5rem] md:max-w-[4rem] h-10 sm:h-12 md:h-14 rounded-lg sm:rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 border-2 flex-shrink-0 ${variant === 'danger' ? 'bg-red-50/60 dark:bg-red-500/30 backdrop-blur-md text-red-500 dark:text-red-400 border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 hover:border-red-200 dark:hover:border-red-500/40 shadow-sm' : 'bg-white/60 dark:bg-zinc-800/60 backdrop-blur-md text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 shadow-sm'}`}
+      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all active:scale-95 border-2 cursor-pointer shadow-md touch-manipulation select-none backdrop-blur-md ${
+        variant === 'operator'
+          ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
+          : variant === 'danger'
+          ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
+          : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
+      }`}
     >
       {icon}
     </button>
