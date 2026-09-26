@@ -833,6 +833,27 @@ function detectInitialLanguage(): Language {
   return 'ru';
 }
 
+const preloadedImageUrlsSet = new Set<string>();
+
+const preloadImagePool = (urls: string[]) => {
+  if (!urls || urls.length === 0) return;
+  const toLoad = urls.filter(u => u && !preloadedImageUrlsSet.has(u));
+  if (toLoad.length === 0) return;
+  
+  let index = 0;
+  const loadNext = () => {
+    if (index >= toLoad.length) return;
+    const url = toLoad[index++];
+    preloadedImageUrlsSet.add(url);
+    const img = new Image();
+    img.onload = () => setTimeout(loadNext, 50);
+    img.onerror = () => setTimeout(loadNext, 50);
+    img.src = url;
+  };
+  loadNext();
+  loadNext();
+};
+
 export default function App() {
   // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
   useEffect(() => {
@@ -903,6 +924,8 @@ export default function App() {
   const [carImageLoaded, setCarImageLoaded] = useState<boolean>(false);
   const carImagesListRef = useRef<string[]>([]);
   const ticketImagesListRef = useRef<any[]>([]);
+  const nextTicketRef = useRef<{ item: any; img: HTMLImageElement } | null>(null);
+  const nextCarRef = useRef<{ url: string; img: HTMLImageElement } | null>(null);
   const [recentCarUrls, setRecentCarUrls] = useState<string[]>([]);
   const [recentTicketUrls, setRecentTicketUrls] = useState<string[]>([]);
 
@@ -927,6 +950,29 @@ export default function App() {
     return { item: chosenItem, updatedUrls };
   };
 
+  const prepareNextTicket = useCallback(() => {
+    if (!ticketImagesListRef.current || ticketImagesListRef.current.length === 0) return;
+    const { item: nextTicket } = getSmartRandomItem(ticketImagesListRef.current, recentTicketUrls, 6);
+    if (nextTicket) {
+      const url = nextTicket.imageUrl || nextTicket.url;
+      if (url) {
+        const img = new Image();
+        img.src = url;
+        nextTicketRef.current = { item: nextTicket, img };
+      }
+    }
+  }, [recentTicketUrls]);
+
+  const prepareNextCar = useCallback(() => {
+    if (!carImagesListRef.current || carImagesListRef.current.length === 0) return;
+    const { item: nextUrl } = getSmartRandomItem(carImagesListRef.current, recentCarUrls, 6);
+    if (nextUrl) {
+      const img = new Image();
+      img.src = nextUrl;
+      nextCarRef.current = { url: nextUrl, img };
+    }
+  }, [recentCarUrls]);
+
   const [ticketBg, setTicketBg] = useState<{
     imageUrl: string;
     category: string;
@@ -936,26 +982,62 @@ export default function App() {
   const fetchRandomTicket = useCallback(async () => {
     setIsVisualReady(false);
     
+    // 1. Проверяем, есть ли уже упреждающе загруженный билет в памяти
+    if (nextTicketRef.current && nextTicketRef.current.item) {
+      const prepared = nextTicketRef.current;
+      nextTicketRef.current = null;
+      const chosenTicket = prepared.item;
+      const chosenUrl = chosenTicket.imageUrl || chosenTicket.url;
+      
+      setRecentTicketUrls(prev => [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6));
+      
+      let isDone = false;
+      const handleDone = () => {
+        if (isDone) return;
+        isDone = true;
+        setTicketBg({
+          imageUrl: chosenUrl,
+          category: chosenTicket.category || 'default',
+          categoryName: chosenTicket.categoryName || ''
+        });
+        setIsVisualReady(true);
+      };
+
+      if (prepared.img.complete) {
+        handleDone();
+      } else {
+        prepared.img.onload = handleDone;
+        prepared.img.onerror = handleDone;
+        setTimeout(handleDone, 5000);
+      }
+      return;
+    }
+
+    // 2. Если упреждающего нет в очереди, выбираем из локального пула
     if (ticketImagesListRef.current && ticketImagesListRef.current.length > 0) {
       setRecentTicketUrls(prev => {
         const { item: chosenTicket, updatedUrls } = getSmartRandomItem(ticketImagesListRef.current, prev, 6);
         if (chosenTicket) {
+          const chosenUrl = chosenTicket.imageUrl || chosenTicket.url;
           const img = new Image();
           let isDone = false;
           const handleDone = () => {
             if (isDone) return;
             isDone = true;
             setTicketBg({
-              imageUrl: chosenTicket.imageUrl,
-              category: chosenTicket.category,
-              categoryName: chosenTicket.categoryName
+              imageUrl: chosenUrl,
+              category: chosenTicket.category || 'default',
+              categoryName: chosenTicket.categoryName || ''
             });
             setIsVisualReady(true);
           };
           img.onload = handleDone;
           img.onerror = handleDone;
           setTimeout(handleDone, 5000);
-          img.src = chosenTicket.imageUrl;
+          img.src = chosenUrl;
+          if (img.complete) {
+            handleDone();
+          }
         } else {
           setIsVisualReady(true);
         }
@@ -964,14 +1046,15 @@ export default function App() {
       return;
     }
 
-    // Fallback if pool empty
+    // 3. Fallback, если пул пуст
     try {
       const response = await fetch(`${API_URL}/api/tickets/random`);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.ticket) {
+          const chosenUrl = data.ticket.imageUrl || data.ticket.url;
           setRecentTicketUrls(prev => {
-            const updatedUrls = [data.ticket.imageUrl, ...prev.filter(u => u !== data.ticket.imageUrl)].slice(0, 6);
+            const updatedUrls = [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6);
             return updatedUrls;
           });
           const img = new Image();
@@ -980,16 +1063,19 @@ export default function App() {
             if (isDone) return;
             isDone = true;
             setTicketBg({
-              imageUrl: data.ticket.imageUrl,
-              category: data.ticket.category,
-              categoryName: data.ticket.categoryName
+              imageUrl: chosenUrl,
+              category: data.ticket.category || 'default',
+              categoryName: data.ticket.categoryName || ''
             });
             setIsVisualReady(true);
           };
           img.onload = handleDone;
           img.onerror = handleDone;
           setTimeout(handleDone, 5000);
-          img.src = data.ticket.imageUrl;
+          img.src = chosenUrl;
+          if (img.complete) {
+            handleDone();
+          }
         } else {
           setIsVisualReady(true);
         }
@@ -1184,6 +1270,7 @@ export default function App() {
             }
             return updatedUrls;
           });
+          preloadImagePool(parsed);
         }
       }
     } catch (e) {
@@ -1196,6 +1283,16 @@ export default function App() {
         const parsed = JSON.parse(cachedTickets);
         if (Array.isArray(parsed) && parsed.length > 0) {
           ticketImagesListRef.current = parsed;
+          const initialTicket = parsed[Math.floor(Math.random() * parsed.length)];
+          if (initialTicket) {
+            setTicketBg(prev => prev || {
+              imageUrl: initialTicket.imageUrl || initialTicket.url,
+              category: initialTicket.category || 'default',
+              categoryName: initialTicket.categoryName || ''
+            });
+          }
+          const ticketUrls = parsed.map((t: any) => t.imageUrl || t.url).filter(Boolean);
+          preloadImagePool(ticketUrls);
         }
       }
     } catch (e) {
@@ -1205,36 +1302,85 @@ export default function App() {
 
   useEffect(() => {
     const fetchImages = async () => {
+      // 1. Пул картинок автомобилей
       try {
         const response = await fetch(`${API_URL}/api/cars/pool`);
-        if (!response.ok) throw new Error('Ошибка при загрузке пула картинок с бэкенда');
-        
-        const data = await response.json();
-        const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
-        
-        const imageUrls = images.map((item: any) => typeof item === 'string' ? item : (item.imageUrl || item.url || item.dataUrl || ''));
-        const validUrls = imageUrls.filter(Boolean);
-        
-        if (validUrls.length > 0) {
-          carImagesListRef.current = validUrls;
-          const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
-          const img = new Image();
-          img.onload = () => setCarImage(newUrl);
-          img.src = newUrl;
-          try {
-            localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
-          } catch (e) {
-            console.warn('Failed to cache KV images:', e);
+        if (response.ok) {
+          const data = await response.json();
+          const images = Array.isArray(data) ? data : (data.cars || data.pool || []);
+          
+          const imageUrls = images.map((item: any) => typeof item === 'string' ? item : (item.imageUrl || item.url || item.dataUrl || ''));
+          const validUrls = imageUrls.filter(Boolean);
+          
+          if (validUrls.length > 0) {
+            carImagesListRef.current = validUrls;
+            if (!carImage) {
+              const newUrl = validUrls[Math.floor(Math.random() * validUrls.length)];
+              const img = new Image();
+              img.onload = () => setCarImage(newUrl);
+              img.src = newUrl;
+            }
+            try {
+              localStorage.setItem('make100_kv_images', JSON.stringify(validUrls));
+            } catch (e) {
+              console.warn('Failed to cache KV images:', e);
+            }
+            preloadImagePool(validUrls);
           }
         }
       } catch (err) {
-        // Use console.warn instead of console.error to avoid raising fatal errors in test automation
         console.warn('Ошибка при получении картинок с бэкенда:', err);
+      }
+
+      // 2. Пул фонов билетов
+      try {
+        const response = await fetch(`${API_URL}/api/tickets/pool`);
+        if (response.ok) {
+          const data = await response.json();
+          const tickets = Array.isArray(data) ? data : (data.tickets || data.pool || []);
+          if (tickets && tickets.length > 0) {
+            const formattedTickets = tickets.map((t: any) => ({
+              id: t.id,
+              category: t.category || 'default',
+              categoryName: t.categoryName || '',
+              imageUrl: t.imageUrl || t.url || ''
+            })).filter((t: any) => Boolean(t.imageUrl));
+
+            if (formattedTickets.length > 0) {
+              ticketImagesListRef.current = formattedTickets;
+              try {
+                localStorage.setItem('make100_kv_ticket_images', JSON.stringify(formattedTickets));
+              } catch (e) {
+                console.warn('Failed to cache KV ticket images:', e);
+              }
+              setTicketBg(prev => {
+                if (prev && prev.imageUrl) return prev;
+                const initialTicket = formattedTickets[Math.floor(Math.random() * formattedTickets.length)];
+                return {
+                  imageUrl: initialTicket.imageUrl,
+                  category: initialTicket.category,
+                  categoryName: initialTicket.categoryName
+                };
+              });
+              const ticketUrls = formattedTickets.map((t: any) => t.imageUrl);
+              preloadImagePool(ticketUrls);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Ошибка при получении пула билетов с бэкенда:', err);
       }
     };
     
     fetchImages();
-  }, []);
+  }, [carImage]);
+
+  useEffect(() => {
+    if (isVisualReady) {
+      prepareNextTicket();
+      prepareNextCar();
+    }
+  }, [isVisualReady, prepareNextTicket, prepareNextCar]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -1909,7 +2055,28 @@ export default function App() {
     if (gameMode === 'ticket') {
       fetchRandomTicket();
     } else {
-      if (carImagesListRef.current.length > 0) {
+      if (nextCarRef.current && nextCarRef.current.url) {
+        const prepared = nextCarRef.current;
+        nextCarRef.current = null;
+        const newUrl = prepared.url;
+        setRecentCarUrls(prev => [newUrl, ...prev.filter(u => u !== newUrl)].slice(0, 6));
+
+        let isDone = false;
+        const handleDone = () => {
+          if (isDone) return;
+          isDone = true;
+          setCarImage(newUrl);
+          setIsVisualReady(true);
+        };
+
+        if (prepared.img.complete) {
+          handleDone();
+        } else {
+          prepared.img.onload = handleDone;
+          prepared.img.onerror = handleDone;
+          setTimeout(handleDone, 5000);
+        }
+      } else if (carImagesListRef.current.length > 0) {
         setRecentCarUrls(prev => {
           const { item: newUrl, updatedUrls } = getSmartRandomItem(carImagesListRef.current, prev, 6);
           if (newUrl) {
@@ -1925,6 +2092,9 @@ export default function App() {
             img.onerror = handleDone;
             setTimeout(handleDone, 5000);
             img.src = newUrl;
+            if (img.complete) {
+              handleDone();
+            }
           } else {
             setIsVisualReady(true);
           }
