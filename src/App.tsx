@@ -9,6 +9,7 @@ import { LicensePlate } from './components/LicensePlate';
 import { TicketCard } from './components/TicketCard';
 import { UserProfile } from "./components/UserProfile";
 import { InteractiveTutorial } from './components/InteractiveTutorial';
+import { Stopwatch } from './components/Stopwatch';
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
@@ -915,40 +916,26 @@ export default function App() {
   const [hintUsed, setHintUsed] = useState(false);
   const [noSolutionMessage, setNoSolutionMessage] = useState(false);
 
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const timerIntervalRef = useRef<NodeJS.Timeout | number | null>(null);
+  const elapsedTimeRef = useRef<number>(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [stopwatchResetKey, setStopwatchResetKey] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
 
+  const handleStopwatchTick = useCallback((elapsedMs: number) => {
+    elapsedTimeRef.current = elapsedMs / 1000;
+  }, []);
+
   const startTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current as any);
-      timerIntervalRef.current = null;
-    }
-    
-    timerIntervalRef.current = setInterval(() => {
-      if (roundStartTimeRef.current) {
-        const diffMs = Math.max(0, Date.now() - roundStartTimeRef.current);
-        setElapsedTime(diffMs / 1000);
-      }
-    }, 50);
+    roundStartTimeRef.current = Date.now();
+    setStopwatchResetKey(prev => prev + 1);
+    setIsTimerRunning(true);
   }, []);
 
   const stopTimer = useCallback(() => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current as any);
-      timerIntervalRef.current = null;
-    }
+    setIsTimerRunning(false);
   }, []);
-
-  const formatLiveStopwatch = (sec: number) => {
-    const totalMs = Math.max(0, Math.floor(sec * 1000));
-    const mins = Math.floor(totalMs / 60000);
-    const secs = Math.floor((totalMs % 60000) / 1000);
-    const ms = Math.floor((totalMs % 1000) / 10); // сотые доли (00..99)
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}:${String(ms).padStart(2, '0')}`;
-  };
 
   const formatSolveTime = (timeMs: number) => {
     const secStr = t?.secondsShort || 'сек.';
@@ -1886,12 +1873,13 @@ export default function App() {
     setWon(false);
     setHintUsed(false);
     
-    setElapsedTime(0);
+    elapsedTimeRef.current = 0;
+    setStopwatchResetKey(prev => prev + 1);
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
     stopTimer();
-  }, [playSound, playVibration, language, elapsedTime, stopTimer, gameMode, fetchRandomTicket]);
+  }, [playSound, playVibration, language, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
     let attempts = 0;
@@ -2137,7 +2125,7 @@ export default function App() {
   useEffect(() => {
     if (gameState === 'playing' && !won && isVisualReady) {
       roundStartTimeRef.current = Date.now();
-      setElapsedTime(0);
+      elapsedTimeRef.current = 0;
       startTimer();
     } else {
       stopTimer();
@@ -2237,7 +2225,7 @@ export default function App() {
       stopTimer();
       const exactSolveTimeMs = Date.now() - roundStartTimeRef.current;
       const exactSolveTimeSec = exactSolveTimeMs / 1000;
-      setElapsedTime(exactSolveTimeSec);
+      elapsedTimeRef.current = exactSolveTimeSec;
       setWon(true);
       setGameState('idle');
       playSound('success');
@@ -2441,12 +2429,12 @@ export default function App() {
   // Считаем, сколько знаков ввёл игрок (как это уже делается в UI)
   const playerSignsCount = gaps.join('').replace(/[0-9.]/g, '').length;
   
-  // Получаем оптимальное решение только когда игра выиграна, чтобы не нагружать рендер
-  let aiSignsCount = 0;
-  if (won) {
+  // Получаем оптимальное решение только когда игра выиграна (кешируем через useMemo)
+  const aiSignsCount = React.useMemo(() => {
+    if (!won) return 0;
     const solution = findSolution(digits);
-    aiSignsCount = solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
-  }
+    return solution ? solution.join('').replace(/[0-9.]/g, '').length : 0;
+  }, [won, digits]);
 
   const handleWatchOptimal = () => {
     // Проверяем баланс подсказок
@@ -2573,9 +2561,7 @@ export default function App() {
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono">
-              {formatLiveStopwatch(elapsedTime)}
-            </span>
+            <Stopwatch isRunning={isTimerRunning} onTick={handleStopwatchTick} resetKey={stopwatchResetKey} />
           </div>
           
           {/* Вертикальный разделитель */}
@@ -3241,7 +3227,7 @@ export default function App() {
                 </motion.div>
               )}
               <div className="flex flex-col items-center gap-1 mb-8">
-                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTime * 1000))}</span></p>
+                <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.solvedIn} <span className="font-mono font-bold">{formatSolveTime(lastRoundTimeMs || (elapsedTimeRef.current * 1000))}</span></p>
                 <p className="text-lg text-zinc-500 dark:text-zinc-400">{t.operatorsUsed} <span className="font-mono font-bold">{gaps.join('').replace(/[0-9.]/g, '').length}</span></p>
                 
                 <div className="text-center py-2 mt-2 flex flex-wrap justify-center gap-2">
