@@ -23,8 +23,8 @@ import { TRANSLATIONS, LANGUAGES, Language } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
 import { LicensePlate } from './components/LicensePlate';
 import { TicketCard } from './components/TicketCard';
-import { UserProfile } from "./components/UserProfile";
-import { InteractiveTutorial } from './components/InteractiveTutorial';
+const UserProfile = React.lazy(() => import("./components/UserProfile").then(m => ({ default: m.UserProfile })));
+const InteractiveTutorial = React.lazy(() => import('./components/InteractiveTutorial').then(m => ({ default: m.InteractiveTutorial })));
 import { Stopwatch } from './components/Stopwatch';
 import { TelegramLoadingOverlay } from './components/TelegramLoadingOverlay';
 import { SaveBotModal } from './components/SaveBotModal';
@@ -2533,13 +2533,15 @@ export default function App() {
         />
         <AnimatePresence>
           {showTutorial && (
-            <InteractiveTutorial
-              onComplete={completeTutorial}
-              t={t}
-              theme={theme}
-              playSound={playSound}
-              playVibration={playVibration}
-            />
+            <React.Suspense fallback={null}>
+              <InteractiveTutorial
+                onComplete={completeTutorial}
+                t={t}
+                theme={theme}
+                playSound={playSound}
+                playVibration={playVibration}
+              />
+            </React.Suspense>
           )}
         </AnimatePresence>
 
@@ -2671,25 +2673,29 @@ export default function App() {
       </AnimatePresence>
 
       {/* Profile Modal (Full-Screen Overlay) */}
-      <UserProfile 
-        isOpen={isProfileOpen}
-        onClose={() => { setIsProfileOpen(false); playSound('click'); playVibration('light'); }}
-        stats={stats}
-        tgUser={tgUser}
-        language={language}
-        t={t}
-        solvedCount={solvedCount}
-        unsolvedCount={unsolvedCount}
-        totalSolveTime={totalSolveTime}
-        bestTimeMs={bestTimeMs}
-        minCharacters={minCharacters}
-        formatBestTime={formatBestTime}
-        formatTotalPlayTime={formatTotalPlayTime}
-        formatRegistrationDate={formatRegistrationDate}
-        handleInviteFriend={handleInviteFriend}
-        playSound={playSound}
-        playVibration={playVibration}
-      />
+      {isProfileOpen && (
+        <React.Suspense fallback={null}>
+          <UserProfile 
+            isOpen={isProfileOpen}
+            onClose={() => { setIsProfileOpen(false); playSound('click'); playVibration('light'); }}
+            stats={stats}
+            tgUser={tgUser}
+            language={language}
+            t={t}
+            solvedCount={solvedCount}
+            unsolvedCount={unsolvedCount}
+            totalSolveTime={totalSolveTime}
+            bestTimeMs={bestTimeMs}
+            minCharacters={minCharacters}
+            formatBestTime={formatBestTime}
+            formatTotalPlayTime={formatTotalPlayTime}
+            formatRegistrationDate={formatRegistrationDate}
+            handleInviteFriend={handleInviteFriend}
+            playSound={playSound}
+            playVibration={playVibration}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 }
