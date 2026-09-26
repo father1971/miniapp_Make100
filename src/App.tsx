@@ -397,6 +397,175 @@ function findSolution(digits: string[]): string[] | null {
   return gaps;
 }
 
+/**
+ * Умная защитная клавиатура (Smart Button Guard):
+ * Подсчет незакрытых открывающих скобок '(' в выражении до указанного слота
+ */
+function getUnclosedParenCount(gaps: string[], upToSlotIdx: number): number {
+  let count = 0;
+  for (let i = 0; i <= upToSlotIdx; i++) {
+    const s = gaps[i] || '';
+    for (let c = 0; c < s.length; c++) {
+      if (s[c] === '(') count++;
+      else if (s[c] === ')') count--;
+    }
+  }
+  return Math.max(0, count);
+}
+
+/**
+ * Умная защитная клавиатура: общий баланс скобок во всем выражении
+ */
+function getTotalParenBalance(gaps: string[]): { totalOpen: number; totalClosed: number } {
+  let totalOpen = 0;
+  let totalClosed = 0;
+  for (const s of gaps) {
+    if (!s) continue;
+    for (let c = 0; c < s.length; c++) {
+      if (s[c] === '(') totalOpen++;
+      else if (s[c] === ')') totalClosed++;
+    }
+  }
+  return { totalOpen, totalClosed };
+}
+
+/**
+ * Умная защитная клавиатура (Smart Button Guard):
+ * Проверка допустимости нажатия клавиши в текущем активном слоте
+ */
+function isOpAllowed(
+  op: string,
+  selectedSlot: number | null,
+  digits: string[],
+  gaps: string[],
+  won: boolean,
+  isVisualReady: boolean
+): boolean {
+  if (selectedSlot === null || won || !isVisualReady) return false;
+  if (selectedSlot < 0 || selectedSlot > digits.length) return false;
+
+  const curr = gaps[selectedSlot] || '';
+  const lastChar = curr.length > 0 ? curr[curr.length - 1] : null;
+
+  // 1. Backspace (стереть)
+  if (op === 'Backspace') {
+    return curr.length > 0;
+  }
+
+  // Ограничение емкости слота (максимум 5 символов, если это не замена оператора)
+  const isReplacingOp = ['+', '-', '*', '/'].includes(op) && (['+', '-', '*', '/'].includes(lastChar || '') || lastChar === ',');
+  if (!isReplacingOp && curr.length >= 5) {
+    return false;
+  }
+
+  // 2. Слот 6 (после самой последней цифры)
+  if (selectedSlot === digits.length) {
+    if (op !== ')') return false;
+    const unclosedToLeft = getUnclosedParenCount(gaps, selectedSlot);
+    const { totalOpen, totalClosed } = getTotalParenBalance(gaps);
+    if (unclosedToLeft <= 0 || totalOpen <= totalClosed) return false;
+    if (curr.length > 0 && !curr.endsWith(')')) return false;
+    return true;
+  }
+
+  // 3. Слот 0 (перед первой цифрой)
+  if (selectedSlot === 0) {
+    // Бинарные операторы +, *, /, закрывающая скобка и запятая запрещены
+    if (['+', '*', '/', ')', ','].includes(op)) return false;
+
+    if (op === '-') {
+      // Унарный минус допустим в пустом слоте, после '(' или как замена существующего '-'
+      if (curr === '' || curr.endsWith('(') || curr === '-') return true;
+      return false;
+    }
+
+    if (op === '(') {
+      // Открывающая скобка допустима в пустом слоте, после '(' или после '-'
+      if (curr === '' || curr.endsWith('(') || curr.endsWith('-')) return true;
+      return false;
+    }
+
+    return false;
+  }
+
+  // 4. Промежуточные слоты (1..5)
+  // --- Десятичная запятая ',' ---
+  if (op === ',') {
+    if (curr.length > 0) return false;
+
+    // Проверяем, нет ли уже запятой в этом непрерывном числе (поиск влево)
+    for (let i = selectedSlot - 1; i >= 0; i--) {
+      const g = gaps[i] || '';
+      if (g.includes(',') || g.includes('.')) return false;
+      if (/[+\-*/()]/.test(g)) break;
+    }
+
+    // Поиск вправо
+    for (let i = selectedSlot + 1; i <= digits.length; i++) {
+      const g = gaps[i] || '';
+      if (g.includes(',') || g.includes('.')) return false;
+      if (/[+\-*/()]/.test(g)) break;
+    }
+
+    return true;
+  }
+
+  // --- Закрывающая скобка ')' ---
+  if (op === ')') {
+    const unclosedToLeft = getUnclosedParenCount(gaps, selectedSlot);
+    const { totalOpen, totalClosed } = getTotalParenBalance(gaps);
+    if (unclosedToLeft <= 0 || totalOpen <= totalClosed) return false;
+
+    // Нельзя закрывать сразу после оператора, '(' или ','
+    if (curr.length > 0) {
+      return curr.endsWith(')');
+    }
+    // Если слот пустой, перед ним стоит цифра digits[selectedSlot - 1]
+    return true;
+  }
+
+  // --- Открывающая скобка '(' (Вариант А) ---
+  if (op === '(') {
+    // В пустом промежуточном слоте '(' неактивна, пока не нажат оператор!
+    if (curr === '') return false;
+    // Разрешена после оператора (+, -, *, /) или после другой '('
+    if (['+', '-', '*', '/'].includes(lastChar || '') || lastChar === '(') {
+      return true;
+    }
+    return false;
+  }
+
+  // --- Арифметические операторы (+, -, *, /) ---
+  if (['+', '-', '*', '/'].includes(op)) {
+    // Если в слоте стоит запятая, оператор заменяет ее
+    if (curr === ',') return true;
+
+    // Если последний символ — оператор:
+    if (['+', '-', '*', '/'].includes(lastChar || '')) {
+      const prevChar = curr.length > 1 ? curr[curr.length - 2] : null;
+      if (prevChar === '(') {
+        return op === '-'; // После '(' разрешен только унарный минус '-'
+      }
+      return true; // Замена оператора (+, -, *, /)
+    }
+
+    // В пустом слоте (перед ним цифра)
+    if (curr === '') return true;
+
+    // После закрывающей скобки ')'
+    if (lastChar === ')') return true;
+
+    // Сразу после '(' допустим только унарный минус '-'
+    if (lastChar === '(') {
+      return op === '-';
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
 const getTicketStyles = (t: any) => [
   {
     id: 'flight',
@@ -2017,18 +2186,38 @@ export default function App() {
   const handleOp = useCallback((op: string) => {
     if (selectedSlot === null || won || !isVisualReady) return;
     
+    if (!isOpAllowed(op, selectedSlot, digits, gaps, won, isVisualReady)) {
+      playVibration('light');
+      return;
+    }
+
     const newGaps = [...gaps];
+    const curr = newGaps[selectedSlot] || '';
+    const lastChar = curr.length > 0 ? curr[curr.length - 1] : null;
+
     if (op === 'Backspace') {
-      newGaps[selectedSlot] = newGaps[selectedSlot].slice(0, -1);
+      newGaps[selectedSlot] = curr.slice(0, -1);
       playSound('click');
       playVibration('light');
+    } else if (['+', '-', '*', '/'].includes(op)) {
+      if (['+', '-', '*', '/'].includes(lastChar || '')) {
+        // Умная замена предыдущего знака на новый вместо дублирования
+        newGaps[selectedSlot] = curr.slice(0, -1) + op;
+      } else if (curr === ',') {
+        // Замена запятой на оператор
+        newGaps[selectedSlot] = op;
+      } else {
+        newGaps[selectedSlot] += op;
+      }
+      playSound('click');
+      playVibration('medium');
     } else {
       newGaps[selectedSlot] += op;
       playSound('click');
       playVibration('medium');
     }
     setGaps(newGaps);
-  }, [selectedSlot, gaps, won, isVisualReady, playSound, playVibration]);
+  }, [selectedSlot, gaps, won, isVisualReady, playSound, playVibration, digits]);
 
   const handleSlotClick = useCallback((idx: number) => {
     if (!isVisualReady || won) return;
@@ -2048,12 +2237,21 @@ export default function App() {
       }
       if (selectedSlot === null) return;
       
+      let opToApply: string | null = null;
       if (['+', '-', '*', '/', '(', ')', ','].includes(e.key)) {
-        handleOp(e.key);
+        opToApply = e.key;
       } else if (e.key === '.') {
-        handleOp(',');
+        opToApply = ',';
       } else if (e.key === 'Backspace') {
-        handleOp('Backspace');
+        opToApply = 'Backspace';
+      }
+
+      if (opToApply) {
+        if (isOpAllowed(opToApply, selectedSlot, digits, gaps, won, isVisualReady)) {
+          handleOp(opToApply);
+        } else {
+          playVibration('light');
+        }
       } else if (e.key === 'ArrowLeft') {
         setSelectedSlot(Math.max(0, selectedSlot - 1));
         playSound('click');
@@ -2066,7 +2264,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedSlot, handleOp, won, initGame, gameState, playSound, playVibration]);
+  }, [selectedSlot, handleOp, won, initGame, gameState, playSound, playVibration, digits, gaps, isVisualReady]);
 
   const currentResult = digits.length ? calculateResult(digits, gaps) : 0;
   const currentInput = gaps.join('');
@@ -2815,20 +3013,20 @@ export default function App() {
           </div>
         </div>
 
-        {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью) */}
+        {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью и защитной клавиатурой) */}
         <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
-            <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} variant="operator" />
-            <OperatorButton op="-" icon={<Minus size={24} strokeWidth={3.5} />} onClick={() => handleOp('-')} variant="operator" />
-            <OperatorButton op="*" icon={<X size={24} strokeWidth={3.5} />} onClick={() => handleOp('*')} variant="operator" />
-            <OperatorButton op="/" icon={<Divide size={24} strokeWidth={3.5} />} onClick={() => handleOp('/')} variant="operator" />
+            <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} disabled={!isOpAllowed('+', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="-" icon={<Minus size={24} strokeWidth={3.5} />} onClick={() => handleOp('-')} disabled={!isOpAllowed('-', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="*" icon={<X size={24} strokeWidth={3.5} />} onClick={() => handleOp('*')} disabled={!isOpAllowed('*', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="/" icon={<Divide size={24} strokeWidth={3.5} />} onClick={() => handleOp('/')} disabled={!isOpAllowed('/', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
 
             {/* Ряд 2: Скобки, запятая и Backspace */}
-            <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} />
-            <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} />
-            <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} />
-            <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} variant="danger" />
+            <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} disabled={!isOpAllowed('(', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} disabled={!isOpAllowed(')', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} disabled={!isOpAllowed(',', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} disabled={!isOpAllowed('Backspace', selectedSlot, digits, gaps, won, isVisualReady)} variant="danger" />
           </div>
         </div>
 
@@ -3115,16 +3313,32 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
   );
 }
 
-function OperatorButton({ icon, onClick, variant = 'default' }: { op: string, icon: React.ReactNode, onClick: () => void, variant?: 'default' | 'operator' | 'danger' }) {
+function OperatorButton({ 
+  icon, 
+  onClick, 
+  variant = 'default',
+  disabled = false
+}: { 
+  op: string, 
+  icon: React.ReactNode, 
+  onClick: () => void, 
+  variant?: 'default' | 'operator' | 'danger',
+  disabled?: boolean
+}) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all active:scale-95 border-2 cursor-pointer shadow-md touch-manipulation select-none backdrop-blur-md ${
-        variant === 'operator'
-          ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
-          : variant === 'danger'
-          ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
-          : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
+      disabled={disabled}
+      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
+        disabled
+          ? 'opacity-25 cursor-not-allowed pointer-events-none border-transparent bg-zinc-200/40 dark:bg-zinc-800/20 text-zinc-400 dark:text-zinc-600 shadow-none'
+          : `active:scale-95 cursor-pointer shadow-md touch-manipulation ${
+              variant === 'operator'
+                ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
+                : variant === 'danger'
+                ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
+                : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
+            }`
       }`}
     >
       {icon}
