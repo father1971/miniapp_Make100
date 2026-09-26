@@ -227,6 +227,10 @@ export interface TranslationData {
 
 export const TRANSLATIONS: Record<string, TranslationData> = {
   ru: {
+    saveBotModalTitle: "Не потеряй игру Make 100! 🧩",
+    saveBotModalDesc: "Закрепи бота в списке своих чатов, чтобы возвращаться к игре в любое время и сохранить свои рекорды и монеты.\n\nЗапусти бота прямо сейчас и получи бонус +250 🪙 монет!",
+    saveBotModalBtn: "🤖 Запустить бота (+250 🪙)",
+    saveBotModalLater: "Позже",
     howToPlayTutorial: "🎓 Обучение: Как играть",
     tutorialSkip: "Пропустить",
     tutorialNext: "Далее ➡️",
@@ -350,6 +354,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   en: {
+    saveBotModalTitle: "Don't lose Make 100! 🧩",
+    saveBotModalDesc: "Keep the bot in your chat list so you can return to the game anytime and keep your records and coins.\n\nStart the bot now and claim a +250 🪙 coin bonus!",
+    saveBotModalBtn: "🤖 Start Bot (+250 🪙)",
+    saveBotModalLater: "Later",
     howToPlayTutorial: "🎓 Tutorial: How to play",
     tutorialSkip: "Skip",
     tutorialNext: "Next ➡️",
@@ -473,6 +481,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   de: {
+    saveBotModalTitle: "Verliere Make 100 nicht! 🧩",
+    saveBotModalDesc: "Behalte den Bot in deiner Chatliste, um jederzeit zum Spiel zurückzukehren und deine Rekorde und Münzen zu behalten.\n\nStarte den Bot jetzt und sichere dir +250 🪙 Münzen Bonus!",
+    saveBotModalBtn: "🤖 Bot starten (+250 🪙)",
+    saveBotModalLater: "Später",
     howToPlayTutorial: "🎓 Anleitung: Spielregeln",
     tutorialSkip: "Überspringen",
     tutorialNext: "Weiter ➡️",
@@ -596,6 +608,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   fr: {
+    saveBotModalTitle: "Ne perdez pas Make 100 ! 🧩",
+    saveBotModalDesc: "Gardez le bot dans votre liste de chats pour revenir au jeu à tout moment et conserver vos records et pièces.\n\nLancez le bot maintenant et recevez un bonus de +250 🪙 pièces !",
+    saveBotModalBtn: "🤖 Démarrer le bot (+250 🪙)",
+    saveBotModalLater: "Plus tard",
     howToPlayTutorial: "🎓 Tutoriel : Comment jouer",
     tutorialSkip: "Passer",
     tutorialNext: "Suivant ➡️",
@@ -719,6 +735,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   pt: {
+    saveBotModalTitle: "Não perca o Make 100! 🧩",
+    saveBotModalDesc: "Mantenha o bot na sua lista de conversas para voltar ao jogo a qualquer momento e salvar seus recordes e moedas.\n\nInicie o bot agora e ganhe um bônus de +250 🪙 moedas!",
+    saveBotModalBtn: "🤖 Iniciar Bot (+250 🪙)",
+    saveBotModalLater: "Mais tarde",
     howToPlayTutorial: "🎓 Tutorial: Como jogar",
     tutorialSkip: "Pular",
     tutorialNext: "Avançar ➡️",
@@ -842,6 +862,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   es: {
+    saveBotModalTitle: "¡No pierdas Make 100! 🧩",
+    saveBotModalDesc: "Mantén el bot en tu lista de chats para volver al juego en cualquier momento y guardar tus récords y monedas.\n\n¡Inicia el bot ahora y recibe un bono de +250 🪙 monedas!",
+    saveBotModalBtn: "🤖 Iniciar Bot (+250 🪙)",
+    saveBotModalLater: "Más tarde",
     howToPlayTutorial: "🎓 Tutorial: Cómo jugar",
     tutorialSkip: "Saltar",
     tutorialNext: "Siguiente ➡️",
@@ -965,6 +989,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   zh: {
+    saveBotModalTitle: "不要错过 Make 100！🧩",
+    saveBotModalDesc: "将机器人保存在您的聊天列表中，以便随时返回游戏并保留您的记录和金币。\n\n立即启动机器人，领取 +250 🪙 金币奖励！",
+    saveBotModalBtn: "🤖 启动机器人 (+250 🪙)",
+    saveBotModalLater: "稍后",
     howToPlayTutorial: "🎓 教学：怎么玩",
     tutorialSkip: "跳过",
     tutorialNext: "下一步 ➡️",
@@ -1088,6 +1116,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ja: {
+    saveBotModalTitle: "Make 100 を見失わないように！🧩",
+    saveBotModalDesc: "チャット一覧にボットを残して、いつでもゲームに戻れるようにし、記録とコインを守りましょう。\n\n今すぐボットを起動して +250 🪙 コインのボーナスをゲット！",
+    saveBotModalBtn: "🤖 ボットを起動 (+250 🪙)",
+    saveBotModalLater: "あとで",
     howToPlayTutorial: "🎓 チュートリアル：遊び方",
     tutorialSkip: "スキップ",
     tutorialNext: "次へ ➡️",
@@ -1211,6 +1243,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   it: {
+    saveBotModalTitle: "Non perdere Make 100! 🧩",
+    saveBotModalDesc: "Conserva il bot nell'elenco chat per tornare al gioco in qualsiasi momento e salvare i tuoi record e monete.\n\nAvvia subito il bot e ricevi un bonus di +250 🪙 monete!",
+    saveBotModalBtn: "🤖 Avvia Bot (+250 🪙)",
+    saveBotModalLater: "Più tardi",
     howToPlayTutorial: "🎓 Tutorial: Come giocare",
     tutorialSkip: "Salta",
     tutorialNext: "Avanti ➡️",
@@ -1334,6 +1370,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ko: {
+    saveBotModalTitle: "Make 100을 놓치지 마세요! 🧩",
+    saveBotModalDesc: "채팅 목록에 봇을 유지하여 언제든지 게임으로 돌아오고 기록과 코인을 보존하세요.\n\n지금 봇을 시작하고 +250 🪙 코인 보너스를 받으세요!",
+    saveBotModalBtn: "🤖 봇 시작하기 (+250 🪙)",
+    saveBotModalLater: "나중에",
     howToPlayTutorial: "🎓 튜토리얼: 게임 방법",
     tutorialSkip: "건너뛰기",
     tutorialNext: "다음 ➡️",
@@ -1457,6 +1497,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   tr: {
+    saveBotModalTitle: "Make 100'ü kaybetmeyin! 🧩",
+    saveBotModalDesc: "İstediğiniz zaman oyuna geri dönebilmek, rekorlarınızı ve paralarınızı korumak için botu sohbet listenizde tutun.\n\nBotu hemen başlatın ve +250 🪙 jeton bonusu kazanın!",
+    saveBotModalBtn: "🤖 Botu Başlat (+250 🪙)",
+    saveBotModalLater: "Daha sonra",
     howToPlayTutorial: "🎓 Eğitim: Nasıl Oynanır",
     tutorialSkip: "Atla",
     tutorialNext: "İleri ➡️",
@@ -1580,6 +1624,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   he: {
+    saveBotModalTitle: "אל תאבדו את Make 100! 🧩",
+    saveBotModalDesc: "שמרו את הבוט ברשימת הצ'אטים כדי לחזור למשחק בכל עת ולשמור על השיאים והמטבעות שלכם.\n\nהפעילו את הבוט עכשיו וקבלו בונוס של +250 🪙 מטבעות!",
+    saveBotModalBtn: "🤖 הפעל את הבוט (+250 🪙)",
+    saveBotModalLater: "אחר כך",
     howToPlayTutorial: "🎓 הדרכה: איך לשחק",
     tutorialSkip: "דלג",
     tutorialNext: "הבא ➡️",
@@ -1703,6 +1751,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   ar: {
+    saveBotModalTitle: "لا تفقد Make 100! 🧩",
+    saveBotModalDesc: "احتفظ بالبوت في قائمة محادثاتك للعودة إلى اللعبة في أي وقت والحفاظ على أرقامك القياسية وعملاتك.\n\nابدأ البوت الآن واحصل على مكافأة +250 🪙 عملة!",
+    saveBotModalBtn: "🤖 تشغيل البوت (+250 🪙)",
+    saveBotModalLater: "لاحقاً",
     howToPlayTutorial: "🎓 التدريب: كيفية اللعب",
     tutorialSkip: "تخطي",
     tutorialNext: "التالي ➡️",
@@ -1826,6 +1878,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   hi: {
+    saveBotModalTitle: "Make 100 न खोएं! 🧩",
+    saveBotModalDesc: "किसी भी समय खेल में लौटने और अपने रिकॉर्ड और सिक्के सुरक्षित रखने के लिए बॉट को अपनी चैट सूची में रखें।\n\nअभी बॉट शुरू करें और +250 🪙 सिक्के बोनस पाएं!",
+    saveBotModalBtn: "🤖 बॉट शुरू करें (+250 🪙)",
+    saveBotModalLater: "बाद में",
     howToPlayTutorial: "🎓 ट्यूटोरियल: कैसे खेलें",
     tutorialSkip: "छोड़ें",
     tutorialNext: "आगे ➡️",
@@ -1949,6 +2005,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   la: {
+    saveBotModalTitle: "Noli amittere Make 100! 🧩",
+    saveBotModalDesc: "Serva botum in indice colloquiorum tuorum ut quandocumque ad ludum redeas et nummos tuos retineas.\n\nIncipe botum nunc et cape praemium +250 🪙 nummorum!",
+    saveBotModalBtn: "🤖 Incipe Botum (+250 🪙)",
+    saveBotModalLater: "Postea",
     howToPlayTutorial: "🎓 Institutio: Quomodo Ludere",
     tutorialSkip: "Praeterire",
     tutorialNext: "Ultra ➡️",
@@ -2072,6 +2132,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   eo: {
+    saveBotModalTitle: "Ne perdu Make 100! 🧩",
+    saveBotModalDesc: "Konservu la roboton en via babileja listo por reveni al la ludo iam ajn kaj konservi viajn rekordojn kaj monerojn.\n\nLanĉu la roboton nun kaj ricevu gratifikon de +250 🪙 moneroj!",
+    saveBotModalBtn: "🤖 Lanĉi Roboton (+250 🪙)",
+    saveBotModalLater: "Poste",
     howToPlayTutorial: "🎓 Lernilo: Kiel Ludi",
     tutorialSkip: "Preterpasi",
     tutorialNext: "Sekva ➡️",
@@ -2195,6 +2259,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   elvish: {
+    saveBotModalTitle: "Áva vanwa Make 100! 🧩",
+    saveBotModalDesc: "Harya i bot imbë sambi lye, ar lelya na tyalië ilurauco. Tula ar túra +250 🪙 mirian!",
+    saveBotModalBtn: "🤖 Yesta Bot (+250 🪙)",
+    saveBotModalLater: "Aban",
     howToPlayTutorial: "🎓 Parmaner: Manen Tyalie",
     tutorialSkip: "Avale",
     tutorialNext: "Ento ➡️",
@@ -2318,6 +2386,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   klingon: {
+    saveBotModalTitle: "Make 100 yItlhopQo'! 🧩",
+    saveBotModalDesc: "quv bot yIpegh. nom yIQujqa' 'ej DarghmeylIj yIghaj. bot yIchenmoH: +250 🪙 Darghmey!",
+    saveBotModalBtn: "🤖 bot yIchu' (+250 🪙)",
+    saveBotModalLater: "pIj",
     howToPlayTutorial: "🎓 ghoj: chay' Quj",
     tutorialSkip: "choS",
     tutorialNext: "veb ➡️",
@@ -2441,6 +2513,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   dothraki: {
+    saveBotModalTitle: "Vos fichat Make 100! 🧩",
+    saveBotModalDesc: "Athchomar bot cheva, tith vezh kishi. Vov bot kishi: +250 🪙 hrakkar!",
+    saveBotModalBtn: "🤖 Dothrak Bot (+250 🪙)",
+    saveBotModalLater: "Jano",
     howToPlayTutorial: "🎓 Diso: Kirekh Dothrak",
     tutorialSkip: "Driv",
     tutorialNext: "Kishi ➡️",
@@ -2564,6 +2640,10 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     }
   },
   valyrian: {
+    saveBotModalTitle: "Daor zaldrīzes Make 100! 🧩",
+    saveBotModalDesc: "Keligon bot lentor, gēlior vēzos daor morghon. Keligon bot: +250 🪙 gēlior!",
+    saveBotModalBtn: "🤖 Keligon Bot (+250 🪙)",
+    saveBotModalLater: "Bantis",
     howToPlayTutorial: "🎓 Bardugon: Skorkydoso Inkon",
     tutorialSkip: "Dārilaros",
     tutorialNext: "Māzigon ➡️",
