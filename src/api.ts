@@ -57,6 +57,12 @@ export async function apiRequest<T>(endpoint: string, options: FetchOptions = {}
           await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));
           continue;
         }
+        // Для 4xx ответов парсим тело, чтобы клиент мог обработать ошибки (banned, insufficient funds и т.д.)
+        if (res.status >= 400 && res.status < 500) {
+          try {
+            return (await res.json()) as T;
+          } catch (e) {}
+        }
         console.warn(`API request to ${endpoint} failed with status: ${res.status}`);
         return null;
       }
@@ -151,13 +157,18 @@ export async function fetchRandomTicketApi(): Promise<RandomTicketResponse | nul
 export async function fetchCarsPoolApi(): Promise<string[] | null> {
   const data = await apiRequest<any>(`/api/cars/pool`, { method: 'GET' });
   if (!data) return null;
-  return Array.isArray(data) ? data : data.images || data.pool || null;
+  if (Array.isArray(data)) return data;
+  // Бэкенд возвращает { success, count, cars: [{id, url}] }
+  const cars = data.cars || data.images || data.pool;
+  if (!Array.isArray(cars)) return null;
+  return cars.map((c: any) => typeof c === 'string' ? c : c.url).filter(Boolean);
 }
 
 export async function fetchTicketsPoolApi(): Promise<any[] | null> {
   const data = await apiRequest<any>(`/api/tickets/pool`, { method: 'GET' });
   if (!data) return null;
-  return Array.isArray(data) ? data : data.images || data.pool || null;
+  // Бэкенд возвращает { success, count, tickets: [...] }
+  return Array.isArray(data) ? data : data.tickets || data.images || data.pool || null;
 }
 
 export { consumeHint as useHint };
