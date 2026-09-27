@@ -402,6 +402,7 @@ export default function App() {
   const elapsedTimeRef = useRef<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [stopwatchResetKey, setStopwatchResetKey] = useState(0);
+  const [roundId, setRoundId] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
   const [lastRoundTimeMs, setLastRoundTimeMs] = useState<number>(0);
   const roundStartTimeRef = useRef<number>(Date.now());
@@ -1199,6 +1200,8 @@ export default function App() {
     setHintUsed(true);
     setGaps(['', '', '', '', '', '', '']);
     setSelectedSlot(null);
+    stopTimer();
+    setStopwatchResetKey(prev => prev + 1);
     
     const newGaps = ['', '', '', '', '', '', ''];
     for (let i = 0; i <= 6; i++) {
@@ -1336,7 +1339,10 @@ export default function App() {
     setIsNewRecord(false);
     setLastRoundTimeMs(0);
     setGameState(startAsIdle === true ? 'idle' : 'playing');
-    stopTimer();
+    setRoundId(prev => prev + 1);
+    if (startAsIdle === true) {
+      stopTimer();
+    }
   }, [playSound, playVibration, language, stopTimer, gameMode, fetchRandomTicket]);
 
   useEffect(() => {
@@ -1581,7 +1587,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (gameState === 'playing' && !won && isVisualReady) {
+    if (gameState === 'playing' && !won && isVisualReady && !hintUsed && !isHinting && !showTutorial) {
       roundStartTimeRef.current = Date.now();
       elapsedTimeRef.current = 0;
       startTimer();
@@ -1589,7 +1595,7 @@ export default function App() {
       stopTimer();
     }
     return () => stopTimer();
-  }, [gameState, won, isVisualReady, startTimer, stopTimer]);
+  }, [gameState, won, isVisualReady, hintUsed, isHinting, showTutorial, roundId, startTimer, stopTimer]);
 
   const handleOp = useCallback((op: string) => {
     if (selectedSlot === null || won || !isVisualReady) return;
