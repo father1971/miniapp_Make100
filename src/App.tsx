@@ -1775,6 +1775,12 @@ export default function App() {
       setGameState('playing');
       setStats((prev: any) => ({ ...prev, hintsCount: Math.max(0, (prev?.hintsCount || 1) - 1) }));
       
+      // Запускаем показ решения сразу, до сетевого запроса, чтобы избежать 
+      // повторного срабатывания победы из-за старых значений gaps (race condition)
+      showHintOnScreen();
+      playSound('click');
+      playVibration('light');
+      
       if (tgUser && tgUser.id && tgUser.id !== 1 && tgUser.id !== 9999) {
         try {
           const res = await consumeHint();
@@ -1791,9 +1797,6 @@ export default function App() {
       } else {
         setIsSubmittingHint(false);
       }
-      showHintOnScreen();
-      playSound('click');
-      playVibration('light');
     } else {
       // Если подсказок нет, открываем стандартное модальное окно покупки подсказок
       setShowBuyHintModal(true);
