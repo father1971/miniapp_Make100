@@ -12,6 +12,7 @@ import {
   TramFront, 
   Snowflake, 
   Tent,
+  Ship,
   Ticket as TicketIcon
 } from 'lucide-react';
 
@@ -244,6 +245,26 @@ const THEMES: Record<string, ThemeDef> = {
     )
   },
 
+  // 10. ferry (Navy blue/ocean cruise theme, ship icon)
+  ferry: {
+    bg: 'bg-gradient-to-br from-[#0c4a6e] via-[#075985] to-[#082f49]',
+    border: 'border-[#38bdf8] ring-1 ring-[#0284c7]/50 shadow-[0_0_15px_rgba(56,189,248,0.35)]',
+    textMain: 'text-[#e0f2fe] font-sans font-black tracking-wider',
+    textAccent: 'text-[#7dd3fc]',
+    digits: 'text-white font-mono font-black drop-shadow-[0_0_10px_rgba(56,189,248,0.85)] tracking-[0.22em]',
+    titleKey: 'ticketFerryTitle',
+    descKey: 'ticketFerryDesc',
+    perforation: 'border-[#38bdf8]/40',
+    icon: Ship,
+    iconClass: 'text-[#38bdf8]',
+    stampText: 'CRUISE',
+    stampClass: 'text-[#38bdf8]',
+    stampRotation: '-rotate-6',
+    extraStyles: (
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-400/10 via-transparent to-transparent pointer-events-none" />
+    )
+  },
+
   // 11. ski (Ice blue/snow white theme, snowflake/goggles icon)
   ski: {
     bg: 'bg-gradient-to-br from-[#0284c7] via-[#0369a1] to-[#075985]',
@@ -325,6 +346,7 @@ const resolveCategory = (cat?: string, catName?: string): string => {
   if (combined.includes('amusement') || combined.includes('carnival') || combined.includes('park') || combined.includes('парк') || combined.includes('аттракцион')) return 'amusement';
   if (combined.includes('museum') || combined.includes('gallery') || combined.includes('музей') || combined.includes('выставк')) return 'museum';
   if (combined.includes('metro') || combined.includes('subway') || combined.includes('метро') || combined.includes('подземк')) return 'metro';
+  if (combined.includes('ferry') || combined.includes('ship') || combined.includes('boat') || combined.includes('cruise') || combined.includes('паром') || combined.includes('теплоход') || combined.includes('круиз') || combined.includes('корабл')) return 'ferry';
   if (combined.includes('ski') || combined.includes('лыж') || combined.includes('ски')) return 'ski';
   if (combined.includes('circus') || combined.includes('tent') || combined.includes('цирк')) return 'circus';
   if (combined.includes('lottery') || combined.includes('lotto') || combined.includes('лотере')) return 'lottery';
