@@ -299,23 +299,25 @@ export default function App() {
       setRecentTicketUrls(prev => [chosenUrl, ...prev.filter(u => u !== chosenUrl)].slice(0, 6));
       
       let isDone = false;
-      const handleDone = () => {
+      const handleDone = (success: boolean = true) => {
         if (isDone) return;
         isDone = true;
-        setTicketBg({
-          imageUrl: chosenUrl,
-          category: chosenTicket.category || 'default',
-          categoryName: chosenTicket.categoryName || ''
-        });
+        if (success) {
+          setTicketBg({
+            imageUrl: chosenUrl,
+            category: chosenTicket.category || 'default',
+            categoryName: chosenTicket.categoryName || ''
+          });
+        }
         setIsVisualReady(true);
       };
 
       if (prepared.img.complete) {
-        handleDone();
+        handleDone(prepared.img.naturalWidth > 0);
       } else {
-        prepared.img.onload = handleDone;
-        prepared.img.onerror = handleDone;
-        setTimeout(handleDone, 5000);
+        prepared.img.onload = () => handleDone(true);
+        prepared.img.onerror = () => handleDone(false);
+        setTimeout(() => handleDone(false), 5000);
       }
       return;
     }
@@ -328,22 +330,24 @@ export default function App() {
           const chosenUrl = chosenTicket.imageUrl || chosenTicket.url;
           const img = new Image();
           let isDone = false;
-          const handleDone = () => {
+          const handleDone = (success: boolean = true) => {
             if (isDone) return;
             isDone = true;
-            setTicketBg({
-              imageUrl: chosenUrl,
-              category: chosenTicket.category || 'default',
-              categoryName: chosenTicket.categoryName || ''
-            });
+            if (success) {
+              setTicketBg({
+                imageUrl: chosenUrl,
+                category: chosenTicket.category || 'default',
+                categoryName: chosenTicket.categoryName || ''
+              });
+            }
             setIsVisualReady(true);
           };
-          img.onload = handleDone;
-          img.onerror = handleDone;
-          setTimeout(handleDone, 5000);
+          img.onload = () => handleDone(true);
+          img.onerror = () => handleDone(false);
+          setTimeout(() => handleDone(false), 5000);
           img.src = chosenUrl;
           if (img.complete) {
-            handleDone();
+            handleDone(img.naturalWidth > 0);
           }
         } else {
           setIsVisualReady(true);
@@ -364,22 +368,24 @@ export default function App() {
         });
         const img = new Image();
         let isDone = false;
-        const handleDone = () => {
+        const handleDone = (success: boolean = true) => {
           if (isDone) return;
           isDone = true;
-          setTicketBg({
-            imageUrl: chosenUrl,
-            category: data.category || 'default',
-            categoryName: data.categoryName || ''
-          });
+          if (success) {
+            setTicketBg({
+              imageUrl: chosenUrl,
+              category: data.category || 'default',
+              categoryName: data.categoryName || ''
+            });
+          }
           setIsVisualReady(true);
         };
-        img.onload = handleDone;
-        img.onerror = handleDone;
-        setTimeout(handleDone, 5000);
+        img.onload = () => handleDone(true);
+        img.onerror = () => handleDone(false);
+        setTimeout(() => handleDone(false), 5000);
         img.src = chosenUrl;
         if (img.complete) {
-          handleDone();
+          handleDone(img.naturalWidth > 0);
         }
       } else {
         setIsVisualReady(true);
@@ -1286,19 +1292,21 @@ export default function App() {
         setRecentCarUrls(prev => [newUrl, ...prev.filter(u => u !== newUrl)].slice(0, 6));
 
         let isDone = false;
-        const handleDone = () => {
+        const handleDone = (success: boolean = true) => {
           if (isDone) return;
           isDone = true;
-          setCarImage(newUrl);
+          if (success) {
+            setCarImage(newUrl);
+          }
           setIsVisualReady(true);
         };
 
         if (prepared.img.complete) {
-          handleDone();
+          handleDone(prepared.img.naturalWidth > 0);
         } else {
-          prepared.img.onload = handleDone;
-          prepared.img.onerror = handleDone;
-          setTimeout(handleDone, 5000);
+          prepared.img.onload = () => handleDone(true);
+          prepared.img.onerror = () => handleDone(false);
+          setTimeout(() => handleDone(false), 5000);
         }
       } else if (carImagesListRef.current.length > 0) {
         setRecentCarUrls(prev => {
@@ -1306,18 +1314,20 @@ export default function App() {
           if (newUrl) {
             const img = new Image();
             let isDone = false;
-            const handleDone = () => {
+            const handleDone = (success: boolean = true) => {
               if (isDone) return;
               isDone = true;
-              setCarImage(newUrl);
+              if (success) {
+                setCarImage(newUrl);
+              }
               setIsVisualReady(true);
             };
-            img.onload = handleDone;
-            img.onerror = handleDone;
-            setTimeout(handleDone, 5000);
+            img.onload = () => handleDone(true);
+            img.onerror = () => handleDone(false);
+            setTimeout(() => handleDone(false), 5000);
             img.src = newUrl;
             if (img.complete) {
-              handleDone();
+              handleDone(img.naturalWidth > 0);
             }
           } else {
             setIsVisualReady(true);
