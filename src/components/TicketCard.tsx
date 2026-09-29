@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { 
   Drama, 
   Bus, 
@@ -9,7 +9,7 @@ import {
   Film, 
   FerrisWheel, 
   Landmark, 
-  TramFront, 
+  Ship, 
   Snowflake, 
   Tent,
   Ticket as TicketIcon
@@ -224,19 +224,19 @@ const THEMES: Record<string, ThemeDef> = {
     )
   },
 
-  // 10. metro (Steel/dark blue subway theme, metro train icon)
-  metro: {
+  // 10. metro (Steel/dark blue FERRY theme, metro train icon)
+  water: {
     bg: 'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]',
     border: 'border-[#38bdf8] ring-1 ring-[#0284c7]/50 shadow-[0_0_15px_rgba(56,189,248,0.3)]',
     textMain: 'text-[#38bdf8] font-mono font-black tracking-wider',
     textAccent: 'text-[#94a3b8]',
     digits: 'text-[#e0f2fe] font-mono font-black drop-shadow-[0_0_10px_rgba(56,189,248,0.85)] tracking-[0.22em]',
-    titleKey: 'ticketMetroTitle',
-    descKey: 'ticketMetroDesc',
+    titleKey: 'ticketWaterTitle',
+    descKey: 'ticketWaterDesc',
     perforation: 'border-[#38bdf8]/40',
-    icon: TramFront,
+    icon: Ship,
     iconClass: 'text-[#38bdf8]',
-    stampText: 'SUBWAY',
+    stampText: 'FERRY',
     stampClass: 'text-[#38bdf8]',
     stampRotation: 'rotate-6',
     extraStyles: (
@@ -324,7 +324,7 @@ const resolveCategory = (cat?: string, catName?: string): string => {
   if (combined.includes('cinema') || combined.includes('movie') || combined.includes('кино') || combined.includes('фильм')) return 'cinema';
   if (combined.includes('amusement') || combined.includes('carnival') || combined.includes('park') || combined.includes('парк') || combined.includes('аттракцион')) return 'amusement';
   if (combined.includes('museum') || combined.includes('gallery') || combined.includes('музей') || combined.includes('выставк')) return 'museum';
-  if (combined.includes('metro') || combined.includes('subway') || combined.includes('метро') || combined.includes('подземк')) return 'metro';
+  if (combined.includes('water') || combined.includes('ferry') || combined.includes('водн') || combined.includes('паром') || combined.includes('теплоход')) return 'water';
   if (combined.includes('ski') || combined.includes('лыж') || combined.includes('ски')) return 'ski';
   if (combined.includes('circus') || combined.includes('tent') || combined.includes('цирк')) return 'circus';
   if (combined.includes('lottery') || combined.includes('lotto') || combined.includes('лотере')) return 'lottery';
