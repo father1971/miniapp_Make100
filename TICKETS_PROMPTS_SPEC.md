@@ -8,14 +8,13 @@
 ```text
 Create ONE photorealistic image prompt in English, no more than 60 words, for the Flux project.
 RULES:
-1. Subject & Mood: Window seat passenger POV inside an airplane looking out the window
-2. Composition: Ensure a natural dynamic perspective with wide field of view, keeping the focal depth centered for vertical phone screens. Center the oval airplane window in the frame.
-3. Elements: Visible aircraft winglet outside, clean clear blue sky, fluffy white clouds below, soft natural daylight, cozy armrest or corner of tray table in lower foreground. Never use flat rigid box-like angles or tiny tunnel windows.
-4. Clean Focus: No distorted limbs, no faces looking straight into the camera, no giant disembodied text, and no unrealistic fantasy elements.
-5. End with: "Shot on iPhone 15 Pro, balanced HDR exposure, cinematic lighting, photorealistic, sharp focus, ultra-detailed."
+1. Subject & Mood: the plane is taking off or landing
+2. Composition: Ensure a natural dynamic perspective with wide field of view, keeping the focal depth centered for vertical phone screens. Never use flat rigid box-like angles or tiny tunnel windows.
+3. Clean Focus: No distorted limbs, no faces looking straight into the camera, no giant disembodied text, and no unrealistic fantasy elements.
+4. End with: "Shot on iPhone 15 Pro, balanced HDR exposure, cinematic lighting, photorealistic, sharp focus, ultra-detailed."
 
 CRITICAL FORMAT REQUIREMENT: 
-Output ONLY the final raw prompt text, ending strictly with the exact phrase from Rule 5. No introductory filler, no markdown blocks, starting immediately with the scene description.
+Output ONLY the final raw prompt text, ending strictly with the exact phrase from Rule 4. No introductory filler, no markdown blocks, starting immediately with the scene description.
 ```
 
 ---
