@@ -80,8 +80,22 @@ Output ONLY the final raw prompt text, ending strictly with the exact phrase fro
 
 ---
 
-## Оставшиеся категории для согласования (7 из 12):
-6. Концерт (`concert`)
+## 6. Концерт (`concert`) — УТВЕРЖДЕНО (V2)
+```text
+Create ONE photorealistic image prompt in English, no more than 60 words, for the Flux project.
+RULES:
+1. Subject & Mood:  View from the standing area towards the stadium concert stage
+2. Composition: Ensure a natural dynamic perspective with wide field of view, keeping the focal depth centered for vertical phone screens. Never use flat rigid box-like angles or tiny tunnel windows.
+3. Clean Focus: No distorted limbs, no faces looking straight into the camera, no giant disembodied text, and no unrealistic fantasy elements.
+4. End with: "Shot on iPhone 15 Pro, balanced HDR exposure, cinematic lighting, photorealistic, sharp focus, ultra-detailed."
+
+CRITICAL FORMAT REQUIREMENT: 
+Output ONLY the final raw prompt text, ending strictly with the exact phrase from Rule 4. No introductory filler, no markdown blocks, starting immediately with the scene description.
+```
+
+---
+
+## Оставшиеся категории для согласования (6 из 12):
 7. Стадион (`stadium`)
 8. Парк аттракционов (`amusement_park`)
 9. Музей (`museum`)
