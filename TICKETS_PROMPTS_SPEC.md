@@ -95,8 +95,22 @@ Output ONLY the final raw prompt text, ending strictly with the exact phrase fro
 
 ---
 
-## Оставшиеся категории для согласования (6 из 12):
-7. Стадион (`stadium`)
+## 7. Стадион (`stadium`) — УТВЕРЖДЕНО (V3)
+```text
+Create ONE photorealistic image prompt in English, no more than 60 words, for the Flux project.
+RULES:
+1. Subject & Mood:  view from Upper tier to World-class championship. 
+2. Composition: Ensure a natural dynamic perspective with wide field of view, keeping the focal depth centered for vertical phone screens. Never use flat rigid box-like angles or tiny tunnel windows.
+3. Clean Focus: No distorted limbs, no faces looking straight into the camera, no giant disembodied text, and no unrealistic fantasy elements.
+4. End with: "Shot on iPhone 15 Pro, balanced HDR exposure, cinematic lighting, photorealistic, sharp focus, ultra-detailed."
+
+CRITICAL FORMAT REQUIREMENT: 
+Output ONLY the final raw prompt text, ending strictly with the exact phrase from Rule 4. No introductory filler, no markdown blocks, starting immediately with the scene description.
+```
+
+---
+
+## Оставшиеся категории для согласования (5 из 12):
 8. Парк аттракционов (`amusement_park`)
 9. Музей (`museum`)
 10. Водный транспорт (`water_transport`)
