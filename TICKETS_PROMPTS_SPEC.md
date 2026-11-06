@@ -170,5 +170,20 @@ Output ONLY the final raw prompt text, ending strictly with the exact phrase fro
 
 ---
 
-## Оставшиеся категории для согласования (1 из 12):
-12. Цирк (`circus`)
+## 12. Цирк (`circus`) — УТВЕРЖДЕНО (V65)
+```text
+Create ONE photorealistic image prompt in English, no more than 60 words, for the Flux project.
+RULES:
+1. Subject & Mood: A festive grand circus show inside an authentic circular circus building from an elevated spectator view. In the center is strictly ONE single classic circular circus ring (manège) with a traditional raised red velvet border. The circular ring is completely surrounded on all sides by a packed full house of spectators in steeply tiered amphitheater stands. On the brightly illuminated circular arena floor, a colorful grand parade of circus performers in dazzling costumes takes place. Beams of vibrant colored spotlights and festive haze cut across the space under the soaring circus dome. Strictly no concert stage, no text, authentic 360-degree circular circus arena.
+2. Composition: Elevated perspective looking down at strictly ONE central circular circus arena ring, fully encircled by packed tiered audience stands, centered for vertical phone screens.
+3. Clean Focus: Strictly ONE single circular circus ring, no concert stages, no multiple rings, packed full auditorium, strictly no text or letters.
+4. End with: "Shot on iPhone 15 Pro, balanced HDR exposure, cinematic lighting, photorealistic, sharp focus, ultra-detailed."
+
+CRITICAL FORMAT REQUIREMENT: 
+Output ONLY the final raw prompt text, ending strictly with the exact phrase from Rule 4. No introductory filler, no markdown blocks, starting immediately with the scene description.
+```
+
+---
+
+## Итог согласования:
+Все 12 из 12 категорий билетов согласованы и утверждены!
