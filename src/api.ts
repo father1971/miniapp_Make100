@@ -14,7 +14,10 @@ export const API_URL = import.meta.env.VITE_API_URL || 'https://make100-backend.
 export function getAuthHeader(): Record<string, string> {
   try {
     const initData = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp?.initData : undefined;
-    return initData ? { 'Authorization': `Bearer ${initData}` } : {};
+    if (initData) return { 'Authorization': `Bearer ${initData}` };
+    const webToken = typeof window !== 'undefined' ? localStorage.getItem('make100_web_auth_token') : undefined;
+    if (webToken) return { 'Authorization': `Bearer ${webToken}` };
+    return {};
   } catch (e) {
     return {};
   }
@@ -172,3 +175,73 @@ export async function fetchTicketsPoolApi(): Promise<any[] | null> {
 }
 
 export { consumeHint as useHint };
+
+export async function submitFeedbackApi(payload: { name: string; contact: string; message: string }): Promise<{ success: boolean; message?: string; error?: string }> {
+  const res = await apiRequest<{ success: boolean; message?: string; error?: string }>(`/api/contact/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return res || { success: false, error: 'Network error' };
+}
+
+export async function authTelegramWidgetApi(widgetData: any): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+  const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/telegram-widget`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(widgetData)
+  });
+  if (res && res.success && res.token) {
+    localStorage.setItem('make100_web_auth_token', res.token);
+    if (res.user) {
+      localStorage.setItem('make100_web_user', JSON.stringify(res.user));
+    }
+  }
+  return res || { success: false, error: 'Network error' };
+}
+
+export async function authEmailRegisterApi(payload: { email: string; password: string; name: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+  const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/email/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (res && res.success && res.token) {
+    localStorage.setItem('make100_web_auth_token', res.token);
+    if (res.user) {
+      localStorage.setItem('make100_web_user', JSON.stringify(res.user));
+    }
+  }
+  return res || { success: false, error: 'Network error' };
+}
+
+export async function authEmailLoginApi(payload: { email: string; password: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+  const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/email/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (res && res.success && res.token) {
+    localStorage.setItem('make100_web_auth_token', res.token);
+    if (res.user) {
+      localStorage.setItem('make100_web_user', JSON.stringify(res.user));
+    }
+  }
+  return res || { success: false, error: 'Network error' };
+}
+
+export function getSavedWebUser(): any | null {
+  try {
+    const raw = localStorage.getItem('make100_web_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function logoutWebApi(): void {
+  try {
+    localStorage.removeItem('make100_web_auth_token');
+    localStorage.removeItem('make100_web_user');
+  } catch (e) {}
+}

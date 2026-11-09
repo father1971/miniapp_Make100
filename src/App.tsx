@@ -29,6 +29,12 @@ import { Stopwatch } from './components/Stopwatch';
 import { TelegramLoadingOverlay } from './components/TelegramLoadingOverlay';
 import { SaveBotModal } from './components/SaveBotModal';
 import { BuyHintModal } from './components/BuyHintModal';
+import { LandingPage } from './components/LandingPage';
+import { FeedbackModal } from './components/FeedbackModal';
+import { AuthModal } from './components/AuthModal';
+import { getSavedWebUser } from './api';
+
+const BOT_USERNAME = (import.meta.env.VITE_BOT_USERNAME || import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/[@\s]/g, '');
 
 // Removed GITHUB_FOLDER_URL and FALLBACK_IMAGES
 
@@ -433,6 +439,20 @@ export default function App() {
   const [isBanned, setIsBanned] = useState<boolean>(false);
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [isTgValidating, setIsTgValidating] = useState<boolean>(true);
+  const [webUser, setWebUser] = useState<any>(() => getSavedWebUser());
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const isInsideTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
+  const [currentScreen, setCurrentScreen] = useState<'landing' | 'game'>(() => {
+    if (isInsideTelegram) return 'game';
+    if (typeof window !== 'undefined') {
+      if (window.location.hash.includes('play') || window.location.search.includes('play=1')) {
+        return 'game';
+      }
+    }
+    return 'landing';
+  });
   
   const [gameMode, setGameMode] = useState<'ticket' | 'car'>(() => {
     return (typeof window !== 'undefined' ? (localStorage.getItem('make100_game_mode') as 'ticket' | 'car') : null) || 'ticket';
@@ -818,9 +838,9 @@ export default function App() {
 
   const fetchLeaderboard = async () => {
     // Безопасно определяем ID активного пользователя
-    const activeUserId = tgUser?.id || (stats as any)?.id;
+    const activeUserId = tgUser?.id || (stats as any)?.id || 0;
     
-    if (!activeUserId) {
+    if (activeUserId === undefined || activeUserId === null) {
       console.error("❌ Не удалось определить ID пользователя для лидерборда");
       return;
     }
@@ -1228,6 +1248,13 @@ export default function App() {
   const handleSkip = async () => {
     if (isHinting || isPending || !isVisualReady) return;
     setIsPending(true);
+    if (!tgUser) {
+      setUnsolvedCount(prev => prev + 1);
+      setStats((prev: any) => ({ ...prev, skippedCount: (prev?.skippedCount || 0) + 1 }));
+      initGame(false, true);
+      setIsPending(false);
+      return;
+    }
     
     // Send API request
     try {
@@ -1500,6 +1527,12 @@ export default function App() {
         setTimeout(poll, 100);
       } else if (isMounted) {
         // Validation gave up. We didn't find telegram data.
+        const savedWebUser = getSavedWebUser();
+        if (savedWebUser) {
+          setTgUser(savedWebUser);
+          setIsTgValidating(false);
+          return;
+        }
         if (isPreviewEnv) {
           setTgUser({
             id: 9999,
@@ -1716,6 +1749,18 @@ export default function App() {
       lastRoundExpressionRef.current = fullExpression;
       lastRoundSolveTimeMsRef.current = exactSolveTimeMs;
 
+      if (!tgUser) {
+        setSolvedCount(prev => prev + 1);
+        setLastEarnedScore(100);
+        setLastEarnedCoins(10);
+        setStats((prev: any) => ({
+          ...prev,
+          solvedCount: (prev?.solvedCount || 0) + 1,
+          coins: (prev?.coins || 100) + 10,
+          score: (prev?.score || 0) + 100
+        }));
+        setIsPending(false);
+      } else {
       // Validate on server
       setIsPending(true);
       submitGameSolve({
@@ -1763,6 +1808,7 @@ export default function App() {
       }).finally(() => {
         setIsPending(false);
       });
+      }
 
       setSelectedSlot(null);
     }
@@ -1894,6 +1940,54 @@ export default function App() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // 🌟 Отображение презентационного лендинга, если открыто во внешнем браузере
+  if (currentScreen === 'landing') {
+    return (
+      <>
+        <LandingPage
+          onPlayWeb={() => setCurrentScreen('game')}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
+          currentUser={webUser || tgUser}
+          theme={theme}
+          onToggleTheme={() => setThemePreference(prev => prev === 'dark' ? 'light' : 'dark')}
+          language={language}
+          onSelectLanguage={(lang) => {
+            setLanguage(lang);
+            try {
+              localStorage.setItem('make100_language', lang);
+              localStorage.setItem('make100_user_chose_lang', 'true');
+            } catch (e) {}
+          }}
+          translations={t}
+          botUsername={BOT_USERNAME}
+        />
+        <FeedbackModal
+          isOpen={isFeedbackOpen}
+          onClose={() => setIsFeedbackOpen(false)}
+          translations={t}
+        />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          currentUser={webUser || tgUser}
+          onAuthSuccess={(user) => {
+            setWebUser(user);
+            setTgUser(user);
+            window.location.reload();
+          }}
+          onLogout={() => {
+            setWebUser(null);
+            setTgUser(null);
+            window.location.reload();
+          }}
+          translations={t}
+          botUsername={BOT_USERNAME}
+        />
+      </>
     );
   }
 
@@ -2075,6 +2169,17 @@ export default function App() {
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
 
+              {/* Плашка входа для гостей во внешнем браузере */}
+              {!isInsideTelegram && !webUser && !tgUser && (
+                <button
+                  onClick={() => { setIsAuthModalOpen(true); playSound('click'); }}
+                  className="py-1.5 px-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all shadow-sm"
+                  title={t.guestBannerNotice || "Войдите для сохранения в облаке"}
+                >
+                  🏆 <span>{t.guestBannerBtn || "Войти"}</span>
+                </button>
+              )}
+
               {/* Кнопка открытия бокового меню */}
               <button 
                 onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
@@ -2254,6 +2359,34 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* Кнопки возврата на лендинг и обратной связи */}
+              {!isInsideTelegram && (
+                <button 
+                  onClick={() => { 
+                    setIsMenuOpen(false); 
+                    setCurrentScreen('landing'); 
+                    playSound('click'); 
+                    playVibration('light'); 
+                  }}
+                  className="w-full py-3 px-4 rounded-2xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-300/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <span>🌐 {t.backToLanding || 'О проекте / Главная'}</span>
+                </button>
+              )}
+
+              <button 
+                onClick={() => { 
+                  setIsMenuOpen(false); 
+                  setIsFeedbackOpen(true); 
+                  playSound('click'); 
+                  playVibration('light'); 
+                }}
+                className="w-full py-3 px-4 rounded-2xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-300/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <MessageSquare size={16} />
+                <span>{t.contactDeveloper || 'Написать разработчику'}</span>
+              </button>
 
               <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
                 v1.00
@@ -2723,6 +2856,28 @@ export default function App() {
           />
         </React.Suspense>
       )}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        translations={t}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={webUser || tgUser}
+        onAuthSuccess={(user) => {
+          setWebUser(user);
+          setTgUser(user);
+          window.location.reload();
+        }}
+        onLogout={() => {
+          setWebUser(null);
+          setTgUser(null);
+          window.location.reload();
+        }}
+        translations={t}
+        botUsername={BOT_USERNAME}
+      />
     </div>
   );
 }
