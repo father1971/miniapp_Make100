@@ -364,7 +364,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
   ticketTitle = ticketTitle.trim().split(/\s+/)[0].toUpperCase();
 
   return (
-    <div className="w-[96%] max-w-[340px] sm:max-w-[380px] h-[120px] sm:h-[135px] drop-shadow-[0_16px_32px_rgba(0,0,0,0.85)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
+    <div className="w-[94%] max-w-[273px] md:max-w-[380px] h-[100px] md:h-[135px] drop-shadow-[0_16px_32px_rgba(0,0,0,0.85)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
       <div 
         className={`w-full h-full rounded-xl ${theme.bg} border ${theme.border} flex relative overflow-hidden`}
         style={{
@@ -386,7 +386,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
             width="54" 
             height="54" 
             viewBox="0 0 100 100" 
-            className={`w-12 h-12 sm:w-13 sm:h-13 opacity-30 sm:opacity-35 ${theme.stampClass}`}
+            className={`w-11 h-11 md:w-13 md:h-13 opacity-30 md:opacity-35 ${theme.stampClass}`}
           >
             <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5 3" />
             <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -421,8 +421,8 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
         </div>
 
         {/* Main Ticket Section (Left, ~75%) */}
-        <div className={`w-[75%] h-full flex flex-col justify-between p-3 sm:p-3.5 border-r-2 border-dashed ${theme.perforation} relative z-10`}>
-          <div className={`flex justify-between items-start text-[7px] sm:text-[8px] uppercase tracking-widest ${theme.textMain}`}>
+        <div className={`w-[75%] h-full flex flex-col justify-between p-2.5 md:p-3.5 border-r-2 border-dashed ${theme.perforation} relative z-10`}>
+          <div className={`flex justify-between items-start text-[7px] md:text-[8px] uppercase tracking-widest ${theme.textMain}`}>
             <div className="flex items-center gap-1 max-w-[48%] min-w-0">
               <CategoryIcon size={12} className={`shrink-0 ${theme.iconClass || theme.textAccent}`} />
               <span className="truncate leading-tight font-black">
@@ -435,22 +435,22 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
           </div>
           
           <div className="flex-1 flex items-center justify-center mt-1 sm:mt-1.5 relative z-10">
-            <span className={`font-mono font-black text-3xl sm:text-4xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
+            <span className={`font-mono font-black text-2xl md:text-4xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
               {displayDigits}
             </span>
           </div>
         </div>
 
         {/* Stub Section (Right, ~25%) */}
-        <div className={`w-[25%] h-full flex flex-col items-center justify-between py-2.5 sm:py-3 relative z-10 ${theme.textMain}`}>
+        <div className={`w-[25%] h-full flex flex-col items-center justify-between py-2 md:py-3 relative z-10 ${theme.textMain}`}>
           <div className="flex flex-col items-center gap-0.5">
             <CategoryIcon size={11} className={`opacity-85 shrink-0 ${theme.iconClass || theme.textAccent}`} />
-            <span className={`text-[6px] sm:text-[7px] font-black uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 ${theme.textAccent}`}>
+            <span className={`text-[6px] md:text-[7px] font-black uppercase tracking-widest [writing-mode:vertical-rl] rotate-180 ${theme.textAccent}`}>
               {t?.ticketControl || 'КОНТРОЛЬ'}
             </span>
           </div>
           
-          <div className="flex items-end justify-center gap-[1px] sm:gap-[1.5px] h-6 sm:h-7 w-full px-1.5 opacity-85">
+          <div className="flex items-end justify-center gap-[1px] md:gap-[1.5px] h-6 md:h-7 w-full px-1.5 opacity-85">
             {BARCODE_BARS.map((height, i) => (
               <div 
                 key={`bar-${i}`} 
