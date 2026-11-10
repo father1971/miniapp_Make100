@@ -263,6 +263,9 @@ export interface TranslationData {
   guestBannerNotice?: string;
   guestBannerBtn?: string;
   backToLanding?: string;
+  welcomeModalTitle?: string;
+  welcomeModalSubtitle?: string;
+  playGuestBtn?: string;
 }
 
 export const TRANSLATIONS: Record<string, TranslationData> = {
@@ -307,6 +310,9 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     guestBannerNotice: "Гостевой режим: играйте без ограничений. Прогресс сохраняется в браузере.",
     guestBannerBtn: "Войти для рейтинга",
     backToLanding: "О проекте",
+    welcomeModalTitle: "Добро пожаловать в Make 100!",
+    welcomeModalSubtitle: "Выберите удобный способ игры:",
+    playGuestBtn: "Играть без регистрации",
     howToPlayTutorial: "🎓 Обучение: Как играть",
     tutorialSkip: "Пропустить",
     tutorialNext: "Далее ➡️",
@@ -470,6 +476,9 @@ export const TRANSLATIONS: Record<string, TranslationData> = {
     guestBannerNotice: "Guest mode: play without limits. Progress is saved in your browser.",
     guestBannerBtn: "Log in for Leaderboard",
     backToLanding: "About Project",
+    welcomeModalTitle: "Welcome to Make 100!",
+    welcomeModalSubtitle: "Choose how you want to play:",
+    playGuestBtn: "Play without registration",
     howToPlayTutorial: "🎓 Tutorial: How to play",
     tutorialSkip: "Skip",
     tutorialNext: "Next ➡️",
