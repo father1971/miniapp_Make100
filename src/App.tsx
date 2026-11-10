@@ -1996,7 +1996,7 @@ export default function App() {
   const renderTicket = () => {
     const baseCategory = ticketBg?.category ? ticketBg.category.split('_')[0] : 'default';
     return (
-      <div className="absolute top-3 sm:top-3 left-1/2 -translate-x-1/2 scale-75 origin-top pointer-events-none z-20 w-full max-w-sm flex justify-center">
+      <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 scale-110 sm:scale-125 origin-top pointer-events-none z-20 w-full max-w-md flex justify-center">
         <TicketCard 
           digits={digits} 
           category={baseCategory} 

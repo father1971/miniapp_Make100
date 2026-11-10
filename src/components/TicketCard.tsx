@@ -364,7 +364,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
   ticketTitle = ticketTitle.trim().split(/\s+/)[0].toUpperCase();
 
   return (
-    <div className="w-[94%] max-w-[273px] h-[100px] sm:h-[110px] drop-shadow-[0_16px_32px_rgba(0,0,0,0.85)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
+    <div className="w-[96%] max-w-[340px] sm:max-w-[380px] h-[120px] sm:h-[135px] drop-shadow-[0_16px_32px_rgba(0,0,0,0.85)] -rotate-1 select-none pointer-events-none z-20 mx-auto">
       <div 
         className={`w-full h-full rounded-xl ${theme.bg} border ${theme.border} flex relative overflow-hidden`}
         style={{
@@ -435,7 +435,7 @@ export const TicketCard: React.FC<TicketCardProps> = React.memo(({ digits, categ
           </div>
           
           <div className="flex-1 flex items-center justify-center mt-1 sm:mt-1.5 relative z-10">
-            <span className={`font-mono font-black text-2xl sm:text-3xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
+            <span className={`font-mono font-black text-3xl sm:text-4xl tracking-[0.20em] whitespace-nowrap ${theme.digits}`}>
               {displayDigits}
             </span>
           </div>
