@@ -442,15 +442,18 @@ export default function App() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const isInsideTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
 
-  // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован
+    // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован и туториал не идет
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(() => {
     if (isInsideTelegram) return false;
-    if (typeof window !== 'undefined') {
+    try {
+      const isTutorialDone = localStorage.getItem('make100_tutorial_completed_v3') === 'true';
       const dismissed = sessionStorage.getItem('make100_welcome_dismissed');
       const hasToken = Boolean(localStorage.getItem('make100_web_auth_token'));
-      return !dismissed && !hasToken;
+      // Если обучение еще не пройдено, сначала идет обучение!
+      return isTutorialDone && !dismissed && !hasToken;
+    } catch (e) {
+      return false;
     }
-    return false;
   });
   
   const [gameMode, setGameMode] = useState<'ticket' | 'car'>(() => {
@@ -781,36 +784,32 @@ export default function App() {
     }
   }, [vibrationEnabled]);
 
-  // Interactive Tutorial State
-  // По требованию: запускается один раз у ВСЕХ игроков (так как новый ключ отсутствует),
-  // а после прохождения/пропуска сохраняется в localStorage и больше не навязывается.
-    const [showTutorial, setShowTutorial] = useState(() => {
-    // В Telegram запускается сразу при первом входе
-    if (isInsideTelegram) {
-      try {
-        return localStorage.getItem('make100_tutorial_completed_v2') !== 'true';
-      } catch (e) {
-        return false;
-      }
-    }
-    // Во внешнем браузере: если окно выбора уже закрывалось и обучение еще не пройдено
+    // Interactive Tutorial State: автоматически запускается при первом запуске игры
+  const [showTutorial, setShowTutorial] = useState(() => {
     try {
-      const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('make100_welcome_dismissed');
-      const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('make100_web_auth_token'));
-      if ((dismissed || hasToken) && localStorage.getItem('make100_tutorial_completed_v2') !== 'true') {
-        return true;
-      }
-    } catch (e) {}
-    return false;
+      return localStorage.getItem('make100_tutorial_completed_v3') !== 'true';
+    } catch (e) {
+      return false;
+    }
   });
 
   const completeTutorial = () => {
     setShowTutorial(false);
     try {
-      localStorage.setItem('make100_tutorial_completed_v2', 'true');
+      localStorage.setItem('make100_tutorial_completed_v3', 'true');
     } catch (e) {}
     setHasSeenOnboarding(true);
     setGameState('playing');
+    // Во внешнем браузере после прохождения или пропуска туториала открываем окно выбора режима, если игрок еще не вошел
+    if (!isInsideTelegram) {
+      try {
+        const hasToken = Boolean(localStorage.getItem('make100_web_auth_token'));
+        const dismissed = sessionStorage.getItem('make100_welcome_dismissed');
+        if (!hasToken && !dismissed) {
+          setIsWelcomeModalOpen(true);
+        }
+      } catch (e) {}
+    }
   };
 
   // Game Statistics
@@ -2102,17 +2101,6 @@ export default function App() {
               >
                 <Trophy size={18} fill="currentColor" className="text-yellow-100" />
               </button>
-
-              {/* Плашка входа для гостей во внешнем браузере */}
-              {!isInsideTelegram && !webUser && !tgUser && (
-                <button
-                  onClick={() => { setIsWelcomeModalOpen(true); playSound('click'); }}
-                  className="py-1.5 px-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1 active:scale-95 transition-all shadow-sm"
-                  title={t.guestBannerNotice || "Войдите для сохранения в облаке"}
-                >
-                  🏆 <span>{t.guestBannerBtn || "Войти"}</span>
-                </button>
-              )}
 
               {/* Кнопка открытия бокового меню */}
               <button 
