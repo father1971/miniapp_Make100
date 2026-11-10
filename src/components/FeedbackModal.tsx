@@ -95,7 +95,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               {t.feedbackSuccess || 'Сообщение отправлено!'}
             </p>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-              Разработчик получил ваше сообщение в Telegram и скоро ответит.
+              {t.feedbackSuccessSub || 'Разработчик получил ваше сообщение в Telegram и скоро ответит.'}
             </p>
           </div>
         ) : (
@@ -117,7 +117,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 maxLength={60}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Как к вам обращаться?"
+                placeholder={t.feedbackNamePlaceholder || 'Как к вам обращаться?'}
                 className="w-full px-4 py-2.5 rounded-2xl bg-slate-100/80 dark:bg-zinc-900/80 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
               />
             </div>
@@ -132,7 +132,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 maxLength={100}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="@username в Telegram или email@domain.com"
+                placeholder={t.feedbackContactPlaceholder || '@username в Telegram или email@domain.com'}
                 className="w-full px-4 py-2.5 rounded-2xl bg-slate-100/80 dark:bg-zinc-900/80 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-mono text-xs"
               />
             </div>
@@ -147,7 +147,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 maxLength={2000}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ваш вопрос, пожелание или найденная ошибка..."
+                placeholder={t.feedbackMessagePlaceholder || 'Ваш вопрос, пожелание или найденная ошибка...'}
                 className="w-full px-4 py-2.5 rounded-2xl bg-slate-100/80 dark:bg-zinc-900/80 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all resize-none"
               />
             </div>

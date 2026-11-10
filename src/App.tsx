@@ -2324,7 +2324,7 @@ export default function App() {
                   }}
                   className="w-full py-3 px-4 rounded-2xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-300/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  <span>{webUser || tgUser ? '👤 Мой аккаунт' : '🏆 Войти / Сохранить прогресс'}</span>
+                  <span>{webUser || tgUser ? (t.myAccountBtn || '👤 Мой аккаунт') : (t.loginSaveProgressBtn || '🏆 Войти / Сохранить прогресс')}</span>
                 </button>
               )}
 

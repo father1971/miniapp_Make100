@@ -222,7 +222,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
 
             <div className="mt-4 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2 text-left">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>Ваш прогресс сохраняется в облаке и участвует в мировом лидерборде!</span>
+              <span>{t.welcomeAuthSavedCloud || 'Ваш прогресс сохраняется в облаке и участвует в мировом лидерборде!'}</span>
             </div>
 
             <div className="mt-5 flex gap-2.5">
@@ -231,7 +231,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                 onClick={onClose}
                 className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-sm shadow-md active:scale-95 transition-all cursor-pointer"
               >
-                Продолжить игру
+                {t.welcomeContinueGame || 'Продолжить игру'}
               </button>
               <button
                 type="button"
@@ -239,7 +239,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                 className="py-3 px-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold border border-red-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Выйти</span>
+                <span>{t.welcomeLogout || 'Выйти'}</span>
               </button>
             </div>
           </div>
@@ -297,7 +297,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                         {t.playGuestBtn || 'Играть без регистрации'}
                       </div>
                       <div className="text-[11px] text-white/85">
-                        Быстрый старт прямо здесь • сохранение в браузере
+                        {t.playGuestSub || 'Быстрый старт прямо здесь • сохранение в браузере'}
                       </div>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                         {t.playInTelegram || 'Играть в Telegram-боте'}
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-zinc-400">
-                        Идеально со смартфона • вход в 1 клик
+                        {t.playInTelegramSub || 'Идеально со смартфона • вход в 1 клик'}
                       </div>
                     </div>
                   </div>
@@ -334,14 +334,14 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
             <div className="mt-4 pt-3.5 border-t border-slate-200/80 dark:border-white/10">
               <div className="text-center mb-3">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-                  🏆 Сохранение рекордов и мировой рейтинг
+                  {t.welcomeLeaderboardHeader || '🏆 Сохранение рекордов и мировой рейтинг'}
                 </span>
               </div>
 
               {/* Вход через Telegram Widget */}
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-white/10 text-center mb-2.5">
                 <div className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
-                  Быстрый вход через Telegram в 1 клик:
+                  {t.welcomeTgWidgetTitle || 'Быстрый вход через Telegram в 1 клик:'}
                 </div>
                 <div
                   ref={tgWidgetContainerRef}
@@ -357,21 +357,21 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                   className="w-full py-2.5 px-3 rounded-2xl bg-white/60 dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Войти по электронной почте (код на Email)</span>
+                  <span>{t.welcomeEmailBtn || 'Войти по электронной почте (код на Email)'}</span>
                 </button>
               ) : (
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-white/10 animate-fade-in">
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-black flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Вход по 6-значному коду на Email</span>
+                      <span>{t.welcomeEmailTitle || 'Вход по 6-значному коду на Email'}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowEmailForm(false)}
                       className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-white"
                     >
-                      Свернуть
+                      {t.welcomeCollapse || 'Свернуть'}
                     </button>
                   </div>
 
@@ -382,7 +382,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="Ваше имя (для таблицы рекордов)"
+                          placeholder={t.welcomeNamePlaceholder || 'Ваше имя (для таблицы рекордов)'}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500"
                         />
                       </div>
@@ -392,7 +392,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Ваш email: player@example.com"
+                          placeholder={t.welcomeEmailPlaceholder || 'Ваш email: player@example.com'}
                           className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 font-mono"
                         />
                       </div>
@@ -401,13 +401,13 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                         disabled={isSendingCode}
                         className="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
                       >
-                        {isSendingCode ? 'Отправка...' : 'Получить 6-значный код ✉️'}
+                        {isSendingCode ? (t.welcomeSending || 'Отправка...') : (t.welcomeGetCodeBtn || 'Получить 6-значный код ✉️')}
                       </button>
                     </form>
                   ) : (
                     <form onSubmit={handleVerifyCode} className="space-y-2.5">
                       <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                        Введите 6 цифр из письма, отправленного на <strong className="text-slate-700 dark:text-zinc-200">{email}</strong>:
+                        {t.welcomeEnterCodeText || 'Введите 6 цифр из письма, отправленного на'} <strong className="text-slate-700 dark:text-zinc-200">{email}</strong>:
                       </p>
                       <div className="relative">
                         <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -428,20 +428,20 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                           onClick={() => setEmailStep('input')}
                           className="px-3 py-2 rounded-xl bg-slate-200/60 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-bold"
                         >
-                          Назад
+                          {t.welcomeBackBtn || 'Назад'}
                         </button>
                         <button
                           type="submit"
                           disabled={isVerifyingCode}
                           className="flex-1 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
                         >
-                          {isVerifyingCode ? 'Проверка...' : 'Подтвердить и войти 🚀'}
+                          {isVerifyingCode ? (t.welcomeVerifying || 'Проверка...') : (t.welcomeVerifyBtn || 'Подтвердить и войти 🚀')}
                         </button>
                       </div>
                     </form>
                   )}
                   <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2 text-center">
-                    🔒 Вход запоминается на 1 год, повторный ввод кода не потребуется!
+                    {t.welcomeSessionNotice || '🔒 Вход запоминается на 1 год, повторный ввод кода не потребуется!'}
                   </p>
                 </div>
               )}
