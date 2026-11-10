@@ -447,16 +447,8 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
               )}
             </div>
 
-            {/* Подвал с обратной связью */}
-            <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between text-xs text-slate-400">
-              <button
-                type="button"
-                onClick={onOpenFeedback}
-                className="inline-flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{t.contactDeveloper || 'Написать разработчику'}</span>
-              </button>
+            {/* Подвал */}
+            <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-center text-xs text-slate-400">
               <span>Make 100 Puzzle • 2026</span>
             </div>
           </div>

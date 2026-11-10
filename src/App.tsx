@@ -784,15 +784,24 @@ export default function App() {
   // Interactive Tutorial State
   // По требованию: запускается один раз у ВСЕХ игроков (так как новый ключ отсутствует),
   // а после прохождения/пропуска сохраняется в localStorage и больше не навязывается.
-  const [showTutorial, setShowTutorial] = useState(() => {
-    if (!isInsideTelegram) {
-      return false;
+    const [showTutorial, setShowTutorial] = useState(() => {
+    // В Telegram запускается сразу при первом входе
+    if (isInsideTelegram) {
+      try {
+        return localStorage.getItem('make100_tutorial_completed_v2') !== 'true';
+      } catch (e) {
+        return false;
+      }
     }
+    // Во внешнем браузере: если окно выбора уже закрывалось и обучение еще не пройдено
     try {
-      return localStorage.getItem('make100_tutorial_completed_v2') !== 'true';
-    } catch (e) {
-      return false;
-    }
+      const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('make100_welcome_dismissed');
+      const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('make100_web_auth_token'));
+      if ((dismissed || hasToken) && localStorage.getItem('make100_tutorial_completed_v2') !== 'true') {
+        return true;
+      }
+    } catch (e) {}
+    return false;
   });
 
   const completeTutorial = () => {
@@ -2790,7 +2799,14 @@ export default function App() {
       />
       <WelcomeAuthModal
         isOpen={isWelcomeModalOpen}
-        onClose={() => setIsWelcomeModalOpen(false)}
+        onClose={() => {
+          setIsWelcomeModalOpen(false);
+          try {
+            if (localStorage.getItem('make100_tutorial_completed_v2') !== 'true') {
+              setShowTutorial(true);
+            }
+          } catch(e) {}
+        }}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
         currentUser={webUser || tgUser}
         onAuthSuccess={(user) => {

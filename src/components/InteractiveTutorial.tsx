@@ -429,15 +429,12 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`fixed inset-0 z-[200] ${theme === 'dark' ? 'bg-zinc-950 text-white' : 'bg-slate-50 text-zinc-900'} flex flex-col items-center justify-between select-none overflow-y-auto`}
+      className="fixed inset-0 z-[200] bg-black/60 dark:bg-black/75 backdrop-blur-md text-white flex flex-col items-center justify-between select-none overflow-y-auto"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 12px)',
       }}
     >
-      {/* Background Grid Pattern */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]" />
-
       <div className="relative z-10 w-full max-w-[440px] flex flex-col justify-between items-center h-full px-3">
         {/* Top Header */}
         <header className="w-full flex items-center justify-between gap-2 py-1 mb-1">
@@ -598,16 +595,16 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         </div>
 
         {/* Real Keypad Display */}
-        <div className="w-full max-w-sm grid grid-cols-4 gap-1.5 sm:gap-2 mb-2 relative">
+        <div className="w-full max-w-sm grid grid-cols-4 gap-1.5 sm:gap-2 mb-2 relative p-2 rounded-2xl bg-white/10 dark:bg-zinc-950/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-lg">
           {[
-            { op: '+', label: '+', icon: <Plus size={18} strokeWidth={3} /> },
-            { op: '-', label: '-', icon: <Minus size={18} strokeWidth={3} /> },
-            { op: '*', label: '*', icon: <X size={18} strokeWidth={3} /> },
-            { op: '/', label: '/', icon: <Divide size={18} strokeWidth={3} /> },
-            { op: '(', label: '(', icon: <span className="text-lg font-black">(</span> },
-            { op: ')', label: ')', icon: <span className="text-lg font-black">)</span> },
-            { op: ',', label: ',', icon: <span className="text-lg font-black">,</span> },
-            { op: '⌫', label: '⌫', icon: <Delete size={18} strokeWidth={2.5} />, isDanger: true },
+            { op: '+', label: '+', icon: <Plus size={20} strokeWidth={3.5} />, isOp: true },
+            { op: '-', label: '-', icon: <Minus size={20} strokeWidth={3.5} />, isOp: true },
+            { op: '*', label: '*', icon: <X size={20} strokeWidth={3.5} />, isOp: true },
+            { op: '/', label: '/', icon: <Divide size={20} strokeWidth={3.5} />, isOp: true },
+            { op: '(', label: '(', icon: <span className="text-xl font-black">(</span> },
+            { op: ')', label: ')', icon: <span className="text-xl font-black">)</span> },
+            { op: ',', label: ',', icon: <span className="text-xl font-black">,</span> },
+            { op: '⌫', label: '⌫', icon: <Delete size={20} strokeWidth={2.5} />, isDanger: true },
           ].map(item => {
             const isTargetOp = cue?.type === 'op' && cue.op === item.op;
 
@@ -620,12 +617,14 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                 )}
                 <button
                   onClick={() => handleOpClick(item.op)}
-                  className={`w-full h-10 sm:h-12 rounded-xl flex items-center justify-center font-bold text-base transition-all active:scale-95 cursor-pointer border-2 ${
+                  className={`w-full h-11 sm:h-12 rounded-xl flex items-center justify-center font-bold text-base transition-all active:scale-95 cursor-pointer border-2 backdrop-blur-md ${
                     isTargetOp
-                      ? 'border-orange-500 bg-orange-500/30 text-orange-600 scale-105 ring-4 ring-orange-500/30 animate-pulse z-20'
+                      ? 'border-orange-500 bg-orange-500 text-white scale-105 ring-4 ring-orange-500/40 animate-pulse z-20 shadow-lg'
                       : item.isDanger
-                      ? 'bg-red-50/60 dark:bg-red-500/20 text-red-500 border-red-200 dark:border-red-500/30'
-                      : 'bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
+                      ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30'
+                      : item.isOp
+                      ? 'border-orange-500/80 bg-orange-500/25 text-orange-400 hover:bg-orange-500/35'
+                      : 'border-zinc-700 bg-zinc-800/80 text-white hover:bg-zinc-700/80'
                   }`}
                 >
                   {item.icon}
