@@ -56,7 +56,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
 
   // Инициализация виджета Telegram Login при открытии модалки
   useEffect(() => {
-    if (!isOpen || currentUser) return;
+    if (!isOpen || (currentUser && !currentUser.isGuest)) return;
 
     (window as any).onTelegramAuth = async (user: any) => {
       try {
@@ -198,7 +198,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {currentUser ? (
+        {currentUser && !currentUser.isGuest ? (
           /* Экран уже авторизованного пользователя */
           <div className="text-center py-2">
             <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-orange-500/25 mb-3">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
@@ -785,6 +785,9 @@ export default function App() {
   // По требованию: запускается один раз у ВСЕХ игроков (так как новый ключ отсутствует),
   // а после прохождения/пропуска сохраняется в localStorage и больше не навязывается.
   const [showTutorial, setShowTutorial] = useState(() => {
+    if (!isInsideTelegram) {
+      return false;
+    }
     try {
       return localStorage.getItem('make100_tutorial_completed_v2') !== 'true';
     } catch (e) {
@@ -1077,10 +1080,27 @@ export default function App() {
         setStatsLoaded(true);
       } else {
         const localStatsStr = localStorage.getItem('make100_stats');
+        let initialHints = 3;
+        let initialCoins = 100;
         if (localStatsStr) {
           try {
-            applyStatsToState(JSON.parse(localStatsStr));
+            const parsed = JSON.parse(localStatsStr);
+            initialHints = Math.max(3, parsed.hintsCount !== undefined ? parsed.hintsCount : 3);
+            initialCoins = parsed.coins !== undefined ? parsed.coins : 100;
+            applyStatsToState({ ...parsed, hintsCount: initialHints, coins: initialCoins });
           } catch(e) {}
+        } else {
+          applyStatsToState({
+            solvedCount: 0,
+            skippedCount: 0,
+            totalTimeMs: 0,
+            totalCharacters: 0,
+            settings: {},
+            modeStats: {},
+            coins: initialCoins,
+            hintsCount: initialHints,
+            referralCount: 0
+          });
         }
         isStatsLoadedRef.current = true;
         setStatsLoaded(true);
@@ -1985,60 +2005,14 @@ export default function App() {
     );
   }
 
-  const isRealTelegramUser = isPreviewEnv || !!(tgUser && tgUser.id && tgUser.id !== 1 && (tgUser.id !== 9999 || isPreviewEnv));
-
-  if (!isRealTelegramUser && !devBypassed) {
-    return (
-      <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-zinc-950 text-zinc-50' : 'bg-zinc-50 text-zinc-900'} flex flex-col items-center justify-center p-4 text-center`}>
-        <div className="bg-zinc-100 dark:bg-zinc-900 p-4 rounded-full mb-4">
-          <Smartphone size={32} className="text-blue-500" />
-        </div>
-        <h2 className="text-xl font-bold mb-2">
-          {t.accessRestricted || (language === 'ru' ? 'Доступ ограничен' : 'Telegram Only')}
-        </h2>
-        <p className="text-sm opacity-70 mb-6 max-w-xs">
-          {t.tgOnlyDesc || (language === 'ru' 
-            ? 'Пожалуйста, войдите в игру через официального Telegram-бота после авторизации.' 
-            : 'Please play the game through our Telegram Bot.')}
-        </p>
-        <button 
-          onClick={() => {
-            const tg = (window as any).Telegram?.WebApp;
-            const botName = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-            if (tg && typeof tg.openTelegramLink === 'function') {
-              try {
-                tg.openTelegramLink(`https://t.me/${botName}`);
-              } catch (e) {
-                window.open(`https://t.me/${botName}`, "_blank");
-              }
-            } else {
-              window.open(`https://t.me/${botName}`, "_blank");
-            }
-          }}
-          className="px-6 py-3 bg-blue-500 hover:opacity-90 text-white rounded-xl font-bold transition-colors shadow-lg mb-4 w-[240px]"
-        >
-          {t.openInTelegram || (language === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram')}
-        </button>
-
-        <button 
-          onClick={() => {
-            setDevBypassed(true);
-            setTgUser({ id: 9999, first_name: "Guest" });
-          }} 
-          className="px-6 py-3 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl font-bold transition-colors shadow mb-2 w-[240px]"
-        >
-          {t.playAsGuest || (language === 'ru' ? 'Играть как гость' : 'Play as Guest')}
-        </button>
-      </div>
-    );
-  }
-
+  // Во внешнем браузере игра сразу доступна для всех игроков (гостевой режим или Web-авторизация)
+  const isRealTelegramUser = true;
 
   const isCarMode = gameMode === 'car';
   
   return (
     <div 
-      className="fixed inset-0 w-full h-full min-h-screen bg-zinc-950 text-white overflow-hidden flex flex-col items-center justify-between"
+      className="fixed inset-0 w-full h-full min-h-screen bg-zinc-950 text-white overflow-y-auto overflow-x-hidden flex flex-col items-center justify-between custom-scrollbar"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 2px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 2px)'
@@ -2062,9 +2036,9 @@ export default function App() {
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
-        <div className="relative z-10 w-full max-w-[420px] sm:max-w-[460px] md:max-w-[480px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
+        <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
           {/* Header */}
-          <header className="w-full max-w-md mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+          <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
             {/* Кликабельная аватарка с индикатором кликабельности */}
             <button 
               onClick={() => setIsProfileOpen(true)}
@@ -2144,7 +2118,7 @@ export default function App() {
           </header>
 
       {/* Live Stopwatch & Character Counter (единый стандарт 50% матового стекла) */}
-      <div className="w-full max-w-md mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
         <div className="flex justify-center items-center gap-4 sm:gap-6 py-2 px-5 sm:px-6 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
           {/* Секундомер в спортивном формате ММ:СС:мс */}
           <div className="flex items-center gap-2">
@@ -2552,7 +2526,7 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
-        <div className={`w-full max-w-md py-2.5 sm:py-3.5 px-1 sm:px-2.5 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
+        <div className={`w-full max-w-md sm:max-w-lg md:max-w-xl py-2.5 sm:py-3.5 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
           <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
@@ -2581,7 +2555,7 @@ export default function App() {
         </div>
 
         {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью и защитной клавиатурой) */}
-        <div className="w-full max-w-md p-1.5 sm:p-2 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-1.5 sm:p-2.5 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
             <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} disabled={!isOpAllowed('+', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
@@ -2598,7 +2572,7 @@ export default function App() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-1.5 sm:mt-2 w-full max-w-md grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
+        <div className="mt-1.5 sm:mt-2 w-full max-w-md sm:max-w-lg md:max-w-xl grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
