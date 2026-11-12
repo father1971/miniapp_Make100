@@ -61,7 +61,7 @@ export async function apiRequest<T>(endpoint: string, options: FetchOptions = {}
           continue;
         }
         // Для 4xx ответов парсим тело, чтобы клиент мог обработать ошибки (banned, insufficient funds и т.д.)
-        if (res.status >= 400 && res.status < 500) {
+        if (res.status >= 400) {
           try {
             return (await res.json()) as T;
           } catch (e) {}
