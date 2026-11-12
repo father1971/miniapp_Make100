@@ -48,6 +48,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [otpCode, setOtpCode] = useState('');
+  const [otpSession, setOtpSession] = useState<string>('');
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -130,6 +131,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
       });
 
       if (res.success) {
+        setOtpSession(res.otpSession || '');
         setEmailStep('verify');
         setStatusMsg({
           type: 'success',
@@ -161,6 +163,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
       const res = await verifyEmailOtpApi({
         email: email.trim(),
         code: otpCode.trim(),
+        otpSession: otpSession || undefined,
         name: name.trim() || undefined,
       });
 

@@ -200,8 +200,8 @@ export async function authTelegramWidgetApi(widgetData: any): Promise<{ success:
   return res || { success: false, error: 'Network error' };
 }
 
-export async function sendEmailOtpApi(payload: { email: string; name?: string }): Promise<{ success: boolean; message?: string; devCode?: string; error?: string }> {
-  const res = await apiRequest<{ success: boolean; message?: string; devCode?: string; error?: string }>(`/api/auth/email/send-code`, {
+export async function sendEmailOtpApi(payload: { email: string; name?: string }): Promise<{ success: boolean; message?: string; otpSession?: string; devCode?: string; error?: string }> {
+  const res = await apiRequest<{ success: boolean; message?: string; otpSession?: string; devCode?: string; error?: string }>(`/api/auth/email/send-code`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -209,7 +209,7 @@ export async function sendEmailOtpApi(payload: { email: string; name?: string })
   return res || { success: false, error: 'Network error' };
 }
 
-export async function verifyEmailOtpApi(payload: { email: string; code: string; name?: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+export async function verifyEmailOtpApi(payload: { email: string; code: string; otpSession?: string; name?: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
   const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/email/verify-code`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
