@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LogIn } from 'lucide-react';
 import { UserStats, TelegramUser } from '../types';
 import { TranslationData, Language } from '../translations';
 
@@ -20,6 +21,8 @@ export interface UserProfileProps {
   handleInviteFriend: () => void;
   playSound: (type: 'click' | 'success' | 'error' | 'skip') => void;
   playVibration: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
+  isGuest?: boolean;
+  onOpenAuth?: () => void;
 }
 
 export function UserProfile({
@@ -39,7 +42,9 @@ export function UserProfile({
   formatRegistrationDate,
   handleInviteFriend,
   playSound,
-  playVibration
+  playVibration,
+  isGuest,
+  onOpenAuth
 }: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'stats' | 'referral'>('stats');
   const [avatarError, setAvatarError] = useState(false);
@@ -101,6 +106,27 @@ export function UserProfile({
             </p>
           </div>
         </div>
+
+        {/* Guest Banner if not registered */}
+        {isGuest && (
+          <div className="mt-4 p-4 rounded-3xl bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/30 flex flex-col gap-2.5 text-center">
+            <p className="text-xs text-slate-600 dark:text-zinc-300 font-medium leading-relaxed">
+              {t.guestProfileNotice || "Вы играете без регистрации (в демо-версии). Войдите, чтобы сохранить свой прогресс!"}
+            </p>
+            <button
+              onClick={() => {
+                onClose();
+                onOpenAuth?.();
+                playSound('click');
+                playVibration('light');
+              }}
+              className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>{t.loginRegisterBtn || "Войти / Зарегистрироваться"}</span>
+            </button>
+          </div>
+        )}
 
         {/* Compact Stats Bar */}
         <div className="mt-4 grid grid-cols-4 gap-2">

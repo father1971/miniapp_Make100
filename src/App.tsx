@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles, MessageSquare } from 'lucide-react';
+import { Plus, Minus, X, Divide, RefreshCw, Delete, Play, Moon, Sun, User, Menu, Volume2, VolumeX, Vibrate, VibrateOff, Lightbulb, Trophy, Smartphone, Sparkles, MessageSquare, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
@@ -441,6 +441,7 @@ export default function App() {
   const [webUser, setWebUser] = useState<any>(() => getSavedWebUser());
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const isInsideTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
+  const isGuest = !tgUser && !webUser;
 
     // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован и туториал не идет
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(() => {
@@ -2109,6 +2110,23 @@ export default function App() {
               >
                 <Menu className="w-5 h-5" />
               </button>
+
+              {/* 6. Кнопка "Войти" для гостя прямо рядом с меню */}
+              {isGuest && (
+                <button
+                  onClick={() => {
+                    setIsWelcomeModalOpen(true);
+                    playSound('click');
+                    playVibration('light');
+                  }}
+                  className="h-10 sm:h-11 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md shadow-orange-500/25 flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shrink-0"
+                  title={t.loginBtn || "Войти"}
+                  aria-label={t.loginBtn || "Войти"}
+                >
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
+                  <span className="leading-none">{t.loginBtn || "Войти"}</span>
+                </button>
+              )}
             </header>
           ) : (
             /* Центрированная шапка для браузерной версии на компьютере: все элементы по центру на одинаковом расстоянии */
@@ -2172,6 +2190,23 @@ export default function App() {
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
+
+              {/* 6. Кнопка "Войти" для гостя прямо рядышком с кнопкой меню настроек */}
+              {isGuest && (
+                <button
+                  onClick={() => {
+                    setIsWelcomeModalOpen(true);
+                    playSound('click');
+                    playVibration('light');
+                  }}
+                  className="h-11 sm:h-12 md:h-13 px-3.5 sm:px-4.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
+                  title={t.loginBtn || "Войти"}
+                  aria-label={t.loginBtn || "Войти"}
+                >
+                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span className="leading-none">{t.loginBtn || "Войти"}</span>
+                </button>
+              )}
             </header>
           )}
           {/* Live Stopwatch & Character Counter */}
@@ -2560,18 +2595,38 @@ export default function App() {
               )}
             </div>
 
-            {/* Sticky Bottom Bar (My Result) */}
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200/60 dark:border-slate-900/80 flex justify-center items-center shrink-0 z-10">
-              <div className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20 transition-transform active:scale-98">
-                <span className="font-bold text-sm sm:text-base">
-                  {myRank > 0 ? (
-                    (t.youAreOnRank ? t.youAreOnRank.replace('{rank}', String(myRank)).replace('{score}', String((stats as any)?.score || 0)) : `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`)
-                  ) : (
-                    t.playRoundToEnter || 'Сыграйте раунд, чтобы войти в рейтинг!'
-                  )}
-                </span>
-                <Trophy size={20} className="opacity-80 animate-pulse" />
-              </div>
+            {/* Sticky Bottom Bar (My Result / Login for Guest) */}
+            <div className="sticky bottom-0 left-0 right-0 p-3 sm:p-4 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200/60 dark:border-slate-900/80 flex flex-col justify-center items-center gap-2 shrink-0 z-10">
+              {isGuest ? (
+                <div className="w-full max-w-sm flex flex-col gap-2">
+                  <div className="text-center text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                    {t.guestLeaderboardNotice || "Войдите в аккаунт, чтобы сохранять результаты и попасть в рейтинг!"}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsLeaderboardOpen(false);
+                      setIsWelcomeModalOpen(true);
+                      playSound('click');
+                      playVibration('light');
+                    }}
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-sm shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>{t.loginRegisterBtn || "Войти / Зарегистрироваться"}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-lg shadow-amber-500/20 transition-transform active:scale-98">
+                  <span className="font-bold text-sm sm:text-base">
+                    {myRank > 0 ? (
+                      (t.youAreOnRank ? t.youAreOnRank.replace('{rank}', String(myRank)).replace('{score}', String((stats as any)?.score || 0)) : `Вы на ${myRank} месте со своими ${(stats as any)?.score || 0} очками`)
+                    ) : (
+                      t.playRoundToEnter || 'Сыграйте раунд, чтобы войти в рейтинг!'
+                    )}
+                  </span>
+                  <Trophy size={20} className="opacity-80 animate-pulse" />
+                </div>
+              )}
             </div>
 
           </div>
@@ -2869,6 +2924,8 @@ export default function App() {
             handleInviteFriend={handleInviteFriend}
             playSound={playSound}
             playVibration={playVibration}
+            isGuest={isGuest}
+            onOpenAuth={() => setIsWelcomeModalOpen(true)}
           />
         </React.Suspense>
       )}
