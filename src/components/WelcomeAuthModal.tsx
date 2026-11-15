@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Play,
   Send,
   Mail,
-  User,
   CheckCircle2,
   AlertCircle,
   LogOut,
-  Sparkles,
-  ShieldCheck,
-  MessageSquare,
   KeyRound,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import {
-  authTelegramWidgetApi,
   sendEmailOtpApi,
   verifyEmailOtpApi,
   logoutWebApi
@@ -36,14 +32,16 @@ interface WelcomeAuthModalProps {
 export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
   isOpen,
   onClose,
-  onOpenFeedback,
   currentUser,
   onAuthSuccess,
   onLogout,
   translations: t,
   botUsername = 'Test_Make100_bot',
 }) => {
-  // Состояния для входа по email (OTP)
+  // Режим экрана: три кнопки ('menu') или форма ввода email ('email')
+  const [viewMode, setViewMode] = useState<'menu' | 'email'>('menu');
+
+  // Состояния для входа по email (Stateless OTP)
   const [emailStep, setEmailStep] = useState<'input' | 'verify'>('input');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -52,49 +50,6 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifyingCode, setIsVerifyingCode] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const tgWidgetContainerRef = useRef<HTMLDivElement>(null);
-
-  // Инициализация виджета Telegram Login при открытии модалки
-  useEffect(() => {
-    if (!isOpen || (currentUser && !currentUser.isGuest)) return;
-
-    (window as any).onTelegramAuth = async (user: any) => {
-      try {
-        setStatusMsg(null);
-        const res = await authTelegramWidgetApi(user);
-        if (res.success && res.user) {
-          setStatusMsg({ type: 'success', text: t.loginSuccess || 'Успешный вход через Telegram!' });
-          setTimeout(() => {
-            onAuthSuccess(res.user);
-            onClose();
-          }, 1000);
-        } else {
-          setStatusMsg({ type: 'error', text: res.error || 'Ошибка авторизации Telegram' });
-        }
-      } catch (e: any) {
-        setStatusMsg({ type: 'error', text: 'Ошибка соединения с сервером' });
-      }
-    };
-
-    const container = tgWidgetContainerRef.current;
-    if (container) {
-      container.innerHTML = '';
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.setAttribute('data-telegram-login', botUsername);
-      script.setAttribute('data-size', 'large');
-      script.setAttribute('data-radius', '16');
-      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-      script.setAttribute('data-request-access', 'write');
-      script.async = true;
-      container.appendChild(script);
-    }
-
-    return () => {
-      delete (window as any).onTelegramAuth;
-    };
-  }, [isOpen, currentUser, botUsername]);
 
   if (!isOpen) return null;
 
@@ -112,6 +67,19 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
     trackAnalyticsEvent('click_play_telegram');
     const tgUrl = `https://t.me/${botUsername}?start=web_modal`;
     window.open(tgUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Открытие формы входа по Email
+  const handleOpenEmailForm = () => {
+    setStatusMsg(null);
+    setEmailStep('input');
+    setViewMode('email');
+  };
+
+  // Возврат к экрану трёх кнопок
+  const handleBackToMenu = () => {
+    setStatusMsg(null);
+    setViewMode('menu');
   };
 
   // Отправка 6-значного кода на email
@@ -246,8 +214,124 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
               </button>
             </div>
           </div>
+        ) : viewMode === 'email' ? (
+          /* Экран ввода email и подтверждения 6-значным кодом */
+          <div className="animate-fade-in">
+            <div className="flex items-center gap-2.5 mb-4">
+              <button
+                type="button"
+                onClick={handleBackToMenu}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                title={t.welcomeBackBtn || 'Назад'}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h2 className="text-base font-black tracking-tight flex items-center gap-1.5">
+                  <Mail className="w-4 h-4 text-orange-500" />
+                  <span>{t.welcomeEmailTitle || 'Вход по 6-значному коду на Email'}</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  {t.welcomeEmailSub || 'Сохранение рекордов и прогресса'}
+                </p>
+              </div>
+            </div>
+
+            {/* Сообщения статуса */}
+            {statusMsg && (
+              <div
+                className={`mb-3.5 p-3 rounded-2xl text-xs flex items-center gap-2 border ${
+                  statusMsg.type === 'success'
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                }`}
+              >
+                {statusMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                )}
+                <span>{statusMsg.text}</span>
+              </div>
+            )}
+
+            {emailStep === 'input' ? (
+              <form onSubmit={handleSendCode} className="space-y-2.5">
+                <div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t.welcomeNamePlaceholder || 'Ваше имя (для таблицы рекордов)'}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t.welcomeEmailPlaceholder || 'Ваш email: player@example.com'}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-orange-500 font-mono"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSendingCode}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+                >
+                  {isSendingCode ? (t.welcomeSending || 'Отправка...') : (t.welcomeGetCodeBtn || 'Получить 6-значный код ✉️')}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyCode} className="space-y-2.5">
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  {t.welcomeEnterCodeText || 'Введите 6 цифр из письма, отправленного на'} <strong className="text-slate-700 dark:text-zinc-200">{email}</strong>:
+                </p>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    autoFocus
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="• • • • • •"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-base font-mono tracking-widest text-center text-slate-900 dark:text-white outline-none focus:border-orange-500"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEmailStep('input')}
+                    className="px-3 py-2.5 rounded-xl bg-slate-200/60 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-bold"
+                  >
+                    {t.welcomeBackBtn || 'Назад'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isVerifyingCode}
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+                  >
+                    {isVerifyingCode ? (t.welcomeVerifying || 'Проверка...') : (t.welcomeVerifyBtn || 'Подтвердить и войти 🚀')}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2.5 text-center">
+              {t.welcomeSessionNotice || '🔒 Вход запоминается на 1 год, повторный ввод кода не потребуется!'}
+            </p>
+
+            {/* Подпись Make100 */}
+            <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-center text-xs font-bold text-slate-400 dark:text-zinc-500">
+              <span>Make100</span>
+            </div>
+          </div>
         ) : (
-          /* Главный экран приветствия и выбора режима для неавторизованного пользователя */
+          /* Главный экран: РОВНО ТРИ КНОПКИ и подпись Make100 */
           <div>
             {/* Шапка модального окна */}
             <div className="flex items-center gap-3 mb-4">
@@ -282,9 +366,9 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
               </div>
             )}
 
-            {/* 🎮 ОСНОВНЫЕ КНОПКИ ДЕЙСТВИЯ */}
+            {/* 🎮 РОВНО ТРИ КНОПКИ */}
             <div className="space-y-2.5">
-              {/* 1. Играть без регистрации (Главная кнопка быстрого старта) */}
+              {/* 1. Играть без регистрации */}
               <button
                 type="button"
                 onClick={handlePlayGuest}
@@ -299,8 +383,8 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                       <div className="text-sm font-black">
                         {t.playGuestBtn || 'Играть без регистрации'}
                       </div>
-                      <div className="text-[11px] text-white/85">
-                        {t.playGuestSub || 'Быстрый старт прямо здесь • сохранение в браузере'}
+                      <div className="text-[11px] text-white/90">
+                        {t.playGuestSub || 'Без сохранения данных'}
                       </div>
                     </div>
                   </div>
@@ -308,7 +392,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                 </div>
               </button>
 
-              {/* 2. Играть в Telegram */}
+              {/* 2. Играть в Telegram-боте */}
               <button
                 type="button"
                 onClick={handlePlayTelegram}
@@ -331,128 +415,35 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                   <ArrowRight className="w-4 h-4 text-sky-500 group-hover:translate-x-1 transition-transform" />
                 </div>
               </button>
-            </div>
 
-            {/* 🔐 БЛОК СОХРАНЕНИЯ В ОБЛАКЕ И РЕЙТИНГА */}
-            <div className="mt-4 pt-3.5 border-t border-slate-200/80 dark:border-white/10">
-              <div className="text-center mb-3">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-                  {t.welcomeLeaderboardHeader || '🏆 Сохранение рекордов и мировой рейтинг'}
-                </span>
-              </div>
-
-              {/* Вход через Telegram Widget */}
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-white/10 text-center mb-2.5">
-                <div className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
-                  {t.welcomeTgWidgetTitle || 'Быстрый вход через Telegram в 1 клик:'}
-                </div>
-                <div
-                  ref={tgWidgetContainerRef}
-                  className="min-h-[42px] flex items-center justify-center"
-                />
-              </div>
-
-              {/* Вход по Email через 6-значный код */}
-              {!showEmailForm ? (
-                <button
-                  type="button"
-                  onClick={() => setShowEmailForm(true)}
-                  className="w-full py-2.5 px-3 rounded-2xl bg-white/60 dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Mail className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{t.welcomeEmailBtn || 'Войти по электронной почте (код на Email)'}</span>
-                </button>
-              ) : (
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-white/10 animate-fade-in">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-xs font-black flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{t.welcomeEmailTitle || 'Вход по 6-значному коду на Email'}</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowEmailForm(false)}
-                      className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                    >
-                      {t.welcomeCollapse || 'Свернуть'}
-                    </button>
+              {/* 3. Войти по электронной почте */}
+              <button
+                type="button"
+                onClick={handleOpenEmailForm}
+                className="w-full text-left p-3.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-700 dark:text-amber-400 active:scale-98 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-black">
+                        {t.welcomeEmailBtn || 'Войти по электронной почте'}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-zinc-400">
+                        {t.welcomeEmailSub || 'Сохранение рекордов и прогресса'}
+                      </div>
+                    </div>
                   </div>
-
-                  {emailStep === 'input' ? (
-                    <form onSubmit={handleSendCode} className="space-y-2.5">
-                      <div>
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder={t.welcomeNamePlaceholder || 'Ваше имя (для таблицы рекордов)'}
-                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500"
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder={t.welcomeEmailPlaceholder || 'Ваш email: player@example.com'}
-                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 font-mono"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isSendingCode}
-                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
-                      >
-                        {isSendingCode ? (t.welcomeSending || 'Отправка...') : (t.welcomeGetCodeBtn || 'Получить 6-значный код ✉️')}
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-2.5">
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                        {t.welcomeEnterCodeText || 'Введите 6 цифр из письма, отправленного на'} <strong className="text-slate-700 dark:text-zinc-200">{email}</strong>:
-                      </p>
-                      <div className="relative">
-                        <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                        <input
-                          type="text"
-                          required
-                          maxLength={6}
-                          autoFocus
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                          placeholder="• • • • • •"
-                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-base font-mono tracking-widest text-center text-slate-900 dark:text-white outline-none focus:border-amber-500"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEmailStep('input')}
-                          className="px-3 py-2 rounded-xl bg-slate-200/60 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-xs font-bold"
-                        >
-                          {t.welcomeBackBtn || 'Назад'}
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isVerifyingCode}
-                          className="flex-1 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
-                        >
-                          {isVerifyingCode ? (t.welcomeVerifying || 'Проверка...') : (t.welcomeVerifyBtn || 'Подтвердить и войти 🚀')}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                  <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-2 text-center">
-                    {t.welcomeSessionNotice || '🔒 Вход запоминается на 1 год, повторный ввод кода не потребуется!'}
-                  </p>
+                  <ArrowRight className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform" />
                 </div>
-              )}
+              </button>
             </div>
 
-            {/* Подвал */}
-            <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-center text-xs text-slate-400">
-              <span>Make 100 Puzzle • 2026</span>
+            {/* Подвал с лаконичной подписью Make100 */}
+            <div className="mt-5 pt-3.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-center text-xs font-bold text-slate-400 dark:text-zinc-500">
+              <span>Make100</span>
             </div>
           </div>
         )}
