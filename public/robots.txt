@@ -1,4 +1,2 @@
 User-agent: *
-Allow: /
-Sitemap: https://father1971.github.io/miniapp_Make100/sitemap.xml
-Host: father1971.github.io
+Disallow: /
