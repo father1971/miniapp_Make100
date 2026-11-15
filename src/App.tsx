@@ -530,7 +530,8 @@ export default function App() {
   }, [tgUser]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && tgUser && tgUser.id && tgUser.id !== 9999 && tgUser.id !== 1) {
+    // Окно "Закрепи бота в списке своих чатов" актуально ТОЛЬКО для игроков внутри Telegram
+    if (isInsideTelegram && typeof window !== 'undefined' && tgUser && tgUser.id && tgUser.id > 0 && tgUser.id !== 9999 && tgUser.id !== 1) {
       try {
         const isDismissed = localStorage.getItem('make100_save_bot_dismissed');
         if (!isDismissed) {
@@ -541,7 +542,7 @@ export default function App() {
         }
       } catch (e) {}
     }
-  }, [tgUser]);
+  }, [isInsideTelegram, tgUser]);
   
   const t: any = TRANSLATIONS[language];
 
@@ -2608,13 +2609,15 @@ export default function App() {
           t={t}
         />
 
-        <SaveBotModal
-          isOpen={showSaveBotModal}
-          onClose={() => setShowSaveBotModal(false)}
-          t={t}
-          playSound={playSound}
-          playVibration={playVibration}
-        />
+        {isInsideTelegram && (
+          <SaveBotModal
+            isOpen={showSaveBotModal}
+            onClose={() => setShowSaveBotModal(false)}
+            t={t}
+            playSound={playSound}
+            playVibration={playVibration}
+          />
+        )}
         <AnimatePresence>
           {showTutorial && (
             <React.Suspense fallback={null}>
