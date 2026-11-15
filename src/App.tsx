@@ -2048,9 +2048,9 @@ export default function App() {
         <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
           {/* Header */}
           {isInsideTelegram ? (
-            /* Классическая шапка для Telegram-бота: адаптивная под мобильный экран, аватарка слева, показатели справа */
-            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
-              {/* Кликабельная аватарка профиля */}
+            /* Шапка для Telegram-бота: компактный мобильный размер, все модули на одном расстоянии строго по центру */
+            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+              {/* 1. Кликабельная аватарка профиля */}
               <button 
                 onClick={() => setIsProfileOpen(true)}
                 className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
@@ -2059,59 +2059,56 @@ export default function App() {
               >
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
                 
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
                   {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
                     <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base">
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-base">
                       {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
                     </div>
                   )}
                 </div>
 
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
-                  <span className="text-[10px] text-white leading-none">⚙️</span>
+                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                  <span className="text-[9px] text-white leading-none">⚙️</span>
                 </div>
               </button>
 
-              {/* Блок баланса монет, подсказок и меню */}
-              <div className="flex items-center gap-2 flex-1 justify-end font-mono">
-                {/* Плашка монет */}
-                <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-                  <span className="text-lg drop-shadow-sm">🪙</span>
-                  <span className="text-sm font-black tracking-tight">
-                    {stats.coins}
-                  </span>
-                </div>
-
-                {/* Плашка подсказок */}
-                <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-                  <span className="text-lg drop-shadow-sm">💡</span>
-                  <span className="text-sm font-black tracking-tight">
-                    {stats.hintsCount}
-                  </span>
-                </div>
-
-                {/* Кнопка Зала славы (Кубок) */}
-                <button 
-                  onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                  className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
-                  title={t.leaderboard || 'Зал славы'}
-                  aria-label={t.leaderboard || 'Зал славы'}
-                >
-                  <Trophy className="w-5 h-5 text-yellow-100" fill="currentColor" />
-                </button>
-
-                {/* Кнопка открытия бокового меню */}
-                <button 
-                  onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-                  className="w-10 h-10 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
-                  title={t.settingsMenu || "Меню настроек"}
-                  aria-label={t.settingsMenu || "Меню настроек"}
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
+              {/* 2. Плашка монет */}
+              <div className="flex items-center gap-1.5 h-10 sm:h-11 px-2.5 sm:px-3 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                <span className="text-base sm:text-lg drop-shadow-sm leading-none">🪙</span>
+                <span className="text-xs sm:text-sm font-black tracking-tight">
+                  {stats.coins}
+                </span>
               </div>
+
+              {/* 3. Плашка подсказок */}
+              <div className="flex items-center gap-1.5 h-10 sm:h-11 px-2.5 sm:px-3 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                <span className="text-base sm:text-lg drop-shadow-sm leading-none">💡</span>
+                <span className="text-xs sm:text-sm font-black tracking-tight">
+                  {stats.hintsCount}
+                </span>
+              </div>
+
+              {/* 4. Кнопка Зала славы (Кубок) */}
+              <button 
+                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+                title={t.leaderboard || 'Зал славы'}
+                aria-label={t.leaderboard || 'Зал славы'}
+              >
+                <Trophy className="w-5 h-5 text-yellow-100" fill="currentColor" />
+              </button>
+
+              {/* 5. Кнопка открытия бокового меню */}
+              <button 
+                onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+                title={t.settingsMenu || "Меню настроек"}
+                aria-label={t.settingsMenu || "Меню настроек"}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             </header>
           ) : (
             /* Центрированная шапка для браузерной версии на компьютере: все элементы по центру на одинаковом расстоянии */
@@ -2177,7 +2174,6 @@ export default function App() {
               </button>
             </header>
           )}
-
           {/* Live Stopwatch & Character Counter */}
           {isInsideTelegram ? (
             /* Классический секундомер и счётчик символов для Telegram-бота */
