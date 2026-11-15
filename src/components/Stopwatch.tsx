@@ -62,7 +62,7 @@ export const Stopwatch = React.memo(function Stopwatch({ isRunning, onTick, rese
   }, [isRunning, format, onTick]);
 
   return (
-    <span className={`text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-wider font-mono ${className || ''}`}>
+    <span className={className || "text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono"}>
       {display}
     </span>
   );

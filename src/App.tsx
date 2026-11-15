@@ -2047,92 +2047,188 @@ export default function App() {
       {statsLoaded && (
         <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
           {/* Header */}
-          <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1.5 flex items-center justify-center gap-2 sm:gap-2.5 md:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
-            {/* 1. Кликабельная аватарка профиля */}
-            <button 
-              onClick={() => setIsProfileOpen(true)}
-              className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
-              title={t.openProfile || "Открыть профиль"}
-              aria-label={t.openProfile || "Открыть профиль"}
-            >
-              {/* Пульсирующая внешняя рамка */}
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
-              
-              {/* Сама аватарка */}
-              <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
-                {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
-                  <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base sm:text-lg">
-                    {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
-                  </div>
-                )}
+          {isInsideTelegram ? (
+            /* Классическая шапка для Telegram-бота: адаптивная под мобильный экран, аватарка слева, показатели справа */
+            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-between gap-2 sm:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+              {/* Кликабельная аватарка профиля */}
+              <button 
+                onClick={() => setIsProfileOpen(true)}
+                className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
+                title={t.openProfile || "Открыть профиль"}
+                aria-label={t.openProfile || "Открыть профиль"}
+              >
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
+                
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                  {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
+                    <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base">
+                      {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                  <span className="text-[10px] text-white leading-none">⚙️</span>
+                </div>
+              </button>
+
+              {/* Блок баланса монет, подсказок и меню */}
+              <div className="flex items-center gap-2 flex-1 justify-end font-mono">
+                {/* Плашка монет */}
+                <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                  <span className="text-lg drop-shadow-sm">🪙</span>
+                  <span className="text-sm font-black tracking-tight">
+                    {stats.coins}
+                  </span>
+                </div>
+
+                {/* Плашка подсказок */}
+                <div className="flex items-center gap-1.5 py-2 px-3.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                  <span className="text-lg drop-shadow-sm">💡</span>
+                  <span className="text-sm font-black tracking-tight">
+                    {stats.hintsCount}
+                  </span>
+                </div>
+
+                {/* Кнопка Зала славы (Кубок) */}
+                <button 
+                  onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+                  className="w-10 h-10 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+                  title={t.leaderboard || 'Зал славы'}
+                  aria-label={t.leaderboard || 'Зал славы'}
+                >
+                  <Trophy className="w-5 h-5 text-yellow-100" fill="currentColor" />
+                </button>
+
+                {/* Кнопка открытия бокового меню */}
+                <button 
+                  onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
+                  className="w-10 h-10 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+                  title={t.settingsMenu || "Меню настроек"}
+                  aria-label={t.settingsMenu || "Меню настроек"}
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
+            </header>
+          ) : (
+            /* Центрированная шапка для браузерной версии на компьютере: все элементы по центру на одинаковом расстоянии */
+            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1.5 flex items-center justify-center gap-2 sm:gap-2.5 md:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+              {/* 1. Кликабельная аватарка профиля */}
+              <button 
+                onClick={() => setIsProfileOpen(true)}
+                className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
+                title={t.openProfile || "Открыть профиль"}
+                aria-label={t.openProfile || "Открыть профиль"}
+              >
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
+                
+                <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                  {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
+                    <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base sm:text-lg">
+                      {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                  <span className="text-[9px] sm:text-[10px] text-white leading-none">⚙️</span>
+                </div>
+              </button>
+
+              {/* 2. Плашка монет */}
+              <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">🪙</span>
+                <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
+                  {stats.coins}
+                </span>
               </div>
 
-              {/* Маленький индикатор-шестеренка в углу */}
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
-                <span className="text-[9px] sm:text-[10px] text-white leading-none">⚙️</span>
+              {/* 3. Плашка подсказок */}
+              <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">💡</span>
+                <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
+                  {stats.hintsCount}
+                </span>
               </div>
-            </button>
 
-            {/* 2. Плашка монет */}
-            <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-              <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">🪙</span>
-              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
-                {stats.coins}
-              </span>
+              {/* 4. Кнопка Зала славы (Кубок) */}
+              <button 
+                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+                title={t.leaderboard || 'Зал славы'}
+                aria-label={t.leaderboard || 'Зал славы'}
+              >
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-100" fill="currentColor" />
+              </button>
+
+              {/* 5. Кнопка открытия бокового меню */}
+              <button 
+                onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
+                className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+                title={t.settingsMenu || "Меню настроек"}
+                aria-label={t.settingsMenu || "Меню настроек"}
+              >
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </header>
+          )}
+
+          {/* Live Stopwatch & Character Counter */}
+          {isInsideTelegram ? (
+            /* Классический секундомер и счётчик символов для Telegram-бота */
+            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
+              <div className="flex justify-center items-center gap-4 sm:gap-6 py-2 px-5 sm:px-6 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
+                {/* Секундомер в спортивном формате ММ:СС:мс */}
+                <div className="flex items-center gap-2">
+                  <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
+                  <Stopwatch isRunning={isTimerRunning} onTick={handleStopwatchTick} resetKey={stopwatchResetKey} />
+                </div>
+                
+                {/* Вертикальный разделитель */}
+                <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
+
+                {/* Счётчик символов в текущем вводе */}
+                <div className="flex items-center gap-2">
+                  <span className="text-lg sm:text-xl">✍️</span>
+                  <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-tight">
+                    {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+                  </span>
+                </div>
+              </div>
             </div>
+          ) : (
+            /* Увеличенный секундомер и счётчик символов для браузерной версии на компьютере */
+            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-1 sm:my-1.5 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
+              <div className="flex justify-center items-center gap-4 sm:gap-7 py-2.5 sm:py-3 px-5 sm:px-7 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
+                {/* Секундомер в спортивном формате ММ:СС:мс */}
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <span className="animate-pulse text-xl sm:text-2xl leading-none">⏱️</span>
+                  <Stopwatch 
+                    isRunning={isTimerRunning} 
+                    onTick={handleStopwatchTick} 
+                    resetKey={stopwatchResetKey} 
+                    className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-wider font-mono"
+                  />
+                </div>
+                
+                {/* Вертикальный разделитель */}
+                <div className="h-6 sm:h-7 w-[2px] bg-zinc-300 dark:bg-zinc-700/60"></div>
 
-            {/* 3. Плашка подсказок */}
-            <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-              <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">💡</span>
-              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
-                {stats.hintsCount}
-              </span>
+                {/* Счётчик символов в текущем вводе */}
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <span className="text-xl sm:text-2xl leading-none">✍️</span>
+                  <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-tight leading-none flex items-baseline">
+                    {currentInput.length} <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-sans font-bold ml-1">{t.charsShort || 'симв.'}</span>
+                  </span>
+                </div>
+              </div>
             </div>
-
-            {/* 4. Кнопка Зала славы (Кубок) */}
-            <button 
-              onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
-              title={t.leaderboard || 'Зал славы'}
-              aria-label={t.leaderboard || 'Зал славы'}
-            >
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-100" fill="currentColor" />
-            </button>
-
-            {/* 5. Кнопка открытия бокового меню */}
-            <button 
-              onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
-              title={t.settingsMenu || "Меню настроек"}
-              aria-label={t.settingsMenu || "Меню настроек"}
-            >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-          </header>
-
-      {/* Live Stopwatch & Character Counter (единый стандарт 50% матового стекла) */}
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-1 sm:my-1.5 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
-        <div className="flex justify-center items-center gap-4 sm:gap-7 py-2.5 sm:py-3 px-5 sm:px-7 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
-          {/* Секундомер в спортивном формате ММ:СС:мс */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <span className="animate-pulse text-xl sm:text-2xl leading-none">⏱️</span>
-            <Stopwatch isRunning={isTimerRunning} onTick={handleStopwatchTick} resetKey={stopwatchResetKey} />
-          </div>
-          
-          {/* Вертикальный разделитель */}
-          <div className="h-6 sm:h-7 w-[2px] bg-zinc-300 dark:bg-zinc-700/60"></div>
-
-          {/* Счётчик символов в текущем вводе */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <span className="text-xl sm:text-2xl leading-none">✍️</span>
-            <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-tight leading-none flex items-baseline">
-              {currentInput.length} <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-sans font-bold ml-1">{t.charsShort || 'симв.'}</span>
-            </span>
-          </div>
-        </div>
-      </div>
+          )}
 
       {/* Menu Overlay (Full-Screen) */}
       <AnimatePresence>
