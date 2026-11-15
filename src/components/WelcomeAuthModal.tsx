@@ -384,7 +384,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
                         {t.playGuestBtn || 'Играть без регистрации'}
                       </div>
                       <div className="text-[11px] text-white/90">
-                        {t.playGuestSub || 'Без сохранения данных'}
+                        {t.playGuestSub || 'Без сохранения прогресса и рейтинга'}
                       </div>
                     </div>
                   </div>
