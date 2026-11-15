@@ -16,7 +16,7 @@ import {
   verifyEmailOtpApi,
   logoutWebApi
 } from '../api';
-import { trackAnalyticsEvent } from '../utils/analytics';
+import { trackAnalyticsEvent, buildTelegramStartUrl } from '../utils/analytics';
 
 interface WelcomeAuthModalProps {
   isOpen: boolean;
@@ -55,6 +55,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
 
   // Клик "Играть без регистрации"
   const handlePlayGuest = () => {
+    trackAnalyticsEvent('funnel_guest');
     trackAnalyticsEvent('click_play_web');
     try {
       sessionStorage.setItem('make100_welcome_dismissed', 'true');
@@ -62,15 +63,17 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
     onClose();
   };
 
-  // Клик "Играть в Telegram"
+  // Клик "Играть в Telegram" (со сквозным пробросом рекламного источника)
   const handlePlayTelegram = () => {
+    trackAnalyticsEvent('funnel_telegram');
     trackAnalyticsEvent('click_play_telegram');
-    const tgUrl = `https://t.me/${botUsername}?start=web_modal`;
+    const tgUrl = buildTelegramStartUrl(botUsername, 'web_modal');
     window.open(tgUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Открытие формы входа по Email
   const handleOpenEmailForm = () => {
+    trackAnalyticsEvent('funnel_email_start');
     setStatusMsg(null);
     setEmailStep('input');
     setViewMode('email');
@@ -99,6 +102,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
       });
 
       if (res.success) {
+        trackAnalyticsEvent('funnel_email_code_sent');
         setOtpSession(res.otpSession || '');
         setEmailStep('verify');
         setStatusMsg({
@@ -136,6 +140,7 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
       });
 
       if (res.success && res.user) {
+        trackAnalyticsEvent('funnel_email_success', { extraData: { email: email.trim() } });
         setStatusMsg({ type: 'success', text: 'Успешный вход! Вы останетесь в системе на этом устройстве.' });
         setTimeout(() => {
           onAuthSuccess(res.user);

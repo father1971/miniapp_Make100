@@ -32,6 +32,7 @@ import { BuyHintModal } from './components/BuyHintModal';
 import { WelcomeAuthModal } from './components/WelcomeAuthModal';
 import { FeedbackModal } from './components/FeedbackModal';
 import { getSavedWebUser } from './api';
+import { trackAnalyticsEvent } from './utils/analytics';
 
 const BOT_USERNAME = (import.meta.env.VITE_BOT_USERNAME || import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/[@\s]/g, '');
 
@@ -474,6 +475,11 @@ export default function App() {
     return systemPrefersDark ? 'dark' : 'light';
   });
   const [language, setLanguage] = useState<Language>(detectInitialLanguage);
+
+  // Фиксация визита в аналитике и сохранение UTM-меток
+  useEffect(() => {
+    trackAnalyticsEvent('landing_visit', { once: true });
+  }, []);
 
   useEffect(() => {
     try {
@@ -1202,6 +1208,7 @@ export default function App() {
     // Ссылка для вызова нативного Telegram Share Dialog
     const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
     
+    trackAnalyticsEvent('click_share');
     // Открываем Telegram-шеринг
     if ((window as any).Telegram?.WebApp) {
       (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
@@ -1763,6 +1770,7 @@ export default function App() {
       const exactSolveTimeSec = exactSolveTimeMs / 1000;
       elapsedTimeRef.current = exactSolveTimeSec;
       setWon(true);
+      trackAnalyticsEvent('first_game_solve', { once: true });
       setGameState('idle');
       playSound('success');
       playVibration('success');
