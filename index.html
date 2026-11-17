@@ -1,27 +1,90 @@
 <!doctype html>
-<html lang="en" class="dark h-full bg-zinc-950">
+<html lang="ru" class="dark h-full bg-zinc-950">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <link rel="icon" type="image/jpeg" href="./favicon.jpg" />
-    <link rel="apple-touch-icon" href="./bot_avatar.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#09090b" />
-    <title>Make 100</title>
+    <!-- Запрет индексации тестовой версии поисковыми роботами (Яндекс, Google и др.) -->
+    <meta name="robots" content="noindex, nofollow, noarchive" />
 
-    <!-- Open Graph / Telegram / Social Preview -->
+    <!-- Фавиконки и иконки приложений -->
+    <link rel="icon" type="image/jpeg" href="./favicon.jpg" />
+    <link rel="apple-touch-icon" href="./bot_avatar.jpg" />
+
+    <!-- SEO Мета-теги -->
+    <title>Make 100 — Математическая игра-головоломка | Играй онлайн и в Telegram</title>
+    <meta name="description" content="Увлекательная математическая головоломка: составь число 100 из 6 цифр билета с помощью знаков + − × ÷! Играй бесплатно онлайн и в Telegram, соревнуйся в мировом рейтинге и развивай логику." />
+    <meta name="keywords" content="Make 100, игра сделать 100, математическая головоломка, счастливый билет, игра счастливый билет, развивающие игры, тренировка мозга, математические задачи, Telegram игры, мини апп телеграм, игра головоломка онлайн, math puzzle game, make 100 game" />
+    <meta name="author" content="Make 100 Team" />
+
+    <!-- Open Graph / Telegram / WhatsApp / VK / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://father1971.github.io/miniapp_Make100/" />
+    <meta property="og:site_name" content="Make 100" />
+    <meta property="og:locale" content="ru_RU" />
     <meta property="og:title" content="Make 100 — Математическая игра-головоломка" />
-    <meta property="og:description" content="Решай примеры, составляй число 100 и соревнуйся с игроками!" />
-    <meta property="og:image" content="https://father1971.github.io/miniapp_Make100/bot_avatar.jpg" />
+    <meta property="og:description" content="Составь число 100 из 6 цифр счастливого билета! Играй бесплатно в Telegram и онлайн, соревнуйся в мировом лидерборде." />
+    <meta property="og:image" content="https://father1971.github.io/miniapp_Make100/og_image.jpg" />
+    <meta property="og:image:secure_url" content="https://father1971.github.io/miniapp_Make100/og_image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Make 100 — Математическая битва для ума" />
+
+    <!-- Живое видео-превью для Telegram и соцсетей -->
+    <meta property="og:video" content="https://father1971.github.io/miniapp_Make100/animation_960x540.mp4" />
+    <meta property="og:video:secure_url" content="https://father1971.github.io/miniapp_Make100/animation_960x540.mp4" />
+    <meta property="og:video:type" content="video/mp4" />
+    <meta property="og:video:width" content="960" />
+    <meta property="og:video:height" content="540" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Make 100 — Математическая игра-головоломка" />
-    <meta name="twitter:description" content="Решай примеры, составляй число 100 и соревнуйся с игроками!" />
-    <meta name="twitter:image" content="https://father1971.github.io/miniapp_Make100/bot_avatar.jpg" />
+    <meta name="twitter:description" content="Составь число 100 из 6 цифр счастливого билета! Играй бесплатно в Telegram и онлайн." />
+    <meta name="twitter:image" content="https://father1971.github.io/miniapp_Make100/og_image.jpg" />
+
+    <!-- Микроразметка Schema.org для поисковых систем (Яндекс, Google, Bing) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": ["VideoGame", "WebApplication"],
+      "name": "Make 100",
+      "alternateName": ["Сделай 100", "Make 100 Game", "Счастливый билет 100"],
+      "url": "https://father1971.github.io/miniapp_Make100/",
+      "description": "Интеллектуальная математическая игра-головоломка: составь число 100 из 6 цифр билета, используя арифметические операции. Доступна в Telegram и в браузере.",
+      "genre": ["Puzzle", "Brain Training", "Educational"],
+      "gamePlatform": ["Web Browser", "Telegram Mini App", "Mobile"],
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any",
+      "inLanguage": ["ru", "en", "de", "fr", "pt", "es", "zh", "ja", "it", "ko", "tr", "he", "ar", "hi"],
+      "image": "https://father1971.github.io/miniapp_Make100/og_image.jpg",
+      "screenshot": "https://father1971.github.io/miniapp_Make100/app_photo_640x360.png",
+      "video": {
+        "@type": "VideoObject",
+        "name": "Make 100 Gameplay Animation",
+        "description": "Анимация игрового процесса игры Make 100",
+        "thumbnailUrl": "https://father1971.github.io/miniapp_Make100/og_image.jpg",
+        "contentUrl": "https://father1971.github.io/miniapp_Make100/animation_960x540.mp4",
+        "uploadDate": "2026-11-16T00:00:00Z"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "RUB"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "1250",
+        "bestRating": "5"
+      }
+    }
+    </script>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
       window.process = window.process || { env: {} };

@@ -7,13 +7,15 @@ interface StopwatchProps {
   onTick?: (elapsedMs: number) => void;
   /** Сбрасывает секундомер при изменении этого значения */
   resetKey?: number;
+  /** Дополнительные CSS классы для стилизации */
+  className?: string;
 }
 
 /**
  * Автономный компонент секундомера.
  * Обновляет только себя (setInterval 50мс), не вызывая перерисовку родителя.
  */
-export const Stopwatch = React.memo(function Stopwatch({ isRunning, onTick, resetKey }: StopwatchProps) {
+export const Stopwatch = React.memo(function Stopwatch({ isRunning, onTick, resetKey, className }: StopwatchProps) {
   const [display, setDisplay] = useState('00:00:00');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -60,7 +62,7 @@ export const Stopwatch = React.memo(function Stopwatch({ isRunning, onTick, rese
   }, [isRunning, format, onTick]);
 
   return (
-    <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono">
+    <span className={className || "text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-wider font-mono"}>
       {display}
     </span>
   );

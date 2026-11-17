@@ -11,6 +11,7 @@ dist-ssr/
 # Logs and temp files
 *.log
 *.txt
+!public/robots.txt
 *.py
 patch*
 test*
