@@ -2269,39 +2269,33 @@ export default function App() {
             </div>
           )}
 
-      {/* Menu Overlay (Full-Screen) */}
+      {/* Menu Modal (Всплывающее окно) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-y-auto animate-fade-in select-none">
-            
-            {/* Нативная верхняя панель Меню (идентичная Профилю) */}
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-black/65 backdrop-blur-md animate-fade-in select-none"
+            onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
+          >
             <div 
-              className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md"
-              style={{
-                paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 16px)'
-              }}
+              className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl bg-white/95 dark:bg-zinc-950/95 border border-slate-200/80 dark:border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden text-slate-900 dark:text-white"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Кнопка назад */}
-              <button 
-                onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
-                className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
-                aria-label={t.back || 'Назад'}
-              >
-                ⬅️ {t.back || 'Назад'}
-              </button>
-              <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
-                {t.gameSettings || 'Настройки игры'}
-              </h1>
-              <div className="w-16"></div> {/* Заглушка для центровки заголовка */}
-            </div>
+              {/* Шапка модального окна настроек */}
+              <div className="px-5 py-4 border-b border-slate-200/60 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50 shrink-0">
+                <h2 className="text-base font-black tracking-wider uppercase text-orange-500">
+                  {t.gameSettings || 'Настройки игры'}
+                </h2>
+                <button 
+                  onClick={() => { setIsMenuOpen(false); playSound('click'); playVibration('light'); }}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label={t.close || 'Закрыть'}
+                >
+                  <X size={20} />
+                </button>
+              </div>
 
-            {/* Содержимое меню */}
-            <div 
-              className="flex-1 w-full max-w-md mx-auto px-4 pb-12 pt-6 overflow-y-auto space-y-6"
-              style={{
-                paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 36px)'
-              }}
-            >
+              {/* Содержимое меню со скроллом */}
+              <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6 custom-scrollbar">
               {/* Кнопка запуска интерактивного обучения */}
               <button 
                 onClick={() => { 
@@ -2450,37 +2444,38 @@ export default function App() {
               </div>
             </div>
 
+            </div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Leaderboard Modal */}
+      {/* Leaderboard Modal (Всплывающее окно) */}
       <AnimatePresence>
         {isLeaderboardOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white h-screen w-screen overflow-hidden animate-fade-in select-none">
-            {/* Нативная верхняя панель (идентичная Профилю и Настройкам) */}
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-black/65 backdrop-blur-md animate-fade-in select-none"
+            onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
+          >
             <div 
-              className="sticky top-0 z-10 w-full max-w-md mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900/80 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md shrink-0"
-              style={{
-                paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 16px)'
-              }}
+              className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl bg-white/95 dark:bg-zinc-950/95 border border-slate-200/80 dark:border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden text-slate-900 dark:text-white"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Кнопка назад */}
-              <button 
-                onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
-                className="flex items-center gap-1 py-1.5 px-3 rounded-xl bg-slate-200/60 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition-transform cursor-pointer"
-                aria-label={t.back || 'Назад'}
-              >
-                ⬅️ {t.back || 'Назад'}
-              </button>
-              <h1 className="text-base font-black tracking-wider uppercase text-orange-500">
-                {t.leaderboard || 'Зал славы'}
-              </h1>
-              <div className="w-16"></div> {/* Заглушка для идеальной центровки */}
-            </div>
+              {/* Шапка модального окна рейтинга */}
+              <div className="px-5 py-4 border-b border-slate-200/60 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50 shrink-0">
+                <h2 className="text-base font-black tracking-wider uppercase text-orange-500">
+                  {t.leaderboard || 'Зал славы'}
+                </h2>
+                <button 
+                  onClick={() => { setIsLeaderboardOpen(false); playSound('click'); playVibration('light'); }}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label={t.close || 'Закрыть'}
+                >
+                  <X size={20} />
+                </button>
+              </div>
 
-            {/* Внутренний контейнер скролла */}
-            <div className="w-full max-w-md mx-auto flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 pb-28">
+              {/* Внутренний контейнер скролла */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 custom-scrollbar">
               {isLoadingLeaderboard ? (
                 <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4 text-slate-400 dark:text-slate-500">
                   <RefreshCw size={36} className="animate-spin text-amber-500" />
@@ -2603,8 +2598,8 @@ export default function App() {
               )}
             </div>
 
-            {/* Sticky Bottom Bar (My Result / Login for Guest) */}
-            <div className="sticky bottom-0 left-0 right-0 p-3 sm:p-4 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200/60 dark:border-slate-900/80 flex flex-col justify-center items-center gap-2 shrink-0 z-10">
+            {/* Нижняя закрепленная панель (Мой результат / Вход) */}
+            <div className="p-3 sm:p-4 bg-slate-50/95 dark:bg-zinc-900/95 backdrop-blur-lg border-t border-slate-200/60 dark:border-white/10 flex flex-col justify-center items-center gap-2 shrink-0">
               {isGuest ? (
                 <div className="w-full max-w-sm flex flex-col gap-2">
                   <div className="text-center text-xs text-slate-500 dark:text-zinc-400 font-medium">
@@ -2637,6 +2632,7 @@ export default function App() {
               )}
             </div>
 
+            </div>
           </div>
         )}
       </AnimatePresence>
