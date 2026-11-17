@@ -1,2 +1,4 @@
 User-agent: *
-Disallow: /
+Allow: /
+Sitemap: https://make100-3ow.pages.dev/sitemap.xml
+Host: https://make100-3ow.pages.dev
