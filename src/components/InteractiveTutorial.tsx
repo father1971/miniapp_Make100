@@ -103,229 +103,271 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         return ['(', '+', '+', '+', ')', '', ''];
       case 22:
       case 23:
-        return ['(', '+', '+', '+', ')*', '', '']; // (1+2+3+4) * 10 = 100
-
+        return ['(', '+', '+', '+', ')*', '', '']; // (1+2+3+4)*10 = 100
       default:
         return ['', '', '', '', '', '', ''];
     }
   };
 
-  const gaps = React.useMemo(() => getGapsForStep(step), [step]);
+  const gaps = getGapsForStep(step);
 
-  const selectedSlot = React.useMemo(() => {
-    if (step === 2 || step === 3) return 2;
-    if (step === 4 || step === 5) return 3;
-    if (step === 6 || step === 7) return 4;
-    if (step === 8 || step === 9) return 5;
-    if (step === 12 || step === 13) return 0;
-    if (step === 14 || step === 15) return 1;
-    if (step === 16 || step === 17) return 2;
-    if (step === 18 || step === 19) return 3;
-    if (step === 20 || step === 21 || step === 22) return 4;
-    return null;
-  }, [step]);
-
-  useEffect(() => {
-    // Эффект победы при решении примеров
-    if (step === 10 || step === 23) {
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
-        playSound('success');
-        playVibration('success');
-      } catch (e) {
-        console.warn('Confetti error:', e);
-      }
+  // Selected slot depending on step
+  const getSelectedSlotForStep = (s: number): number | null => {
+    switch (s) {
+      case 2:
+      case 3:
+        return 2;
+      case 4:
+      case 5:
+        return 3;
+      case 6:
+      case 7:
+        return 4;
+      case 8:
+      case 9:
+        return 5;
+      case 12:
+      case 13:
+        return 0;
+      case 14:
+      case 15:
+        return 1;
+      case 16:
+      case 17:
+        return 2;
+      case 18:
+      case 19:
+        return 3;
+      case 20:
+      case 21:
+      case 22:
+        return 4;
+      default:
+        return null;
     }
-  }, [step, playSound, playVibration]);
+  };
 
-  // Target element for pulsating cue
-  const getCue = () => {
-    // Пример 1
-    if (step === 2) return { type: 'slot', idx: 2 };
-    if (step === 3) return { type: 'op', op: '+' };
-    if (step === 4) return { type: 'slot', idx: 3 };
-    if (step === 5) return { type: 'op', op: '-' };
-    if (step === 6) return { type: 'slot', idx: 4 };
-    if (step === 7) return { type: 'op', op: '+' };
-    if (step === 8) return { type: 'slot', idx: 5 };
-    if (step === 9) return { type: 'op', op: '-' };
+  const selectedSlot = getSelectedSlotForStep(step);
 
-    // Пример 2
-    if (step === 12) return { type: 'slot', idx: 0 };
-    if (step === 13) return { type: 'op', op: '(' };
-    if (step === 14) return { type: 'slot', idx: 1 };
-    if (step === 15) return { type: 'op', op: '+' };
-    if (step === 16) return { type: 'slot', idx: 2 };
-    if (step === 17) return { type: 'op', op: '+' };
-    if (step === 18) return { type: 'slot', idx: 3 };
-    if (step === 19) return { type: 'op', op: '+' };
-    if (step === 20) return { type: 'slot', idx: 4 };
-    if (step === 21) return { type: 'op', op: ')' };
-    if (step === 22) return { type: 'op', op: '*' };
+  // Cue (target action): slot or operator
+  const getCue = (): { type: 'slot' | 'op' | 'btn'; idx?: number; op?: string } | null => {
+    switch (step) {
+      case 0:
+      case 1:
+        return { type: 'btn' };
+      case 2:
+        return { type: 'slot', idx: 2 };
+      case 3:
+        return { type: 'op', op: '+' };
+      case 4:
+        return { type: 'slot', idx: 3 };
+      case 5:
+        return { type: 'op', op: '-' };
+      case 6:
+        return { type: 'slot', idx: 4 };
+      case 7:
+        return { type: 'op', op: '+' };
+      case 8:
+        return { type: 'slot', idx: 5 };
+      case 9:
+        return { type: 'op', op: '-' };
+      case 10:
+        return { type: 'btn' };
 
-    return null;
+      case 11:
+        return { type: 'btn' };
+      case 12:
+        return { type: 'slot', idx: 0 };
+      case 13:
+        return { type: 'op', op: '(' };
+      case 14:
+        return { type: 'slot', idx: 1 };
+      case 15:
+        return { type: 'op', op: '+' };
+      case 16:
+        return { type: 'slot', idx: 2 };
+      case 17:
+        return { type: 'op', op: '+' };
+      case 18:
+        return { type: 'slot', idx: 3 };
+      case 19:
+        return { type: 'op', op: '+' };
+      case 20:
+        return { type: 'slot', idx: 4 };
+      case 21:
+        return { type: 'op', op: ')' };
+      case 22:
+        return { type: 'op', op: '*' };
+      case 23:
+        return { type: 'btn' };
+      default:
+        return null;
+    }
   };
 
   const cue = getCue();
 
-  // Navigation handlers
-  const handleNext = () => {
-    playSound('click');
-    playVibration('light');
-    if (step < 23) {
+  // Trigger confetti on win steps
+  useEffect(() => {
+    if (step === 9 || step === 10 || step === 22 || step === 23) {
+      playSound('success');
+      playVibration('success');
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.6 },
+      });
+    }
+  }, [step]);
+
+  // Handle slot click
+  const handleSlotClick = (slotIdx: number) => {
+    if (cue?.type === 'slot' && cue.idx === slotIdx) {
+      playSound('click');
+      playVibration('light');
       setStep(s => s + 1);
     } else {
-      onComplete();
+      playVibration('error');
     }
   };
 
-  const handlePrev = () => {
+  // Handle operator click
+  const handleOpClick = (op: string) => {
+    if (cue?.type === 'op' && cue.op === op) {
+      playSound('click');
+      playVibration('medium');
+      setStep(s => s + 1);
+    } else {
+      playVibration('error');
+    }
+  };
+
+  // Handle next button
+  const handleNext = () => {
     playSound('click');
     playVibration('light');
+    if (step === 10) {
+      setStep(11); // Переход ко 2 примеру
+    } else if (step === 23) {
+      onComplete(); // Окончание туториала
+    } else if (step === 0 || step === 1 || step === 11) {
+      setStep(s => s + 1);
+    } else {
+      // Если игрок жмет "Далее" во время интерактивного шага, можно авто-продвинуть
+      setStep(s => s + 1);
+    }
+  };
+
+  // Handle prev button
+  const handlePrev = () => {
     if (step > 0) {
+      playSound('click');
+      playVibration('light');
       setStep(s => s - 1);
     }
   };
 
-  // Slot click handler
-  const handleSlotClick = (idx: number) => {
-    playSound('click');
-    playVibration('light');
-
-    // Проверяем, соответствует ли клик требуемому слоту
-    if (step === 2 && idx === 2) setStep(3);
-    else if (step === 4 && idx === 3) setStep(5);
-    else if (step === 6 && idx === 4) setStep(7);
-    else if (step === 8 && idx === 5) setStep(9);
-    else if (step === 12 && idx === 0) setStep(13);
-    else if (step === 14 && idx === 1) setStep(15);
-    else if (step === 16 && idx === 2) setStep(17);
-    else if (step === 18 && idx === 3) setStep(19);
-    else if (step === 20 && idx === 4) setStep(21);
-  };
-
-  // Operator click handler
-  const handleOpClick = (op: string) => {
-    playSound('click');
-    playVibration('light');
-
-    if (step === 3 && op === '+') setStep(4);
-    else if (step === 5 && op === '-') setStep(6);
-    else if (step === 7 && op === '+') setStep(8);
-    else if (step === 9 && op === '-') setStep(10);
-    else if (step === 13 && op === '(') setStep(14);
-    else if (step === 15 && op === '+') setStep(16);
-    else if (step === 17 && op === '+') setStep(18);
-    else if (step === 19 && op === '+') setStep(20);
-    else if (step === 21 && op === ')') setStep(22);
-    else if (step === 22 && op === '*') setStep(23);
-  };
-
-  // Step info definitions
+  // Localized title & descriptions for each step
   const getStepInfo = () => {
     switch (step) {
-      // Пример 1
+      // --- ПРИМЕР 1 ---
       case 0:
         return {
-          title: t?.tEx1Step0Title || 'Цель игры Make 100',
-          desc: t?.tEx1Step0Desc || 'Расставьте математические знаки между цифрами, чтобы в итоге получилось ровно 100!',
-          badge: t?.tutorialBadgeEx1Intro || 'Пример 1/2 • Введение',
-          btnText: t?.tutorialStart || t?.tutorialNext || 'Начать ➡️',
+          title: t?.tEx1Step0Title || '🎯 Цель игры — получить ровно 100!',
+          desc: t?.tEx1Step0Desc || 'Перед вами билет с шестью цифрами: 9 8 7 6 5 4. Ваша задача — расставить математические знаки так, чтобы получилось ровно 100.',
+          badge: (t?.tutorialBadgeEx1Intro || 'Пример 1/2 • Введение'),
+          btnText: t?.tutorialStart || 'Начать обучение 🚀',
         };
       case 1:
         return {
-          title: t?.tEx1Step1Title || 'Секрет: склейка цифр',
-          desc: t?.tEx1Step1Desc || 'Пустой слот между цифрами объединяет их в одно число! Первые цифры 9 и 8 образуют 98.',
-          badge: t?.tutorialBadgeEx1Merge || 'Пример 1/2 • Склейка',
+          title: t?.tEx1Step1Title || '💡 Секрет склеивания цифр',
+          desc: t?.tEx1Step1Desc || 'Если оставить промежуток между цифрами пустым, они объединяются в одно число! Первые цифры 9 и 8 дают 98.',
+          badge: (t?.tutorialBadgeEx1Merge || 'Пример 1/2 • Склейка цифр'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 2:
         return {
-          title: t?.tEx1Step2Title || 'Слот между 8 и 7',
-          desc: t?.tEx1Step2Desc || 'Нажмите на кружок между 8 и 7, чтобы выбрать его.',
+          title: t?.tEx1Step2Title || 'Выберите слот между 8 и 7',
+          desc: t?.tEx1Step2Desc || 'Нажмите на подсвеченный кружок между цифрами 8 и 7, чтобы вставить знак.',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '1'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 3:
         return {
-          title: t?.tEx1Step3Title || 'Ставим знак +',
-          desc: t?.tEx1Step3Desc || 'Теперь нажмите на кнопку «+» на клавиатуре внизу.',
+          title: t?.tEx1Step3Title || 'Поставьте знак +',
+          desc: t?.tEx1Step3Desc || 'Нажмите на кнопку «+» на клавиатуре внизу. Теперь у нас: 98 + 7 = 105!',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '2'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 4:
         return {
-          title: t?.tEx1Step4Title || 'Слот между 7 и 6',
-          desc: t?.tEx1Step4Desc || 'Отлично! Теперь нажмите на кружок между 7 и 6.',
+          title: t?.tEx1Step4Title || 'Выберите слот между 7 и 6',
+          desc: t?.tEx1Step4Desc || 'Нажмите на подсвеченный кружок между 7 и 6.',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '3'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 5:
         return {
-          title: t?.tEx1Step5Title || 'Ставим знак -',
-          desc: t?.tEx1Step5Desc || 'Нажмите знак «-» на клавиатуре внизу.',
+          title: t?.tEx1Step5Title || 'Поставьте знак -',
+          desc: t?.tEx1Step5Desc || 'Нажмите «-» на клавиатуре. Получаем: 105 - 6 = 99!',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '4'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 6:
         return {
-          title: t?.tEx1Step6Title || 'Слот между 6 и 5',
-          desc: t?.tEx1Step6Desc || 'Хорошо! Теперь выберите кружок между 6 и 5.',
+          title: t?.tEx1Step6Title || 'Выберите слот между 6 и 5',
+          desc: t?.tEx1Step6Desc || 'Нажмите на подсвеченный кружок между 6 и 5.',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '5'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 7:
         return {
-          title: t?.tEx1Step7Title || 'Ставим знак +',
-          desc: t?.tEx1Step7Desc || 'Нажмите знак «+» на клавиатуре внизу.',
+          title: t?.tEx1Step7Title || 'Поставьте знак +',
+          desc: t?.tEx1Step7Desc || 'Нажмите «+» на клавиатуре. 99 + 5 = 104!',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '6'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 8:
         return {
-          title: t?.tEx1Step8Title || 'Слот между 5 и 4',
-          desc: t?.tEx1Step8Desc || 'Нажмите на последний кружок между 5 и 4.',
+          title: t?.tEx1Step8Title || 'Последний слот: между 5 и 4',
+          desc: t?.tEx1Step8Desc || 'Нажмите на кружок между 5 и 4.',
           badge: (t?.tutorialBadgeEx1Step || 'Пример 1/2 • Шаг {step}').replace('{step}', '7'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 9:
         return {
           title: t?.tEx1Step9Title || 'Финальный знак -',
-          desc: t?.tEx1Step9Desc || 'Нажмите знак «-» на клавиатуре: 98 + 7 - 6 + 5 - 4 = 100!',
-          badge: t?.tutorialBadgeEx1Final || 'Пример 1/2 • Финал',
+          desc: t?.tEx1Step9Desc || 'Нажмите «-» на клавиатуре. 104 - 4 = ровно 100!',
+          badge: (t?.tutorialBadgeEx1Final || 'Пример 1/2 • Финал'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 10:
         return {
-          title: t?.tEx1SuccessTitle || '🎉 Браво! Первый пример решён!',
-          desc: t?.tEx1SuccessDesc || 'Вы сами расставили все знаки и получили 100. Перейдём ко второму примеру со скобками!',
+          title: t?.tEx1SuccessTitle || '🎉 Отлично! 98 + 7 - 6 + 5 - 4 = 100!',
+          desc: t?.tEx1SuccessDesc || 'Вы успешно решили первый пример! Теперь давайте научимся использовать скобки.',
           badge: t?.tutorialBadgeEx1Win || 'Пример 1/2 • Победа!',
-          btnText: t?.tutorialNextExample || 'Пример 2: Скобки ➡️',
+          btnText: t?.tutorialNextExample || 'Пример 2: Скобки 🚀',
         };
 
-      // Пример 2
+      // --- ПРИМЕР 2 ---
       case 11:
         return {
-          title: t?.tEx2Step0Title || 'Пример 2: Скобки и умножение',
-          desc: t?.tEx2Step0Desc || 'Умножение выполняется первым. Чтобы сначала сложить числа, используем скобки ( )!',
+          title: t?.tEx2Step0Title || 'Пример 2: Магия скобок ( )',
+          desc: t?.tEx2Step0Desc || 'Перед вами цифры: 1 2 3 4 1 0. Сложим первые четыре цифры в скобках (1+2+3+4 = 10) и умножим на 10!',
           badge: t?.tutorialBadgeEx2Intro || 'Пример 2/2 • Введение',
-          btnText: t?.tutorialStart || t?.tutorialNext || 'Начать ➡️',
+          btnText: t?.tutorialStart || 'Попробовать 🚀',
         };
       case 12:
         return {
-          title: t?.tEx2Step1Title || 'Слот перед цифрой 1',
-          desc: t?.tEx2Step1Desc || 'Нажмите на первый кружок перед цифрой 1.',
+          title: t?.tEx2Step1Title || 'Слот ПЕРЕД первой цифрой',
+          desc: t?.tEx2Step1Desc || 'Скобку можно открыть в самом начале выражения! Нажмите на кружок перед цифрой 1.',
           badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '1'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 13:
         return {
           title: t?.tEx2Step2Title || 'Открываем скобку (',
-          desc: t?.tEx2Step2Desc || 'Нажмите на скобку «(» на клавиатуре внизу.',
+          desc: t?.tEx2Step2Desc || 'Нажмите на открывающую скобку «(» на клавиатуре.',
           badge: (t?.tutorialBadgeEx2Step || 'Пример 2/2 • Шаг {step}').replace('{step}', '2'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
@@ -423,19 +465,67 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     return '= ?';
   };
 
+  // Helper for dynamic Gap width exactly matching the new main game interface
+  const renderGapButton = (slotIdx: number) => {
+    const value = gaps[slotIdx] || '';
+    const isSelected = selectedSlot === slotIdx;
+    const isTarget = cue?.type === 'slot' && cue.idx === slotIdx;
+    const charCount = value.length;
+
+    // Адаптивная ширина слота: базовая + расширение под каждый введенный символ
+    const baseWidthRem = 1.35;
+    const baseWidthVw = 5.8;
+    const baseWidthMaxRem = 2.15;
+    const extraWidthPerCharRem = 0.55;
+    const extraWidthPerCharVw = 2.2;
+    const extraWidthPerCharMaxRem = 0.9;
+    const extraChars = Math.max(0, charCount - 1);
+    const dynamicWidth = `clamp(${baseWidthRem + (extraChars * extraWidthPerCharRem)}rem, ${baseWidthVw + (extraChars * extraWidthPerCharVw)}vw, ${baseWidthMaxRem + (extraChars * extraWidthPerCharMaxRem)}rem)`;
+
+    return (
+      <div className="relative flex-shrink-0" key={slotIdx}>
+        {isTarget && (
+          <div className="absolute -top-7 sm:-top-8 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full whitespace-nowrap animate-bounce shadow-md z-30">
+            👇 {t?.tutorialPressHere || 'Нажми сюда!'}
+          </div>
+        )}
+        <button
+          onClick={() => handleSlotClick(slotIdx)}
+          style={{ width: dynamicWidth }}
+          aria-label={`Слот ${slotIdx + 1}: ${value || 'пусто'}`}
+          className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
+            isTarget
+              ? 'border-orange-500 bg-orange-500/30 text-orange-600 scale-105 ring-4 ring-orange-500/35 animate-pulse z-20'
+              : isSelected
+              ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
+              : value
+              ? 'border-zinc-800/80 dark:border-zinc-200/80 bg-zinc-800/70 dark:bg-zinc-200/80 text-white dark:text-zinc-900 backdrop-blur-md shadow-sm z-10'
+              : 'border-dashed border-zinc-400/70 dark:border-zinc-500/60 hover:border-orange-400 text-zinc-400 dark:text-zinc-500 bg-white/30 dark:bg-zinc-800/30 backdrop-blur-md z-10'
+          }`}
+        >
+          {value ? (
+            <span className="text-[clamp(1.15rem,4.8vw,1.6rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
+          ) : (
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-zinc-400 dark:bg-zinc-600"></span>
+          )}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <motion.div
       key="interactive-tutorial"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-black/60 dark:bg-black/75 backdrop-blur-md text-white flex flex-col items-center justify-between select-none overflow-y-auto"
+      className="fixed inset-0 z-[200] bg-slate-100/90 dark:bg-slate-950/95 backdrop-blur-md text-zinc-900 dark:text-white flex flex-col items-center justify-between select-none overflow-y-auto"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 12px)',
       }}
     >
-      <div className="relative z-10 w-full max-w-[440px] flex flex-col justify-between items-center h-full px-3">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg md:max-w-xl flex flex-col justify-between items-center h-full px-2 sm:px-4">
         {/* Top Header */}
         <header className="w-full flex items-center justify-between gap-2 py-1 mb-1">
           <div className="flex items-center gap-1.5 bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-black tracking-wide border border-orange-500/20">
@@ -450,18 +540,18 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
               playVibration('light');
               onComplete();
             }}
-            className="flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 bg-zinc-200/60 dark:bg-zinc-800/60 py-1.5 px-3 rounded-xl transition-all cursor-pointer"
+            className="flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-white/70 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800/80 py-1.5 px-3 rounded-xl transition-all cursor-pointer shadow-sm"
           >
             <span>{t?.tutorialSkip || 'Пропустить'}</span>
             <CloseIcon size={14} />
           </button>
         </header>
 
-        {/* Step Instruction Card (Гарантированно отображает текст) */}
-        <div className="w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 shadow-xl border border-zinc-200/80 dark:border-zinc-800/80 mb-2 relative overflow-hidden transition-all duration-300">
-          <div className="flex items-start gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black shrink-0 shadow-md shadow-orange-500/30">
-              {step === 10 || step === 23 ? <CheckCircle2 size={20} /> : <Sparkles size={18} />}
+        {/* Step Instruction Card */}
+        <div className="w-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl border border-white/50 dark:border-zinc-800/80 mb-2 relative overflow-hidden transition-all duration-300">
+          <div className="flex items-start gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-orange-500 text-white flex items-center justify-center font-black shrink-0 shadow-md shadow-orange-500/30">
+              {step === 10 || step === 23 ? <CheckCircle2 size={22} /> : <Sparkles size={20} />}
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white leading-tight">
@@ -474,11 +564,11 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
 
           {/* Action buttons (Prev / Next) */}
-          <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80">
             {step > 0 ? (
               <button
                 onClick={handlePrev}
-                className="flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 py-1.5 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition-all cursor-pointer"
+                className="flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 py-2 px-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all cursor-pointer"
               >
                 <ChevronLeft size={16} />
                 <span>{t?.tutorialPrev || '⬅️ Назад'}</span>
@@ -487,7 +577,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
             <button
               onClick={handleNext}
-              className={`flex items-center gap-1 text-xs sm:text-sm font-black py-2 px-4 rounded-xl transition-all shadow-md cursor-pointer ${
+              className={`flex items-center gap-1 text-xs sm:text-sm font-black py-2 px-4.5 rounded-xl transition-all shadow-md cursor-pointer ${
                 step === 10 || step === 23
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 animate-pulse'
                   : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/25'
@@ -499,7 +589,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
         </div>
 
-        {/* Real Ticket Card Display */}
+        {/* Real Ticket Card Display (В точном масштабе нового интерфейса) */}
         <div className="w-full flex-1 flex items-center justify-center py-1 sm:py-2">
           <div className="w-full max-w-sm transform scale-95 sm:scale-100 transition-all duration-300">
             <TicketCard
@@ -510,83 +600,42 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
         </div>
 
-        {/* Expression Builder with Slot Gaps */}
-        <div className="w-full bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-lg border border-zinc-200/60 dark:border-zinc-800/60 mb-2 flex flex-col items-center">
-          <div className="flex flex-nowrap justify-center items-center gap-x-1 sm:gap-x-1.5 text-xl sm:text-2xl font-mono font-black py-1 w-full text-zinc-900 dark:text-white relative">
-            {/* Slot 0 */}
-            <div className="relative">
-              {cue?.type === 'slot' && cue.idx === 0 && (
-                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap animate-bounce shadow-md z-30">
-                  👇 {t?.tutorialPressHere || 'Нажми сюда!'}
-                </div>
-              )}
-              <button
-                onClick={() => handleSlotClick(0)}
-                className={`w-7 sm:w-9 h-7 sm:h-9 rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold text-xs sm:text-sm cursor-pointer ${
-                  cue?.type === 'slot' && cue.idx === 0
-                    ? 'border-orange-500 bg-orange-500/30 text-orange-600 scale-110 ring-4 ring-orange-500/30 animate-pulse z-20'
-                    : selectedSlot === 0
-                    ? 'border-orange-500 bg-orange-500/20 text-orange-500 z-10'
-                    : gaps[0]
-                    ? 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900'
-                    : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/50'
-                }`}
-              >
-                {gaps[0] || <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />}
-              </button>
-            </div>
+        {/* Expression Builder: В точности как на новом основном экране игры */}
+        <div className="w-full py-2 sm:py-3 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10">
+          <div className="flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white">
+            {/* Slot 0 (Перед 1-й цифрой) */}
+            {renderGapButton(0)}
 
-            {/* Digits and Slots 1..6 */}
+            {/* Цифры и слоты 1..6 */}
             {currentDigits.map((digit, idx) => {
               const slotIdx = idx + 1;
-              const isTargetSlot = cue?.type === 'slot' && cue.idx === slotIdx;
               const isHighlightDigits = (step === 1 && (idx === 0 || idx === 1)) || (step === 22 && (idx === 4 || idx === 5));
 
               return (
                 <React.Fragment key={idx}>
                   <span
-                    className={`font-mono text-xl sm:text-2xl font-black px-0.5 transition-all ${
+                    className={`drop-shadow-sm select-none flex-shrink-0 leading-none transition-all duration-300 ${
                       isHighlightDigits
-                        ? 'text-orange-500 scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)] font-extrabold'
-                        : 'text-zinc-800 dark:text-zinc-100'
+                        ? 'text-orange-500 scale-110 drop-shadow-[0_0_12px_rgba(249,115,22,0.8)] font-black'
+                        : 'text-zinc-800 dark:text-zinc-100 opacity-100 scale-100'
                     }`}
                   >
                     {digit}
                   </span>
 
-                  <div className="relative">
-                    {isTargetSlot && (
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap animate-bounce shadow-md z-30">
-                        👇 {t?.tutorialPressHere || 'Нажми сюда!'}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => handleSlotClick(slotIdx)}
-                      className={`w-7 sm:w-9 h-7 sm:h-9 rounded-lg sm:rounded-xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-bold text-xs sm:text-sm cursor-pointer ${
-                        isTargetSlot
-                          ? 'border-orange-500 bg-orange-500/30 text-orange-600 scale-110 ring-4 ring-orange-500/30 animate-pulse z-20'
-                          : selectedSlot === slotIdx
-                          ? 'border-orange-500 bg-orange-500/20 text-orange-500 z-10'
-                          : gaps[slotIdx]
-                          ? 'border-zinc-800 dark:border-zinc-200 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900'
-                          : 'border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/50'
-                      }`}
-                    >
-                      {gaps[slotIdx] || <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />}
-                    </button>
-                  </div>
+                  {renderGapButton(slotIdx)}
                 </React.Fragment>
               );
             })}
           </div>
 
-          {/* Result Display Bar */}
-          <div className="mt-1 flex items-center justify-center h-6">
+          {/* Dynamic Result Display */}
+          <div className="h-7 sm:h-8 mt-1 flex items-center justify-center w-full">
             <span
-              className={`font-mono text-base sm:text-lg font-black tracking-wider transition-all duration-300 ${
+              className={`font-mono text-xl sm:text-2xl font-black tracking-wider transition-all duration-300 ${
                 step === 9 || step === 10 || step >= 22
                   ? 'text-emerald-500 scale-110 animate-pulse drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]'
-                  : 'text-zinc-500 dark:text-zinc-400'
+                  : 'text-zinc-600 dark:text-zinc-300'
               }`}
             >
               {getResultDisplay()}
@@ -594,44 +643,47 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
         </div>
 
-        {/* Real Keypad Display */}
-        <div className="w-full max-w-sm grid grid-cols-4 gap-1.5 sm:gap-2 mb-2 relative p-2 rounded-2xl bg-white/10 dark:bg-zinc-950/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-lg">
-          {[
-            { op: '+', label: '+', icon: <Plus size={20} strokeWidth={3.5} />, isOp: true },
-            { op: '-', label: '-', icon: <Minus size={20} strokeWidth={3.5} />, isOp: true },
-            { op: '*', label: '*', icon: <X size={20} strokeWidth={3.5} />, isOp: true },
-            { op: '/', label: '/', icon: <Divide size={20} strokeWidth={3.5} />, isOp: true },
-            { op: '(', label: '(', icon: <span className="text-xl font-black">(</span> },
-            { op: ')', label: ')', icon: <span className="text-xl font-black">)</span> },
-            { op: ',', label: ',', icon: <span className="text-xl font-black">,</span> },
-            { op: '⌫', label: '⌫', icon: <Delete size={20} strokeWidth={2.5} />, isDanger: true },
-          ].map(item => {
-            const isTargetOp = cue?.type === 'op' && cue.op === item.op;
+        {/* Real Keypad Display: Точная копия новой клавиатуры 4x2 с сочным оранжевым контрастом */}
+        <div className="w-full p-1.5 sm:p-2.5 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg mb-1">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+            {[
+              { op: '+', label: '+', icon: <Plus size={24} strokeWidth={3.5} />, isOp: true },
+              { op: '-', label: '-', icon: <Minus size={24} strokeWidth={3.5} />, isOp: true },
+              { op: '*', label: '*', icon: <X size={24} strokeWidth={3.5} />, isOp: true },
+              { op: '/', label: '/', icon: <Divide size={24} strokeWidth={3.5} />, isOp: true },
+              { op: '(', label: '(', icon: <span className="text-xl font-black">(</span> },
+              { op: ')', label: ')', icon: <span className="text-xl font-black">)</span> },
+              { op: ',', label: ',', icon: <span className="text-xl font-black">,</span> },
+              { op: '⌫', label: '⌫', icon: <Delete size={22} strokeWidth={2.5} />, isDanger: true },
+            ].map(item => {
+              const isTargetOp = cue?.type === 'op' && cue.op === item.op;
 
-            return (
-              <div key={item.op} className="relative">
-                {isTargetOp && (
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap animate-bounce shadow-md z-30">
-                    👆 {t?.tutorialPressHere || 'Нажми сюда!'}
-                  </div>
-                )}
-                <button
-                  onClick={() => handleOpClick(item.op)}
-                  className={`w-full h-11 sm:h-12 rounded-xl flex items-center justify-center font-bold text-base transition-all active:scale-95 cursor-pointer border-2 backdrop-blur-md ${
-                    isTargetOp
-                      ? 'border-orange-500 bg-orange-500 text-white scale-105 ring-4 ring-orange-500/40 animate-pulse z-20 shadow-lg'
-                      : item.isDanger
-                      ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30'
-                      : item.isOp
-                      ? 'border-orange-500/80 bg-orange-500/25 text-orange-400 hover:bg-orange-500/35'
-                      : 'border-zinc-700 bg-zinc-800/80 text-white hover:bg-zinc-700/80'
-                  }`}
-                >
-                  {item.icon}
-                </button>
-              </div>
-            );
-          })}
+              return (
+                <div key={item.op} className="relative">
+                  {isTargetOp && (
+                    <div className="absolute -top-7 sm:-top-8 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full whitespace-nowrap animate-bounce shadow-md z-30">
+                      👆 {t?.tutorialPressHere || 'Нажми сюда!'}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleOpClick(item.op)}
+                    aria-label={item.label}
+                    className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md active:scale-95 cursor-pointer shadow-md touch-manipulation ${
+                      isTargetOp
+                        ? 'border-orange-500 bg-orange-500 text-white scale-105 ring-4 ring-orange-500/40 animate-pulse z-20 shadow-orange-500/40 text-2xl'
+                        : item.isDanger
+                        ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
+                        : item.isOp
+                        ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
+                        : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
+                    }`}
+                  >
+                    {item.icon}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </motion.div>
