@@ -253,7 +253,6 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     } else if (step === 0 || step === 1 || step === 11) {
       setStep(s => s + 1);
     } else {
-      // Если игрок жмет "Далее" во время интерактивного шага, можно авто-продвинуть
       setStep(s => s + 1);
     }
   };
@@ -276,13 +275,13 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           title: t?.tEx1Step0Title || '🎯 Цель игры — получить ровно 100!',
           desc: t?.tEx1Step0Desc || 'Перед вами билет с шестью цифрами: 9 8 7 6 5 4. Ваша задача — расставить математические знаки так, чтобы получилось ровно 100.',
           badge: (t?.tutorialBadgeEx1Intro || 'Пример 1/2 • Введение'),
-          btnText: t?.tutorialStart || 'Начать обучение 🚀',
+          btnText: t?.tutorialStart || 'Начать ➡️',
         };
       case 1:
         return {
           title: t?.tEx1Step1Title || '💡 Секрет склеивания цифр',
           desc: t?.tEx1Step1Desc || 'Если оставить промежуток между цифрами пустым, они объединяются в одно число! Первые цифры 9 и 8 дают 98.',
-          badge: (t?.tutorialBadgeEx1Merge || 'Пример 1/2 • Склейка цифр'),
+          badge: (t?.tutorialBadgeEx1Merge || 'Пример 1/2 • Склейка'),
           btnText: t?.tutorialNext || 'Далее ➡️',
         };
       case 2:
@@ -346,7 +345,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           title: t?.tEx1SuccessTitle || '🎉 Отлично! 98 + 7 - 6 + 5 - 4 = 100!',
           desc: t?.tEx1SuccessDesc || 'Вы успешно решили первый пример! Теперь давайте научимся использовать скобки.',
           badge: t?.tutorialBadgeEx1Win || 'Пример 1/2 • Победа!',
-          btnText: t?.tutorialNextExample || 'Пример 2: Скобки 🚀',
+          btnText: t?.tutorialNextExample || 'Пример 2: Скобки ➡️',
         };
 
       // --- ПРИМЕР 2 ---
@@ -355,7 +354,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           title: t?.tEx2Step0Title || 'Пример 2: Магия скобок ( )',
           desc: t?.tEx2Step0Desc || 'Перед вами цифры: 1 2 3 4 1 0. Сложим первые четыре цифры в скобках (1+2+3+4 = 10) и умножим на 10!',
           badge: t?.tutorialBadgeEx2Intro || 'Пример 2/2 • Введение',
-          btnText: t?.tutorialStart || 'Попробовать 🚀',
+          btnText: t?.tutorialStart || 'Начать ➡️',
         };
       case 12:
         return {
@@ -446,7 +445,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           title: t?.howToPlayTutorial || 'Обучение Make 100',
           desc: '',
           badge: '',
-          btnText: t?.tutorialNext || 'Далее',
+          btnText: t?.tutorialNext || 'Далее ➡️',
         };
     }
   };
@@ -519,17 +518,20 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-slate-100/90 dark:bg-slate-950/95 backdrop-blur-md text-zinc-900 dark:text-white flex flex-col items-center justify-between select-none overflow-y-auto"
+      className="fixed inset-0 z-[200] text-zinc-900 dark:text-white flex flex-col items-center justify-between select-none overflow-y-auto overflow-x-hidden"
       style={{
         paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 8px)',
         paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 12px)',
       }}
     >
+      {/* Затемняющий полупрозрачный слой матового стекла, сквозь который красиво просвечивает реальный фон игры */}
+      <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-md pointer-events-none -z-10" />
+
       <div className="relative z-10 w-full max-w-md sm:max-w-lg md:max-w-xl flex flex-col justify-between items-center h-full px-2 sm:px-4">
         {/* Top Header */}
         <header className="w-full flex items-center justify-between gap-2 py-1 mb-1">
-          <div className="flex items-center gap-1.5 bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-black tracking-wide border border-orange-500/20">
-            <Sparkles size={14} className="animate-spin-slow" />
+          <div className="flex items-center gap-1.5 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 text-orange-600 dark:text-orange-400 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide shadow-md">
+            <Sparkles size={14} className="animate-spin-slow text-orange-500" />
             <span>{stepInfo.badge}</span>
           </div>
 
@@ -540,15 +542,15 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
               playVibration('light');
               onComplete();
             }}
-            className="flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 bg-white/70 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800/80 py-1.5 px-3 rounded-xl transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 py-1.5 px-3.5 rounded-full transition-all cursor-pointer shadow-md active:scale-95"
           >
             <span>{t?.tutorialSkip || 'Пропустить'}</span>
             <CloseIcon size={14} />
           </button>
         </header>
 
-        {/* Step Instruction Card */}
-        <div className="w-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl border border-white/50 dark:border-zinc-800/80 mb-2 relative overflow-hidden transition-all duration-300">
+        {/* Step Instruction Card: Полупрозрачное матовое стекло 1 в 1 с дизайном игры */}
+        <div className="w-full bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl rounded-2xl sm:rounded-[1.75rem] p-3 sm:p-4 shadow-xl border border-white/40 dark:border-white/10 mb-2 relative overflow-hidden transition-all duration-300">
           <div className="flex items-start gap-2.5 sm:gap-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-orange-500 text-white flex items-center justify-center font-black shrink-0 shadow-md shadow-orange-500/30">
               {step === 10 || step === 23 ? <CheckCircle2 size={22} /> : <Sparkles size={20} />}
@@ -557,18 +559,18 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
               <h2 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white leading-tight">
                 {stepInfo.title}
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-200 mt-1 leading-relaxed">
                 {stepInfo.desc}
               </p>
             </div>
           </div>
 
-          {/* Action buttons (Prev / Next) */}
-          <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80">
+          {/* Action buttons (Prev / Next) с просторным местом под надписи */}
+          <div className="flex items-center justify-between gap-3 mt-3 pt-2.5 border-t border-zinc-300/40 dark:border-zinc-800/60">
             {step > 0 ? (
               <button
                 onClick={handlePrev}
-                className="flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-400 py-2 px-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 py-2.5 px-4 rounded-xl sm:rounded-2xl bg-white/40 dark:bg-zinc-900/40 border border-white/30 dark:border-white/10 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <ChevronLeft size={16} />
                 <span>{t?.tutorialPrev || '⬅️ Назад'}</span>
@@ -577,13 +579,13 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
             <button
               onClick={handleNext}
-              className={`flex items-center gap-1 text-xs sm:text-sm font-black py-2 px-4.5 rounded-xl transition-all shadow-md cursor-pointer ${
+              className={`flex items-center gap-1.5 text-xs sm:text-sm font-black py-2.5 px-5 sm:px-6 rounded-xl sm:rounded-2xl transition-all shadow-md cursor-pointer active:scale-95 ${
                 step === 10 || step === 23
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 animate-pulse'
                   : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/25'
               }`}
             >
-              <span>{stepInfo.btnText}</span>
+              <span className="whitespace-nowrap">{stepInfo.btnText}</span>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -600,8 +602,8 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
         </div>
 
-        {/* Expression Builder: В точности как на новом основном экране игры */}
-        <div className="w-full py-2 sm:py-3 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10">
+        {/* Expression Builder: В точности как на новом основном экране игры (полупрозрачное матовое стекло) */}
+        <div className="w-full py-2.5 sm:py-3.5 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10">
           <div className="flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white">
             {/* Slot 0 (Перед 1-й цифрой) */}
             {renderGapButton(0)}
@@ -635,7 +637,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
               className={`font-mono text-xl sm:text-2xl font-black tracking-wider transition-all duration-300 ${
                 step === 9 || step === 10 || step >= 22
                   ? 'text-emerald-500 scale-110 animate-pulse drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]'
-                  : 'text-zinc-600 dark:text-zinc-300'
+                  : 'text-zinc-700 dark:text-zinc-300 font-bold'
               }`}
             >
               {getResultDisplay()}
@@ -643,7 +645,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           </div>
         </div>
 
-        {/* Real Keypad Display: Точная копия новой клавиатуры 4x2 с сочным оранжевым контрастом */}
+        {/* Real Keypad Display: Точная копия новой клавиатуры 4x2 с сочным оранжевым контрастом и матовым стеклом */}
         <div className="w-full p-1.5 sm:p-2.5 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg mb-1">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {[
