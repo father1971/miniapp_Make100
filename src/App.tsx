@@ -1240,19 +1240,11 @@ export default function App() {
     // Формируем ссылку на сайт (для тестовой среды — тестовый сайт, для боевой — боевой)
     const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
     const referralLink = `${siteBase}/?ref=${userId}`;
-    
-    // Красивый пригласительный текст для друзей
     const shareText = t.inviteShareText || `Привет! Прокачай логику в игре Make 100! 🧩🎯 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
     
     trackAnalyticsEvent('click_share');
 
-    // Фоллбэк шеринга (Telegram WebApp диалог или буфер обмена)
-    const fallbackShare = () => {
-      if ((window as any).Telegram?.WebApp?.openTelegramLink) {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-        (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
-        return;
-      }
+    const copyLinkToClipboard = () => {
       if (navigator?.clipboard?.writeText) {
         navigator.clipboard.writeText(referralLink).then(() => {
           alert(t.referralLinkCopied || 'Ссылка скопирована!');
@@ -1264,7 +1256,7 @@ export default function App() {
       }
     };
 
-    // 1. Проверяем нативный Web Share API (вызывает системный выбор: Telegram, WhatsApp, Почта, SMS и т.д.)
+    // Если доступен системный диалог шеринга устройства (Android/iOS нативное меню выбора приложений)
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       navigator.share({
         title: 'Make 100',
@@ -1272,12 +1264,12 @@ export default function App() {
         url: referralLink,
       }).catch((err: any) => {
         if (err?.name === 'AbortError') return;
-        fallbackShare();
+        copyLinkToClipboard();
       });
       return;
     }
 
-    fallbackShare();
+    copyLinkToClipboard();
   };
 
   const showHint = async () => {
