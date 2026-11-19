@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogIn, X } from 'lucide-react';
+import { LogIn, X, Copy, Check } from 'lucide-react';
 import { UserStats, TelegramUser } from '../types';
 import { TranslationData, Language } from '../translations';
 
@@ -48,6 +48,37 @@ export function UserProfile({
 }: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'stats' | 'referral'>('stats');
   const [avatarError, setAvatarError] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const getReferralUrl = () => {
+    const userId = tgUser?.id || (stats as any)?.id;
+    if (!userId) return '';
+    const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
+    return `${siteBase}/?ref=${userId}`;
+  };
+
+  const handleCopyLink = async () => {
+    const url = getReferralUrl();
+    if (!url) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      setCopiedLink(true);
+      playSound('success');
+      playVibration('success');
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch (e) {
+      console.error('Copy link error', e);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -277,20 +308,41 @@ export function UserProfile({
                   <div className="flex justify-between items-center text-xs sm:text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                     <span className="text-slate-500 dark:text-slate-400">{t.bonusesEarned || 'Получено бонусов:'}</span>
                     <span className="font-extrabold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
-                      🪙 +{(stats?.referralCount || 0) * 500} {t.coinsCount || 'монет'}
+                      🪙 +{(stats?.referralCount || 0) * 600} {t.coinsCount || 'монет'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
-                    {t.referralPromoP1 || 'Позови друга в игру! Ты получишь'} <span className="font-bold text-orange-500">500 {t.coinsCount || 'монет'}</span>{t.referralPromoP2 || ', а друг —'} <span className="font-bold text-orange-500">250 {t.coinsCount || 'монет'}</span> {t.referralPromoP3 || 'приветственного бонуса!'}
+                    {t.referralPromoP1 || 'Позови друга в игру! Ты получишь'} <span className="font-bold text-orange-500">{t.referralPromoP2 || '600 монет'}</span>{t.referralPromoP3 || ', а друг —'} <span className="font-bold text-orange-500">{t.referralPromoP4 || '250 монет'}</span> {t.referralPromoP5 || 'приветственного бонуса!'}
                   </p>
 
-                  <button
-                    onClick={handleInviteFriend}
-                    className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white font-black text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>🚀</span> {t.inviteFriendBtn || 'Пригласить друга'}
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <button
+                      onClick={handleInviteFriend}
+                      className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white font-black text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>🚀</span>
+                      <span>{t.inviteFriendBtn || 'Пригласить друга'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleCopyLink}
+                      className="py-3 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                      title={t.copyReferralLink || 'Скопировать ссылку'}
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-500" />
+                          <span className="text-emerald-500">{t.referralLinkCopied || 'Скопировано!'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <span>{t.copyReferralLink || 'Скопировать'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -185,11 +185,12 @@ export async function submitFeedbackApi(payload: { name: string; contact: string
   return res || { success: false, error: 'Network error' };
 }
 
-export async function authTelegramWidgetApi(widgetData: any): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+export async function authTelegramWidgetApi(widgetData: any, options?: { referredBy?: number; visitorId?: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+  const payload = { ...widgetData, ...options };
   const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/telegram-widget`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(widgetData)
+    body: JSON.stringify(payload)
   });
   if (res && res.success && res.token) {
     localStorage.setItem('make100_web_auth_token', res.token);
@@ -209,7 +210,14 @@ export async function sendEmailOtpApi(payload: { email: string; name?: string })
   return res || { success: false, error: 'Network error' };
 }
 
-export async function verifyEmailOtpApi(payload: { email: string; code: string; otpSession?: string; name?: string }): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
+export async function verifyEmailOtpApi(payload: {
+  email: string;
+  code: string;
+  otpSession?: string;
+  name?: string;
+  referredBy?: number;
+  visitorId?: string;
+}): Promise<{ success: boolean; token?: string; user?: any; error?: string }> {
   const res = await apiRequest<{ success: boolean; token?: string; user?: any; error?: string }>(`/api/auth/email/verify-code`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -221,6 +229,15 @@ export async function verifyEmailOtpApi(payload: { email: string; code: string; 
       localStorage.setItem('make100_web_user', JSON.stringify(res.user));
     }
   }
+  return res || { success: false, error: 'Network error' };
+}
+
+export async function trackReferralVisitApi(referrerId: number, visitorId: string): Promise<{ success: boolean; error?: string }> {
+  const res = await apiRequest<{ success: boolean; error?: string }>(`/api/referrals/visit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ referrerId, visitorId }),
+  });
   return res || { success: false, error: 'Network error' };
 }
 

@@ -17,7 +17,8 @@ import {
   consumeHint,
   fetchRandomTicketApi,
   fetchCarsPoolApi,
-  fetchTicketsPoolApi
+  fetchTicketsPoolApi,
+  trackReferralVisitApi
 } from './api';
 import { TRANSLATIONS, LANGUAGES, Language } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
@@ -918,6 +919,44 @@ export default function App() {
         } catch (e) {}
       }
 
+      // Генерация/получение постоянного visitorId гостя
+      let visitorId: string | null = null;
+      try {
+        visitorId = localStorage.getItem('make100_visitor_id');
+        if (!visitorId) {
+          visitorId = 'v_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+          localStorage.setItem('make100_visitor_id', visitorId);
+        }
+      } catch (e) {}
+
+      // Фиксация реферера в локальном хранилище и уведомление о переходе гостя
+      if (referrerId) {
+        try {
+          localStorage.setItem('make100_pending_referrer', String(referrerId));
+          if (visitorId) {
+            const visitKey = `make100_visit_tracked_${referrerId}_${visitorId}`;
+            if (!localStorage.getItem(visitKey)) {
+              trackReferralVisitApi(referrerId, visitorId).then((res) => {
+                if (res && res.success) {
+                  localStorage.setItem(visitKey, 'true');
+                }
+              }).catch((err) => console.warn('Referral visit track error:', err));
+            }
+          }
+        } catch (e) {}
+      } else {
+        // Если в URL нет параметра, проверяем ранее сохранённого реферера для гостя
+        try {
+          const pendingRef = localStorage.getItem('make100_pending_referrer');
+          if (pendingRef) {
+            const parsedId = parseInt(pendingRef, 10);
+            if (!isNaN(parsedId)) {
+              referrerId = parsedId;
+            }
+          }
+        } catch (e) {}
+      }
+
       const applyStatsToState = (data: any) => {
         setSolvedCount(data.solvedCount || 0);
         setUnsolvedCount(data.skippedCount || data.unsolvedCount || 0);
@@ -1198,24 +1237,47 @@ export default function App() {
     const userId = tgUser?.id || (stats as any)?.id;
     if (!userId) return;
     
-    // Наша рабочая реферальная ссылка на бота
-    const botUsername = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-    const referralLink = `https://t.me/${botUsername}?start=${userId}`;
+    // Формируем ссылку на сайт (для тестовой среды — тестовый сайт, для боевой — боевой)
+    const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
+    const referralLink = `${siteBase}/?ref=${userId}`;
     
     // Красивый пригласительный текст для друзей
     const shareText = t.inviteShareText || `Привет! Прокачай логику в игре Make 100! 🧩🎯 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
     
-    // Ссылка для вызова нативного Telegram Share Dialog
-    const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-    
     trackAnalyticsEvent('click_share');
-    // Открываем Telegram-шеринг
-    if ((window as any).Telegram?.WebApp) {
-      (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
-    } else {
-      // Резервный вариант для тестирования в обычном браузере
-      window.open(telegramShareUrl, '_blank');
+
+    // Фоллбэк шеринга (Telegram WebApp диалог или буфер обмена)
+    const fallbackShare = () => {
+      if ((window as any).Telegram?.WebApp?.openTelegramLink) {
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
+        (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
+        return;
+      }
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(referralLink).then(() => {
+          alert(t.referralLinkCopied || 'Ссылка скопирована!');
+        }).catch(() => {
+          window.open(referralLink, '_blank');
+        });
+      } else {
+        window.open(referralLink, '_blank');
+      }
+    };
+
+    // 1. Проверяем нативный Web Share API (вызывает системный выбор: Telegram, WhatsApp, Почта, SMS и т.д.)
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      navigator.share({
+        title: 'Make 100',
+        text: shareText,
+        url: referralLink,
+      }).catch((err: any) => {
+        if (err?.name === 'AbortError') return;
+        fallbackShare();
+      });
+      return;
     }
+
+    fallbackShare();
   };
 
   const showHint = async () => {
