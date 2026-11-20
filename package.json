@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report test-report",
-    "test:e2e:i18n": "playwright test e2e/scenarios/18-localization-all-langs.spec.ts"
+    "test:e2e:i18n": "playwright test e2e/scenarios/18-localization-all-langs.spec.ts",
+    "test:system": "node --experimental-strip-types scripts/system_test_runner.ts"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.6",
