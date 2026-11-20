@@ -108,15 +108,26 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
   }
 
   // Управление полноэкранным режимом (Telegram Bot API 8.0+):
-  // Раскрываем приложение на полный экран и на смартфонах (Android, iOS), и на десктопе,
-  // чтобы скрыть верхнюю шапку с именем бота и предоставить максимум пространства для игры.
+  // Раскрываем приложение на полный экран ТОЛЬКО на мобильных устройствах (Android, iOS),
+  // чтобы скрыть верхнюю шапку с именем бота.
+  // На компьютерах (Telegram Desktop / macOS / Web) оставляем стандартное окно Telegram.
   try {
+    const platform = tg.platform || '';
+    const isMobileDevice = platform === 'android' || platform === 'ios' || (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
     const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : true;
-    if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
-      tg.requestFullscreen();
+
+    if (isMobileDevice) {
+      if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+        tg.requestFullscreen();
+      }
+    } else {
+      // На десктопе, если окно открылось в полноэкранном режиме, возвращаем его в стандартное окно Telegram
+      if (typeof tg.exitFullscreen === 'function' && tg.isFullscreen) {
+        tg.exitFullscreen();
+      }
     }
   } catch (e) {
-    console.warn('tg.requestFullscreen error:', e);
+    console.warn('tg.requestFullscreen/exitFullscreen error:', e);
   }
 
   // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
@@ -200,11 +211,13 @@ export default function App() {
       if (webApp) {
         safeInitTelegramWebApp(webApp);
 
-        // Для всех устройств (смартфоны и десктоп):
-        // при первом клике/таче/нажатии гарантированно переводим приложение в полноэкранный режим,
+        // Исключительно для мобильных устройств (смартфоны):
+        // при первом клике/таче гарантированно переводим приложение в полноэкранный режим,
         // если Telegram требует пользовательского жеста для requestFullscreen.
         const handleFirstInteraction = () => {
-          if (typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
+          const platform = webApp.platform || '';
+          const isMobileDevice = platform === 'android' || platform === 'ios' || (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+          if (isMobileDevice && typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
             try {
               webApp.requestFullscreen();
             } catch (e) {}
@@ -467,6 +480,11 @@ export default function App() {
   const [webUser, setWebUser] = useState<any>(() => getSavedWebUser());
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const isInsideTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
+  const isMobileTelegram = isInsideTelegram && (
+    (window as any).Telegram?.WebApp?.platform === 'android' ||
+    (window as any).Telegram?.WebApp?.platform === 'ios' ||
+    (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
+  );
   const isGuest = !tgUser && !webUser;
 
     // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован
@@ -2107,11 +2125,15 @@ export default function App() {
     <div 
       className="fixed inset-0 w-full h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-zinc-950 text-white overflow-y-auto overflow-x-hidden flex flex-col items-center justify-between custom-scrollbar"
       style={{
-        paddingTop: isInsideTelegram
+        paddingTop: isMobileTelegram
           ? 'max(var(--tg-content-safe-area-inset-top, 0px), calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 54px), 58px)'
+          : isInsideTelegram
+          ? 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 6px)) + 2px)'
           : 'calc(env(safe-area-inset-top, 12px) + 2px)',
-        paddingBottom: isInsideTelegram
+        paddingBottom: isMobileTelegram
           ? 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 12px)) + 6px)'
+          : isInsideTelegram
+          ? 'calc(var(--tg-safe-area-inset-bottom, 6px) + 4px)'
           : 'calc(env(safe-area-inset-bottom, 12px) + 20px)'
       }}
     >
