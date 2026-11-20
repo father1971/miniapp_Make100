@@ -59,6 +59,7 @@ export interface TelegramWebApp {
     start_param?: string;
   };
   version?: string;
+  platform?: string;
   isVersionAtLeast?: (version: string) => boolean;
   ready: () => void;
   expand: () => void;

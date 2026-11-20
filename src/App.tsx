@@ -66,6 +66,27 @@ declare global {
 
 
 
+// Определение платформы Telegram Desktop / десктопного окружения
+const isDesktopPlatform = (tg?: TelegramWebApp | null): boolean => {
+  if (!tg) {
+    if (typeof navigator !== 'undefined') {
+      return /TelegramDesktop/i.test(navigator.userAgent) || (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !/Mobile/i.test(navigator.userAgent));
+    }
+    return false;
+  }
+  const platform = tg.platform?.toLowerCase() || '';
+  if (['tdesktop', 'macos', 'weba', 'webk'].includes(platform)) {
+    return true;
+  }
+  if (['android', 'android_x', 'ios'].includes(platform)) {
+    return false;
+  }
+  if (typeof navigator !== 'undefined') {
+    return /TelegramDesktop/i.test(navigator.userAgent) || (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !/Mobile/i.test(navigator.userAgent));
+  }
+  return false;
+};
+
 // Безопасная инициализация Telegram WebApp с проверкой версии Bot API
 const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
   if (!tg) return;
@@ -86,13 +107,27 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
     console.warn('tg.expand error:', e);
   }
 
-  // Полноэкранный режим отключен: при необходимости безопасно выходим из него
-  try {
-    if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
-      tg.exitFullscreen();
+  // Управление полноэкранным режимом (Telegram Bot API 8.0+):
+  // В десктопной версии Telegram (tdesktop, macos, web) скрываем нижнюю панель со служебной подписью юзернейма бота через requestFullscreen().
+  // На мобильных устройствах (Android, iOS) сохраняем привычный режим компактной нативной шторки.
+  const isDesktop = isDesktopPlatform(tg);
+  if (isDesktop) {
+    try {
+      const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : true;
+      if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+        tg.requestFullscreen();
+      }
+    } catch (e) {
+      console.warn('tg.requestFullscreen error:', e);
     }
-  } catch (e) {
-    // Игнорируем ошибки неподдерживаемых методов
+  } else {
+    try {
+      if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
+        tg.exitFullscreen();
+      }
+    } catch (e) {
+      // Игнорируем ошибки неподдерживаемых методов
+    }
   }
 
   // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
@@ -172,35 +207,28 @@ export default function App() {
   // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-        const webApp = window.Telegram.WebApp;
+      const webApp = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
+      if (webApp) {
+        safeInitTelegramWebApp(webApp);
 
-        // 1. Уведомляем клиент Telegram о готовности приложения
-        if (typeof webApp.ready === 'function') {
-          webApp.ready();
-        }
+        // Для десктопных клиентов Telegram (где браузерный движок может требовать жест пользователя для fullscreen):
+        // при первом клике/нажатии гарантированно скрываем нижнюю плашку с юзернеймом бота
+        if (isDesktopPlatform(webApp)) {
+          const handleFirstDesktopInteraction = () => {
+            if (typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
+              try {
+                webApp.requestFullscreen();
+              } catch (e) {}
+            }
+          };
 
-        // 2. Раскрываем WebView на 100% высоты viewport
-        if (typeof webApp.expand === 'function') {
-          webApp.expand();
-        }
+          window.addEventListener('click', handleFirstDesktopInteraction, { passive: true, once: true });
+          window.addEventListener('pointerdown', handleFirstDesktopInteraction, { passive: true, once: true });
 
-        // 3. Если приложение случайно открылось в fullscreen, безопасно выходим из него
-        if (webApp.isFullscreen && typeof webApp.exitFullscreen === 'function') {
-          try {
-            webApp.exitFullscreen();
-          } catch (e) {
-            // Игнорируем ошибки неподдерживаемых методов
-          }
-        }
-
-        // 4. Отключение вертикальных свайпов для предотвращения случайного закрытия шторки
-        if (typeof webApp.disableVerticalSwipes === 'function') {
-          try {
-            webApp.disableVerticalSwipes();
-          } catch (e) {
-            // Игнорируем ошибки неподдерживаемых методов
-          }
+          return () => {
+            window.removeEventListener('click', handleFirstDesktopInteraction);
+            window.removeEventListener('pointerdown', handleFirstDesktopInteraction);
+          };
         }
       }
     } catch (e) {
