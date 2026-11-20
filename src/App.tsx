@@ -2137,7 +2137,6 @@ export default function App() {
           className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
         />
       )}
-      <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
         <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] min-h-full h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-2 sm:pb-3 pt-0">
