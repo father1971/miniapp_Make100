@@ -2107,9 +2107,11 @@ export default function App() {
     <div 
       className="fixed inset-0 w-full h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-zinc-950 text-white overflow-y-auto overflow-x-hidden flex flex-col items-center justify-between custom-scrollbar"
       style={{
-        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 12px)) + 2px)',
+        paddingTop: isInsideTelegram
+          ? 'max(var(--tg-content-safe-area-inset-top, 0px), calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 54px), 58px)'
+          : 'calc(env(safe-area-inset-top, 12px) + 2px)',
         paddingBottom: isInsideTelegram
-          ? 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 12px)) + 4px)'
+          ? 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 12px)) + 6px)'
           : 'calc(env(safe-area-inset-bottom, 12px) + 20px)'
       }}
     >
@@ -2133,7 +2135,7 @@ export default function App() {
       {statsLoaded && (
         <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] min-h-full h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-2 sm:pb-3 pt-0">
           {/* Header (Увеличенная адаптивная шапка по центру) */}
-          <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2.5 md:gap-3 select-none mb-0.5 sm:mb-2 z-10 flex-shrink-0">
+          <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-2 sm:gap-3 md:gap-3.5 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
             {/* 1. Кликабельная аватарка профиля */}
             <button 
               onClick={() => setIsProfileOpen(true)}
@@ -2143,33 +2145,33 @@ export default function App() {
             >
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
               
-              <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+              <div className="relative w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
                 {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
                   <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-lg">
+                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base sm:text-xl">
                     {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
                   </div>
                 )}
               </div>
 
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
-                <span className="text-[9px] sm:text-[10px] text-white leading-none">⚙️</span>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                <span className="text-[10px] text-white leading-none">⚙️</span>
               </div>
             </button>
 
             {/* 2. Плашка монет */}
-            <div className="flex items-center gap-1 sm:gap-2 h-11 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-              <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">🪙</span>
-              <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
+            <div className="flex items-center gap-1.5 sm:gap-2 h-12 sm:h-13 md:h-14 px-3 sm:px-4.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+              <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">🪙</span>
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
                 {stats.coins}
               </span>
             </div>
 
             {/* 3. Плашка подсказок */}
-            <div className="flex items-center gap-1 sm:gap-2 h-11 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-              <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">💡</span>
-              <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
+            <div className="flex items-center gap-1.5 sm:gap-2 h-12 sm:h-13 md:h-14 px-3 sm:px-4.5 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+              <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">💡</span>
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
                 {stats.hintsCount}
               </span>
             </div>
@@ -2177,21 +2179,21 @@ export default function App() {
             {/* 4. Кнопка Зала славы (Кубок) */}
             <button 
               onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+              className="w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
               title={t.leaderboard || 'Зал славы'}
               aria-label={t.leaderboard || 'Зал славы'}
             >
-              <Trophy className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-yellow-100" fill="currentColor" />
+              <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-yellow-100" fill="currentColor" />
             </button>
 
             {/* 5. Кнопка открытия бокового меню */}
             <button 
               onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-12 h-12 sm:w-13 sm:h-13 md:w-14 md:h-14 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
               title={t.settingsMenu || "Меню настроек"}
               aria-label={t.settingsMenu || "Меню настроек"}
             >
-              <Menu className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
+              <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
 
             {/* 6. Кнопка "Войти" для гостя */}
@@ -2202,7 +2204,7 @@ export default function App() {
                   playSound('click');
                   playVibration('light');
                 }}
-                className="h-11 sm:h-12 md:h-13 px-3 sm:px-4.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
+                className="h-12 sm:h-13 md:h-14 px-3.5 sm:px-5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
                 title={t.loginBtn || "Войти"}
                 aria-label={t.loginBtn || "Войти"}
               >
@@ -2213,11 +2215,11 @@ export default function App() {
           </header>
 
           {/* Live Stopwatch & Character Counter */}
-          <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
-            <div className="flex justify-center items-center gap-4 sm:gap-7 py-2 sm:py-2.5 px-5 sm:px-7 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
+          <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-1 sm:my-1.5 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
+            <div className="flex justify-center items-center gap-5 sm:gap-8 py-2.5 sm:py-3.5 px-6 sm:px-8 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
               {/* Секундомер в спортивном формате ММ:СС:мс */}
               <div className="flex items-center gap-2 sm:gap-2.5">
-                <span className="animate-pulse text-xl sm:text-2xl leading-none">⏱️</span>
+                <span className="animate-pulse text-2xl sm:text-3xl leading-none">⏱️</span>
                 <Stopwatch 
                   isRunning={isTimerRunning} 
                   onTick={handleStopwatchTick} 
@@ -2227,13 +2229,13 @@ export default function App() {
               </div>
               
               {/* Вертикальный разделитель */}
-              <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
+              <div className="h-6 sm:h-7 w-[2px] bg-zinc-300 dark:bg-zinc-700/60"></div>
 
               {/* Счётчик символов в текущем вводе */}
               <div className="flex items-center gap-2 sm:gap-2.5">
-                <span className="text-xl sm:text-2xl leading-none">✍️</span>
-                <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-2xl tracking-tight leading-none flex items-baseline">
-                  {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+                <span className="text-2xl sm:text-3xl leading-none">✍️</span>
+                <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-tight leading-none flex items-baseline">
+                  {currentInput.length} <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-sans font-bold ml-1">{t.charsShort || 'симв.'}</span>
                 </span>
               </div>
             </div>
@@ -2642,8 +2644,8 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
-        <div className={`w-full max-w-md sm:max-w-lg md:max-w-xl py-1.5 sm:py-3 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-1.5 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.65rem,7vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
+        <div className={`w-full max-w-md sm:max-w-lg md:max-w-xl py-2 sm:py-3.5 px-1.5 sm:px-3.5 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-1.5 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.14rem,0.7vw,0.45rem)] text-[clamp(1.85rem,7.6vw,3.15rem)] font-mono font-black py-1 sm:py-1.5 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
             {digits.map((digit, idx) => (
@@ -2661,7 +2663,7 @@ export default function App() {
                 <span>{t.loading}</span>
               </div>
             ) : gaps.some(g => g !== '') ? (
-              <div className={`font-mono text-xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
+              <div className={`font-mono text-2xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
             ) : (
@@ -2943,12 +2945,12 @@ export default function App() {
 }
 function Gap({ idx, value, selected, onClick }: { idx: number, value: string, selected: boolean, onClick: (idx: number) => void }) {
   const charCount = value.length;
-  const baseWidthRem = 1.35;
-  const baseWidthVw = 6.6;
-  const baseWidthMaxRem = 2.15;
-  const extraWidthPerCharRem = 0.55;
-  const extraWidthPerCharVw = 1.8;
-  const extraWidthPerCharMaxRem = 0.9;
+  const baseWidthRem = 1.45;
+  const baseWidthVw = 7.0;
+  const baseWidthMaxRem = 2.3;
+  const extraWidthPerCharRem = 0.6;
+  const extraWidthPerCharVw = 1.9;
+  const extraWidthPerCharMaxRem = 0.95;
   const extraChars = Math.max(0, charCount - 1);
   const dynamicWidth = `clamp(${baseWidthRem + (extraChars * extraWidthPerCharRem)}rem, ${baseWidthVw + (extraChars * extraWidthPerCharVw)}vw, ${baseWidthMaxRem + (extraChars * extraWidthPerCharMaxRem)}rem)`;
 
@@ -2957,7 +2959,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
       onClick={() => onClick(idx)}
       style={{ width: dynamicWidth }}
       aria-label={`Слот ${idx + 1}: ${value || 'пусто'}`}
-      className={`relative h-[clamp(2.35rem,9.8vw,3.35rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
+      className={`relative h-[clamp(2.55rem,10.2vw,3.6rem)] rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all duration-200 outline-none font-black flex-shrink-0 cursor-pointer touch-manipulation select-none before:absolute before:-inset-1.5 before:content-[''] ${
         selected
           ? 'border-orange-500 bg-orange-500/25 dark:bg-orange-500/35 text-orange-600 dark:text-orange-400 backdrop-blur-md shadow-[0_0_0_4px_rgba(249,115,22,0.2)] scale-105 z-20'
           : value
@@ -2966,7 +2968,7 @@ function Gap({ idx, value, selected, onClick }: { idx: number, value: string, se
       }`}
     >
       {value ? (
-        <span className="text-[clamp(1.15rem,4.8vw,1.6rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
+        <span className="text-[clamp(1.25rem,5.2vw,1.75rem)] whitespace-nowrap px-0.5 leading-none">{value}</span>
       ) : (
         <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-zinc-400 dark:bg-zinc-600"></span>
       )}
