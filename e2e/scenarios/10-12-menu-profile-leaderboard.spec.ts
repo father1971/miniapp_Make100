@@ -18,9 +18,10 @@ test.describe('Сценарии 10, 11 и 12: Меню настроек, Про�
   test('10.1: Открытие меню настроек, проверка звука, вибрации и закрытия', async ({ page }) => {
     await page.goto('/?e2e=true');
 
-    const startBtn = page.getByRole('button', { name: /^старт$|^start$/i });
-    if (await startBtn.isVisible({ timeout: 3000 })) {
+    const startBtn = page.locator('button.bg-orange-500').first();
+    if (await startBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await startBtn.click();
+      await expect(startBtn).not.toBeVisible({ timeout: 5000 }).catch(() => {});
     }
 
     // Открываем меню настроек
@@ -50,9 +51,10 @@ test.describe('Сценарии 10, 11 и 12: Меню настроек, Про�
   test('11.1: Профиль игрока — открытие, вкладки Статистика и Рефералы', async ({ page }) => {
     await page.goto('/?e2e=true');
 
-    const startBtn = page.getByRole('button', { name: /^старт$|^start$/i });
-    if (await startBtn.isVisible({ timeout: 3000 })) {
+    const startBtn = page.locator('button.bg-orange-500').first();
+    if (await startBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await startBtn.click();
+      await expect(startBtn).not.toBeVisible({ timeout: 5000 }).catch(() => {});
     }
 
     // Кликаем по аватарке профиля
@@ -79,9 +81,10 @@ test.describe('Сценарии 10, 11 и 12: Меню настроек, Про�
   test('12.1: Таблица лидеров — открытие списка лучших игроков', async ({ page }) => {
     await page.goto('/?e2e=true');
 
-    const startBtn = page.getByRole('button', { name: /^старт$|^start$/i });
-    if (await startBtn.isVisible({ timeout: 3000 })) {
+    const startBtn = page.locator('button.bg-orange-500').first();
+    if (await startBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await startBtn.click();
+      await expect(startBtn).not.toBeVisible({ timeout: 5000 }).catch(() => {});
     }
 
     // Кликаем по кубку лидеров
