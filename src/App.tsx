@@ -215,6 +215,12 @@ export default function App() {
   const [lastEarnedCoins, setLastEarnedCoins] = useState<number>(0);
   const isPreviewEnv = (() => {
     try {
+      if (typeof window !== 'undefined') {
+        const search = window.location.search;
+        if (search.includes('e2e=true') || sessionStorage.getItem('make100_e2e') === 'true') {
+          return false;
+        }
+      }
       const hostname = window.location.hostname;
       const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
       const isDevOrPre = hostname.includes('ais-dev-') || hostname.includes('ais-pre-');
