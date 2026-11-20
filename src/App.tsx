@@ -66,6 +66,27 @@ declare global {
 
 
 
+// Определение платформы Telegram Desktop / десктопного окружения
+const isDesktopPlatform = (tg?: TelegramWebApp | null): boolean => {
+  if (!tg) {
+    if (typeof navigator !== 'undefined') {
+      return /TelegramDesktop/i.test(navigator.userAgent) || (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !/Mobile/i.test(navigator.userAgent));
+    }
+    return false;
+  }
+  const platform = tg.platform?.toLowerCase() || '';
+  if (['tdesktop', 'macos', 'weba', 'webk'].includes(platform)) {
+    return true;
+  }
+  if (['android', 'android_x', 'ios'].includes(platform)) {
+    return false;
+  }
+  if (typeof navigator !== 'undefined') {
+    return /TelegramDesktop/i.test(navigator.userAgent) || (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && !/Mobile/i.test(navigator.userAgent));
+  }
+  return false;
+};
+
 // Безопасная инициализация Telegram WebApp с проверкой версии Bot API
 const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
   if (!tg) return;
@@ -86,13 +107,16 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
     console.warn('tg.expand error:', e);
   }
 
-  // Полноэкранный режим отключен: при необходимости безопасно выходим из него
+  // Управление полноэкранным режимом (Telegram Bot API 8.0+):
+  // Раскрываем приложение на полный экран и на смартфонах (Android, iOS), и на десктопе,
+  // чтобы скрыть верхнюю шапку с именем бота и предоставить максимум пространства для игры.
   try {
-    if (tg.isFullscreen && typeof tg.exitFullscreen === 'function') {
-      tg.exitFullscreen();
+    const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : true;
+    if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+      tg.requestFullscreen();
     }
   } catch (e) {
-    // Игнорируем ошибки неподдерживаемых методов
+    console.warn('tg.requestFullscreen error:', e);
   }
 
   // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
@@ -172,36 +196,30 @@ export default function App() {
   // Первоначальная инициализация Telegram Mini App при монтировании компонента (до отрисовки игры)
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-        const webApp = window.Telegram.WebApp;
+      const webApp = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
+      if (webApp) {
+        safeInitTelegramWebApp(webApp);
 
-        // 1. Уведомляем клиент Telegram о готовности приложения
-        if (typeof webApp.ready === 'function') {
-          webApp.ready();
-        }
-
-        // 2. Раскрываем WebView на 100% высоты viewport
-        if (typeof webApp.expand === 'function') {
-          webApp.expand();
-        }
-
-        // 3. Если приложение случайно открылось в fullscreen, безопасно выходим из него
-        if (webApp.isFullscreen && typeof webApp.exitFullscreen === 'function') {
-          try {
-            webApp.exitFullscreen();
-          } catch (e) {
-            // Игнорируем ошибки неподдерживаемых методов
+        // Для всех устройств (смартфоны и десктоп):
+        // при первом клике/таче/нажатии гарантированно переводим приложение в полноэкранный режим,
+        // если Telegram требует пользовательского жеста для requestFullscreen.
+        const handleFirstInteraction = () => {
+          if (typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
+            try {
+              webApp.requestFullscreen();
+            } catch (e) {}
           }
-        }
+        };
 
-        // 4. Отключение вертикальных свайпов для предотвращения случайного закрытия шторки
-        if (typeof webApp.disableVerticalSwipes === 'function') {
-          try {
-            webApp.disableVerticalSwipes();
-          } catch (e) {
-            // Игнорируем ошибки неподдерживаемых методов
-          }
-        }
+        window.addEventListener('click', handleFirstInteraction, { passive: true, once: true });
+        window.addEventListener('touchstart', handleFirstInteraction, { passive: true, once: true });
+        window.addEventListener('pointerdown', handleFirstInteraction, { passive: true, once: true });
+
+        return () => {
+          window.removeEventListener('click', handleFirstInteraction);
+          window.removeEventListener('touchstart', handleFirstInteraction);
+          window.removeEventListener('pointerdown', handleFirstInteraction);
+        };
       }
     } catch (e) {
       console.warn('Ошибка инициализации Telegram WebApp при запуске:', e);
@@ -2114,219 +2132,112 @@ export default function App() {
       
       {statsLoaded && (
         <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] min-h-full h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-2 sm:pb-3 pt-0">
-          {/* Header */}
-          {isInsideTelegram ? (
-            /* Шапка для Telegram-бота: компактный мобильный размер, все модули на одном расстоянии строго по центру */
-            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
-              {/* 1. Кликабельная аватарка профиля */}
-              <button 
-                onClick={() => setIsProfileOpen(true)}
-                className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
-                title={t.openProfile || "Открыть профиль"}
-                aria-label={t.openProfile || "Открыть профиль"}
-              >
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
-                
-                <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
-                  {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
-                    <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-base">
-                      {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
-                  <span className="text-[9px] text-white leading-none">⚙️</span>
-                </div>
-              </button>
-
-              {/* 2. Плашка монет */}
-              <div className="flex items-center gap-1.5 h-10 sm:h-11 px-2.5 sm:px-3 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-                <span className="text-base sm:text-lg drop-shadow-sm leading-none">🪙</span>
-                <span className="text-xs sm:text-sm font-black tracking-tight">
-                  {stats.coins}
-                </span>
+          {/* Header (Увеличенная адаптивная шапка по центру) */}
+          <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2.5 md:gap-3 select-none mb-0.5 sm:mb-2 z-10 flex-shrink-0">
+            {/* 1. Кликабельная аватарка профиля */}
+            <button 
+              onClick={() => setIsProfileOpen(true)}
+              className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
+              title={t.openProfile || "Открыть профиль"}
+              aria-label={t.openProfile || "Открыть профиль"}
+            >
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
+              
+              <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
+                  <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-lg">
+                    {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
+                  </div>
+                )}
               </div>
 
-              {/* 3. Плашка подсказок */}
-              <div className="flex items-center gap-1.5 h-10 sm:h-11 px-2.5 sm:px-3 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-                <span className="text-base sm:text-lg drop-shadow-sm leading-none">💡</span>
-                <span className="text-xs sm:text-sm font-black tracking-tight">
-                  {stats.hintsCount}
-                </span>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
+                <span className="text-[9px] sm:text-[10px] text-white leading-none">⚙️</span>
               </div>
+            </button>
 
-              {/* 4. Кнопка Зала славы (Кубок) */}
-              <button 
-                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
-                title={t.leaderboard || 'Зал славы'}
-                aria-label={t.leaderboard || 'Зал славы'}
+            {/* 2. Плашка монет */}
+            <div className="flex items-center gap-1 sm:gap-2 h-11 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+              <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">🪙</span>
+              <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
+                {stats.coins}
+              </span>
+            </div>
+
+            {/* 3. Плашка подсказок */}
+            <div className="flex items-center gap-1 sm:gap-2 h-11 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+              <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">💡</span>
+              <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
+                {stats.hintsCount}
+              </span>
+            </div>
+
+            {/* 4. Кнопка Зала славы (Кубок) */}
+            <button 
+              onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
+              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+              title={t.leaderboard || 'Зал славы'}
+              aria-label={t.leaderboard || 'Зал славы'}
+            >
+              <Trophy className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-yellow-100" fill="currentColor" />
+            </button>
+
+            {/* 5. Кнопка открытия бокового меню */}
+            <button 
+              onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
+              className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+              title={t.settingsMenu || "Меню настроек"}
+              aria-label={t.settingsMenu || "Меню настроек"}
+            >
+              <Menu className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* 6. Кнопка "Войти" для гостя */}
+            {isGuest && (
+              <button
+                onClick={() => {
+                  setIsWelcomeModalOpen(true);
+                  playSound('click');
+                  playVibration('light');
+                }}
+                className="h-11 sm:h-12 md:h-13 px-3 sm:px-4.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
+                title={t.loginBtn || "Войти"}
+                aria-label={t.loginBtn || "Войти"}
               >
-                <Trophy className="w-5 h-5 text-yellow-100" fill="currentColor" />
+                <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                <span className="leading-none">{t.loginBtn || "Войти"}</span>
               </button>
+            )}
+          </header>
 
-              {/* 5. Кнопка открытия бокового меню */}
-              <button 
-                onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
-                title={t.settingsMenu || "Меню настроек"}
-                aria-label={t.settingsMenu || "Меню настроек"}
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-
-              {/* 6. Кнопка "Войти" для гостя прямо рядом с меню */}
-              {isGuest && (
-                <button
-                  onClick={() => {
-                    setIsWelcomeModalOpen(true);
-                    playSound('click');
-                    playVibration('light');
-                  }}
-                  className="h-10 sm:h-11 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md shadow-orange-500/25 flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer shrink-0"
-                  title={t.loginBtn || "Войти"}
-                  aria-label={t.loginBtn || "Войти"}
-                >
-                  <LogIn className="w-3.5 h-3.5 shrink-0" />
-                  <span className="leading-none">{t.loginBtn || "Войти"}</span>
-                </button>
-              )}
-            </header>
-          ) : (
-            /* Центрированная шапка для браузерной версии: все элементы по центру на одинаковом расстоянии */
-            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2.5 md:gap-3 select-none mb-0.5 sm:mb-2 z-10 flex-shrink-0">
-              {/* 1. Кликабельная аватарка профиля */}
-              <button 
-                onClick={() => setIsProfileOpen(true)}
-                className="relative group active:scale-90 transition-all duration-150 focus:outline-none flex-shrink-0 cursor-pointer"
-                title={t.openProfile || "Открыть профиль"}
-                aria-label={t.openProfile || "Открыть профиль"}
-              >
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
-                
-                <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
-                  {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
-                    <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-lg">
-                      {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-md">
-                  <span className="text-[9px] sm:text-[10px] text-white leading-none">⚙️</span>
-                </div>
-              </button>
-
-              {/* 2. Плашка монет */}
-              <div className="flex items-center gap-1 sm:gap-2 h-10 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-                <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">🪙</span>
-                <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
-                  {stats.coins}
-                </span>
-              </div>
-
-              {/* 3. Плашка подсказок */}
-              <div className="flex items-center gap-1 sm:gap-2 h-10 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-                <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">💡</span>
-                <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
-                  {stats.hintsCount}
-                </span>
-              </div>
-
-              {/* 4. Кнопка Зала славы (Кубок) */}
-              <button 
-                onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-10 h-10 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
-                title={t.leaderboard || 'Зал славы'}
-                aria-label={t.leaderboard || 'Зал славы'}
-              >
-                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-100" fill="currentColor" />
-              </button>
-
-              {/* 5. Кнопка открытия бокового меню */}
-              <button 
-                onClick={() => { setIsMenuOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 text-zinc-900 dark:text-white hover:bg-white/70 dark:hover:bg-zinc-900/70 shadow-md backdrop-blur-2xl flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
-                title={t.settingsMenu || "Меню настроек"}
-                aria-label={t.settingsMenu || "Меню настроек"}
-              >
-                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-
-              {/* 6. Кнопка "Войти" для гостя прямо рядышком с кнопкой меню настроек */}
-              {isGuest && (
-                <button
-                  onClick={() => {
-                    setIsWelcomeModalOpen(true);
-                    playSound('click');
-                    playVibration('light');
-                  }}
-                  className="h-11 sm:h-12 md:h-13 px-3.5 sm:px-4.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/25 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
-                  title={t.loginBtn || "Войти"}
-                  aria-label={t.loginBtn || "Войти"}
-                >
-                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                  <span className="leading-none">{t.loginBtn || "Войти"}</span>
-                </button>
-              )}
-            </header>
-          )}
           {/* Live Stopwatch & Character Counter */}
-          {isInsideTelegram ? (
-            /* Классический секундомер и счётчик символов для Telegram-бота */
-            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-4 z-10 flex-shrink-0">
-              <div className="flex justify-center items-center gap-4 sm:gap-6 py-2 px-5 sm:px-6 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
-                {/* Секундомер в спортивном формате ММ:СС:мс */}
-                <div className="flex items-center gap-2">
-                  <span className="animate-pulse text-lg sm:text-xl">⏱️</span>
-                  <Stopwatch isRunning={isTimerRunning} onTick={handleStopwatchTick} resetKey={stopwatchResetKey} />
-                </div>
-                
-                {/* Вертикальный разделитель */}
-                <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
+          <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-0.5 sm:my-1 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
+            <div className="flex justify-center items-center gap-4 sm:gap-7 py-2 sm:py-2.5 px-5 sm:px-7 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
+              {/* Секундомер в спортивном формате ММ:СС:мс */}
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <span className="animate-pulse text-xl sm:text-2xl leading-none">⏱️</span>
+                <Stopwatch 
+                  isRunning={isTimerRunning} 
+                  onTick={handleStopwatchTick} 
+                  resetKey={stopwatchResetKey} 
+                  className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-wider font-mono"
+                />
+              </div>
+              
+              {/* Вертикальный разделитель */}
+              <div className="h-5 sm:h-6 w-[1.5px] bg-zinc-300 dark:bg-zinc-700/60"></div>
 
-                {/* Счётчик символов в текущем вводе */}
-                <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl">✍️</span>
-                  <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-xl tracking-tight">
-                    {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
-                  </span>
-                </div>
+              {/* Счётчик символов в текущем вводе */}
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <span className="text-xl sm:text-2xl leading-none">✍️</span>
+                <span className="text-zinc-900 dark:text-white font-black text-lg sm:text-2xl tracking-tight leading-none flex items-baseline">
+                  {currentInput.length} <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-sans font-semibold ml-0.5">{t.charsShort || 'симв.'}</span>
+                </span>
               </div>
             </div>
-          ) : (
-            /* Увеличенный секундомер и счётчик символов для браузерной версии на компьютере */
-            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-center items-center my-1 sm:my-1.5 py-0.5 px-2 sm:px-4 z-10 flex-shrink-0">
-              <div className="flex justify-center items-center gap-4 sm:gap-7 py-2.5 sm:py-3 px-5 sm:px-7 rounded-2xl sm:rounded-full font-mono bg-white/50 dark:bg-zinc-950/50 border border-white/40 dark:border-white/10 backdrop-blur-2xl shadow-md text-zinc-900 dark:text-white">
-                {/* Секундомер в спортивном формате ММ:СС:мс */}
-                <div className="flex items-center gap-2 sm:gap-2.5">
-                  <span className="animate-pulse text-xl sm:text-2xl leading-none">⏱️</span>
-                  <Stopwatch 
-                    isRunning={isTimerRunning} 
-                    onTick={handleStopwatchTick} 
-                    resetKey={stopwatchResetKey} 
-                    className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-wider font-mono"
-                  />
-                </div>
-                
-                {/* Вертикальный разделитель */}
-                <div className="h-6 sm:h-7 w-[2px] bg-zinc-300 dark:bg-zinc-700/60"></div>
-
-                {/* Счётчик символов в текущем вводе */}
-                <div className="flex items-center gap-2 sm:gap-2.5">
-                  <span className="text-xl sm:text-2xl leading-none">✍️</span>
-                  <span className="text-zinc-900 dark:text-white font-black text-xl sm:text-2xl md:text-3xl tracking-tight leading-none flex items-baseline">
-                    {currentInput.length} <span className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-sans font-bold ml-1">{t.charsShort || 'симв.'}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
 
       {/* Menu Modal (Всплывающее окно) */}
       <AnimatePresence>
@@ -2782,18 +2693,18 @@ export default function App() {
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
             aria-label={t.hint || "Подсказка"}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
-            <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
+            <Lightbulb size={17} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
           </button>
           <button 
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
             aria-label={hintUsed ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar) : (gameMode === 'ticket' ? t.skipTicket : t.skipCar)}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
-            <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
+            <RefreshCw size={17} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
               {hintUsed 
                 ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar)
@@ -3081,7 +2992,7 @@ function OperatorButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={op}
-      className={`flex items-center justify-center w-full h-9 sm:h-11 md:h-13 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
+      className={`flex items-center justify-center w-full h-10 sm:h-12 md:h-13 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
         disabled
           ? 'opacity-25 cursor-not-allowed pointer-events-none border-transparent bg-zinc-200/40 dark:bg-zinc-800/20 text-zinc-400 dark:text-zinc-600 shadow-none'
           : `active:scale-95 cursor-pointer shadow-md touch-manipulation ${
