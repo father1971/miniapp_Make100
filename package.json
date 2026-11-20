@@ -2,7 +2,7 @@
   "name": "lucky-ticket",
   "homepage": "https://father1971.github.io/miniapp_Make100",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

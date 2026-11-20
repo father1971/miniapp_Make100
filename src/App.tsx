@@ -2499,7 +2499,7 @@ export default function App() {
               </button>
 
               <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-                v2.0
+                v2.1
               </div>
             </div>
 
