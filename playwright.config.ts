@@ -3,6 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 // Автоматически направляем браузеры на диск D (где 240+ ГБ свободного места)
 process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH || 'D:\\ms-playwright';
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -14,7 +16,7 @@ export default defineConfig({
     ['list']
   ],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     locale: 'ru-RU',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -66,7 +68,7 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
