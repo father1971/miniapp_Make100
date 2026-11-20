@@ -108,26 +108,15 @@ const safeInitTelegramWebApp = (tg?: TelegramWebApp | null) => {
   }
 
   // Управление полноэкранным режимом (Telegram Bot API 8.0+):
-  // Раскрываем приложение на полный экран ТОЛЬКО на мобильных устройствах (Android, iOS),
-  // чтобы скрыть верхнюю шапку с именем бота.
-  // На компьютерах (Telegram Desktop / macOS / Web) оставляем стандартное окно Telegram.
+  // Раскрываем приложение на полный экран и на смартфонах (Android, iOS), и в Telegram Desktop,
+  // чтобы полностью скрыть нижнюю плашку с именем бота и предоставить максимум пространства для игры.
   try {
-    const platform = tg.platform || '';
-    const isMobileDevice = platform === 'android' || platform === 'ios' || (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
     const isAtLeast8 = typeof tg.isVersionAtLeast === 'function' ? tg.isVersionAtLeast('8.0') : true;
-
-    if (isMobileDevice) {
-      if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
-        tg.requestFullscreen();
-      }
-    } else {
-      // На десктопе, если окно открылось в полноэкранном режиме, возвращаем его в стандартное окно Telegram
-      if (typeof tg.exitFullscreen === 'function' && tg.isFullscreen) {
-        tg.exitFullscreen();
-      }
+    if (isAtLeast8 && typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+      tg.requestFullscreen();
     }
   } catch (e) {
-    console.warn('tg.requestFullscreen/exitFullscreen error:', e);
+    console.warn('tg.requestFullscreen error:', e);
   }
 
   // disableVerticalSwipes поддерживается начиная с Telegram Bot API 7.7
@@ -211,13 +200,11 @@ export default function App() {
       if (webApp) {
         safeInitTelegramWebApp(webApp);
 
-        // Исключительно для мобильных устройств (смартфоны):
-        // при первом клике/таче гарантированно переводим приложение в полноэкранный режим,
+        // Для всех клиентов Telegram (смартфоны и десктоп):
+        // при первом клике/таче/нажатии гарантированно переводим приложение в полноэкранный режим,
         // если Telegram требует пользовательского жеста для requestFullscreen.
         const handleFirstInteraction = () => {
-          const platform = webApp.platform || '';
-          const isMobileDevice = platform === 'android' || platform === 'ios' || (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-          if (isMobileDevice && typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
+          if (typeof webApp.requestFullscreen === 'function' && !webApp.isFullscreen) {
             try {
               webApp.requestFullscreen();
             } catch (e) {}
@@ -2128,12 +2115,10 @@ export default function App() {
         paddingTop: isMobileTelegram
           ? 'max(var(--tg-content-safe-area-inset-top, 0px), calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 54px), 58px)'
           : isInsideTelegram
-          ? 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 6px)) + 2px)'
+          ? 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 8px)) + 8px)'
           : 'calc(env(safe-area-inset-top, 12px) + 2px)',
-        paddingBottom: isMobileTelegram
+        paddingBottom: isInsideTelegram
           ? 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 12px)) + 6px)'
-          : isInsideTelegram
-          ? 'calc(var(--tg-safe-area-inset-bottom, 6px) + 4px)'
           : 'calc(env(safe-area-inset-bottom, 12px) + 20px)'
       }}
     >
