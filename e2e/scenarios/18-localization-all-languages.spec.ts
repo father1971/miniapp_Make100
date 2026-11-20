@@ -29,9 +29,9 @@ test.describe('Сценарий 18: Локализация — проверка 
 
       await page.goto('/?e2e=true');
 
-      // Кликаем старт, если отображается
-      const startBtn = page.getByRole('button', { name: /^старт$|^start$/i });
-      if (await startBtn.isVisible({ timeout: 2000 })) {
+      // Кликаем старт, если отображается (на любом языке кнопка старта имеет оранжевый стиль bg-orange-500)
+      const startBtn = page.locator('button.bg-orange-500').first();
+      if (await startBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         await startBtn.click();
       }
 
