@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { LogIn, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { LogIn, X, Copy, Check, QrCode } from 'lucide-react';
+import QRCode from 'qrcode';
 import { UserStats, TelegramUser } from '../types';
 import { TranslationData, Language } from '../translations';
 
@@ -48,6 +49,58 @@ export function UserProfile({
 }: UserProfileProps) {
   const [activeTab, setActiveTab] = useState<'stats' | 'referral'>('stats');
   const [avatarError, setAvatarError] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  const getReferralUrl = () => {
+    const userId = tgUser?.id || (stats as any)?.id;
+    if (!userId) return '';
+    const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
+    return `${siteBase}/?ref=${userId}`;
+  };
+
+  const referralUrl = getReferralUrl();
+
+  useEffect(() => {
+    if (!referralUrl) return;
+    QRCode.toDataURL(referralUrl, {
+      width: 280,
+      margin: 2,
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    }).then((url) => {
+      setQrDataUrl(url);
+    }).catch((err) => {
+      console.warn('QR Code generation error:', err);
+    });
+  }, [referralUrl]);
+
+  const handleCopyLink = async () => {
+    const url = getReferralUrl();
+    if (!url) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+      setCopiedLink(true);
+      playSound('success');
+      playVibration('success');
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch (e) {
+      console.error('Copy link error', e);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -277,20 +330,78 @@ export function UserProfile({
                   <div className="flex justify-between items-center text-xs sm:text-sm border-b border-slate-200/50 dark:border-slate-800/50 pb-3">
                     <span className="text-slate-500 dark:text-slate-400">{t.bonusesEarned || 'Получено бонусов:'}</span>
                     <span className="font-extrabold text-emerald-500 dark:text-emerald-400 flex items-center gap-1">
-                      🪙 +{(stats?.referralCount || 0) * 500} {t.coinsCount || 'монет'}
+                      🪙 +{(stats?.referralCount || 0) * 600} {t.coinsCount || 'монет'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
-                    {t.referralPromoP1 || 'Позови друга в игру! Ты получишь'} <span className="font-bold text-orange-500">500 {t.coinsCount || 'монет'}</span>{t.referralPromoP2 || ', а друг —'} <span className="font-bold text-orange-500">250 {t.coinsCount || 'монет'}</span> {t.referralPromoP3 || 'приветственного бонуса!'}
+                    {t.referralPromoP1 || 'Позови друга в игру! Ты получишь'} <span className="font-bold text-orange-500">{t.referralPromoP2 || '600 монет'}</span>{t.referralPromoP3 || ', а друг —'} <span className="font-bold text-orange-500">{t.referralPromoP4 || '250 монет'}</span> {t.referralPromoP5 || 'приветственного бонуса!'}
                   </p>
 
-                  <button
-                    onClick={handleInviteFriend}
-                    className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white font-black text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>🚀</span> {t.inviteFriendBtn || 'Пригласить друга'}
-                  </button>
+                  {/* Поле с реферальной ссылкой */}
+                  {referralUrl && (
+                    <div className="flex items-center bg-white/90 dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 text-xs">
+                      <input
+                        type="text"
+                        readOnly
+                        value={referralUrl}
+                        className="w-full bg-transparent text-slate-700 dark:text-slate-300 font-mono text-[11px] sm:text-xs select-all outline-none truncate"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                    </div>
+                  )}
+
+                  {/* Кнопки действий: Скопировать ссылку и QR-код */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={handleCopyLink}
+                      className={`py-3 px-3 font-black text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 shadow-md flex items-center justify-center gap-1.5 cursor-pointer ${
+                        copiedLink
+                          ? 'bg-emerald-500 text-white shadow-emerald-500/25'
+                          : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500 text-white shadow-orange-500/25'
+                      }`}
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-4 h-4 shrink-0" />
+                          <span className="truncate">{t.referralLinkCopied || 'Скопировано!'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 shrink-0" />
+                          <span className="truncate">{t.copyReferralLink || 'Скопировать'}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowQr(!showQr);
+                        playSound('click');
+                        playVibration('light');
+                      }}
+                      className="py-3 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm rounded-xl transition-all duration-200 active:scale-95 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <QrCode className="w-4 h-4 text-orange-500 shrink-0" />
+                      <span className="truncate">{showQr ? (t.hideQrCode || 'Скрыть QR') : (t.showQrCode || 'QR-код')}</span>
+                    </button>
+                  </div>
+
+                  {/* Блок QR-кода */}
+                  {showQr && qrDataUrl && (
+                    <div className="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm animate-scale-up">
+                      <div className="p-2 bg-white rounded-xl shadow-inner border border-slate-100">
+                        <img
+                          src={qrDataUrl}
+                          alt="QR-код приглашения"
+                          className="w-44 h-44 sm:w-52 sm:h-52 object-contain rounded-lg"
+                        />
+                      </div>
+                      <p className="mt-2.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 text-center font-medium">
+                        {t.scanQrCodeHint || 'Наведите камеру смартфона, чтобы открыть игру'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

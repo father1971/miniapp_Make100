@@ -17,7 +17,8 @@ import {
   consumeHint,
   fetchRandomTicketApi,
   fetchCarsPoolApi,
-  fetchTicketsPoolApi
+  fetchTicketsPoolApi,
+  trackReferralVisitApi
 } from './api';
 import { TRANSLATIONS, LANGUAGES, Language } from './translations';
 import { useImagePreloader } from './hooks/useImagePreloader';
@@ -214,6 +215,12 @@ export default function App() {
   const [lastEarnedCoins, setLastEarnedCoins] = useState<number>(0);
   const isPreviewEnv = (() => {
     try {
+      if (typeof window !== 'undefined') {
+        const search = window.location.search;
+        if (search.includes('e2e=true') || sessionStorage.getItem('make100_e2e') === 'true') {
+          return false;
+        }
+      }
       const hostname = window.location.hostname;
       const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
       const isDevOrPre = hostname.includes('ais-dev-') || hostname.includes('ais-pre-');
@@ -444,15 +451,14 @@ export default function App() {
   const isInsideTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
   const isGuest = !tgUser && !webUser;
 
-    // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован и туториал не идет
+    // Во внешнем браузере показываем приветственное окно выбора режима, если пользователь еще не авторизован
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(() => {
     if (isInsideTelegram) return false;
     try {
-      const isTutorialDone = localStorage.getItem('make100_tutorial_completed_v3') === 'true';
       const dismissed = sessionStorage.getItem('make100_welcome_dismissed');
       const hasToken = Boolean(localStorage.getItem('make100_web_auth_token'));
-      // Если обучение еще не пройдено, сначала идет обучение!
-      return isTutorialDone && !dismissed && !hasToken;
+      // Сначала игрок должен выбрать: играть без регистрации или войти через Telegram / Email
+      return !dismissed && !hasToken;
     } catch (e) {
       return false;
     }
@@ -792,10 +798,18 @@ export default function App() {
     }
   }, [vibrationEnabled]);
 
-    // Interactive Tutorial State: автоматически запускается при первом запуске игры
+  // Interactive Tutorial State: запускается только после закрытия приветственного окна (или сразу, если в Telegram / уже авторизован)
   const [showTutorial, setShowTutorial] = useState(() => {
     try {
-      return localStorage.getItem('make100_tutorial_completed_v3') !== 'true';
+      const isCompleted = localStorage.getItem('make100_tutorial_completed_v3') === 'true';
+      if (isCompleted) return false;
+      // Внутри Telegram WebApp запускается сразу при первом визите
+      if (isInsideTelegram) return true;
+      // В веб-браузере: если висит приветственное окно выбора режима, туториал ожидает выбора игрока
+      const dismissed = sessionStorage.getItem('make100_welcome_dismissed');
+      const hasToken = Boolean(localStorage.getItem('make100_web_auth_token'));
+      const isWelcomeActive = !dismissed && !hasToken;
+      return !isWelcomeActive;
     } catch (e) {
       return false;
     }
@@ -808,16 +822,6 @@ export default function App() {
     } catch (e) {}
     setHasSeenOnboarding(true);
     setGameState('playing');
-    // Во внешнем браузере после прохождения или пропуска туториала открываем окно выбора режима, если игрок еще не вошел
-    if (!isInsideTelegram) {
-      try {
-        const hasToken = Boolean(localStorage.getItem('make100_web_auth_token'));
-        const dismissed = sessionStorage.getItem('make100_welcome_dismissed');
-        if (!hasToken && !dismissed) {
-          setIsWelcomeModalOpen(true);
-        }
-      } catch (e) {}
-    }
   };
 
   // Game Statistics
@@ -911,6 +915,44 @@ export default function App() {
             || hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start_param') || hashParams.get('ref') || hashParams.get('start');
           if (rawParam) {
             const parsedId = parseInt(rawParam, 10);
+            if (!isNaN(parsedId)) {
+              referrerId = parsedId;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // Генерация/получение постоянного visitorId гостя
+      let visitorId: string | null = null;
+      try {
+        visitorId = localStorage.getItem('make100_visitor_id');
+        if (!visitorId) {
+          visitorId = 'v_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+          localStorage.setItem('make100_visitor_id', visitorId);
+        }
+      } catch (e) {}
+
+      // Фиксация реферера в локальном хранилище и уведомление о переходе гостя
+      if (referrerId) {
+        try {
+          localStorage.setItem('make100_pending_referrer', String(referrerId));
+          if (visitorId) {
+            const visitKey = `make100_visit_tracked_${referrerId}_${visitorId}`;
+            if (!localStorage.getItem(visitKey)) {
+              trackReferralVisitApi(referrerId, visitorId).then((res) => {
+                if (res && res.success) {
+                  localStorage.setItem(visitKey, 'true');
+                }
+              }).catch((err) => console.warn('Referral visit track error:', err));
+            }
+          }
+        } catch (e) {}
+      } else {
+        // Если в URL нет параметра, проверяем ранее сохранённого реферера для гостя
+        try {
+          const pendingRef = localStorage.getItem('make100_pending_referrer');
+          if (pendingRef) {
+            const parsedId = parseInt(pendingRef, 10);
             if (!isNaN(parsedId)) {
               referrerId = parsedId;
             }
@@ -1198,24 +1240,39 @@ export default function App() {
     const userId = tgUser?.id || (stats as any)?.id;
     if (!userId) return;
     
-    // Наша рабочая реферальная ссылка на бота
-    const botUsername = (import.meta.env.VITE_NAME_BOT || 'Test_Make100_bot').replace(/\s+/g, '');
-    const referralLink = `https://t.me/${botUsername}?start=${userId}`;
-    
-    // Красивый пригласительный текст для друзей
+    // Формируем ссылку на сайт (для тестовой среды — тестовый сайт, для боевой — боевой)
+    const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
+    const referralLink = `${siteBase}/?ref=${userId}`;
     const shareText = t.inviteShareText || `Привет! Прокачай логику в игре Make 100! 🧩🎯 Заходи по моей ссылке и получи 250 монет бонуса на старт!`;
     
-    // Ссылка для вызова нативного Telegram Share Dialog
-    const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-    
     trackAnalyticsEvent('click_share');
-    // Открываем Telegram-шеринг
-    if ((window as any).Telegram?.WebApp) {
-      (window as any).Telegram.WebApp.openTelegramLink(telegramShareUrl);
-    } else {
-      // Резервный вариант для тестирования в обычном браузере
-      window.open(telegramShareUrl, '_blank');
+
+    const copyLinkToClipboard = () => {
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(referralLink).then(() => {
+          alert(t.referralLinkCopied || 'Ссылка скопирована!');
+        }).catch(() => {
+          window.open(referralLink, '_blank');
+        });
+      } else {
+        window.open(referralLink, '_blank');
+      }
+    };
+
+    // Если доступен системный диалог шеринга устройства (Android/iOS нативное меню выбора приложений)
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      navigator.share({
+        title: 'Make 100',
+        text: shareText,
+        url: referralLink,
+      }).catch((err: any) => {
+        if (err?.name === 'AbortError') return;
+        copyLinkToClipboard();
+      });
+      return;
     }
+
+    copyLinkToClipboard();
   };
 
   const showHint = async () => {
@@ -2030,10 +2087,12 @@ export default function App() {
   
   return (
     <div 
-      className="fixed inset-0 w-full h-full min-h-screen bg-zinc-950 text-white overflow-y-auto overflow-x-hidden flex flex-col items-center justify-between custom-scrollbar"
+      className="fixed inset-0 w-full h-[100dvh] min-h-[100dvh] max-h-[100dvh] bg-zinc-950 text-white overflow-y-auto overflow-x-hidden flex flex-col items-center justify-between custom-scrollbar"
       style={{
-        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 16px)) + 2px)',
-        paddingBottom: 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 2px)'
+        paddingTop: 'calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 12px)) + 2px)',
+        paddingBottom: isInsideTelegram
+          ? 'calc(var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 12px)) + 4px)'
+          : 'calc(env(safe-area-inset-bottom, 12px) + 20px)'
       }}
     >
       {isCarMode && carImage && (
@@ -2054,7 +2113,7 @@ export default function App() {
       <div className={`fixed inset-0 pointer-events-none z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]`} />
       
       {statsLoaded && (
-        <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-0 pt-0">
+        <div className="relative z-10 w-full max-w-[440px] sm:max-w-[560px] md:max-w-[640px] lg:max-w-[720px] min-h-full h-full flex flex-col justify-between items-center px-2 sm:px-3 pb-2 sm:pb-3 pt-0">
           {/* Header */}
           {isInsideTelegram ? (
             /* Шапка для Telegram-бота: компактный мобильный размер, все модули на одном расстоянии строго по центру */
@@ -2137,8 +2196,8 @@ export default function App() {
               )}
             </header>
           ) : (
-            /* Центрированная шапка для браузерной версии на компьютере: все элементы по центру на одинаковом расстоянии */
-            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1.5 flex items-center justify-center gap-2 sm:gap-2.5 md:gap-3 select-none mb-1 sm:mb-2 z-10 flex-shrink-0">
+            /* Центрированная шапка для браузерной версии: все элементы по центру на одинаковом расстоянии */
+            <header className="w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto px-2 pt-1 flex items-center justify-center gap-1.5 sm:gap-2.5 md:gap-3 select-none mb-0.5 sm:mb-2 z-10 flex-shrink-0">
               {/* 1. Кликабельная аватарка профиля */}
               <button 
                 onClick={() => setIsProfileOpen(true)}
@@ -2148,11 +2207,11 @@ export default function App() {
               >
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 opacity-75 blur-[2px] animate-pulse"></div>
                 
-                <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 shadow-md">
                   {((stats as any)?.avatarUrl || tgUser?.photo_url) ? (
                     <img src={(stats as any)?.avatarUrl || tgUser?.photo_url} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-base sm:text-lg">
+                    <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white font-black text-sm sm:text-lg">
                       {String((stats as any)?.firstName || tgUser?.first_name || 'U').toUpperCase().charAt(0)}
                     </div>
                   )}
@@ -2164,17 +2223,17 @@ export default function App() {
               </button>
 
               {/* 2. Плашка монет */}
-              <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
-                <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">🪙</span>
-                <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
+              <div className="flex items-center gap-1 sm:gap-2 h-10 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.coinsLabel || "Монеты"}>
+                <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">🪙</span>
+                <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
                   {stats.coins}
                 </span>
               </div>
 
               {/* 3. Плашка подсказок */}
-              <div className="flex items-center gap-1.5 sm:gap-2 h-11 sm:h-12 md:h-13 px-3 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
-                <span className="text-xl sm:text-2xl drop-shadow-sm leading-none">💡</span>
-                <span className="text-sm sm:text-base md:text-lg font-black tracking-tight">
+              <div className="flex items-center gap-1 sm:gap-2 h-10 sm:h-12 md:h-13 px-2.5 sm:px-4 bg-white/50 dark:bg-zinc-950/50 rounded-2xl border border-white/40 dark:border-white/10 shadow-md backdrop-blur-2xl text-zinc-900 dark:text-white font-mono font-black" title={t.hintsLabel || "Подсказки"}>
+                <span className="text-lg sm:text-2xl drop-shadow-sm leading-none">💡</span>
+                <span className="text-xs sm:text-base md:text-lg font-black tracking-tight">
                   {stats.hintsCount}
                 </span>
               </div>
@@ -2182,7 +2241,7 @@ export default function App() {
               {/* 4. Кнопка Зала славы (Кубок) */}
               <button 
                 onClick={() => { setIsLeaderboardOpen(true); playSound('click'); playVibration('light'); }}
-                className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-2xl bg-amber-500/80 hover:bg-amber-500 text-white border border-amber-300/60 shadow-md shadow-amber-500/25 backdrop-blur-2xl flex items-center justify-center transition-all active:scale-90 duration-150 cursor-pointer animate-pulse shrink-0"
                 title={t.leaderboard || 'Зал славы'}
                 aria-label={t.leaderboard || 'Зал славы'}
               >
@@ -2440,7 +2499,7 @@ export default function App() {
               </button>
 
               <div className="mt-4 text-center text-xs text-slate-400 dark:text-slate-600 font-mono">
-                v2.0
+                v2.1
               </div>
             </div>
 
@@ -2672,8 +2731,8 @@ export default function App() {
 
       <div className="w-full flex flex-col items-center z-10 mt-auto flex-shrink-0">
         {/* Expression Builder: Увеличенная плашка и крупные цифры/слоты */}
-        <div className={`w-full max-w-md sm:max-w-lg md:max-w-xl py-2.5 sm:py-3.5 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-2 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
-          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.85rem,7.8vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
+        <div className={`w-full max-w-md sm:max-w-lg md:max-w-xl py-1.5 sm:py-3 px-1 sm:px-3 rounded-2xl sm:rounded-[1.75rem] shadow-xl mb-1.5 sm:mb-2.5 transition-colors flex flex-col items-center overflow-hidden bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10`}>
+          <div className={`flex flex-nowrap justify-center items-center gap-x-[clamp(0.12rem,0.6vw,0.4rem)] text-[clamp(1.65rem,7vw,2.85rem)] font-mono font-black py-0.5 sm:py-1 w-full text-zinc-900 dark:text-white`}>
             <Gap idx={0} value={isVisualReady ? gaps[0] : ''} selected={isVisualReady && selectedSlot === 0} onClick={handleSlotClick}  />
             
             {digits.map((digit, idx) => (
@@ -2685,45 +2744,45 @@ export default function App() {
               </React.Fragment>
             ))}
           </div>
-          <div className="h-8 sm:h-10 mt-1 sm:mt-1.5 flex items-center justify-center w-full">
+          <div className="h-6 sm:h-9 mt-0.5 sm:mt-1 flex items-center justify-center w-full">
             {!isVisualReady ? (
-              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-base animate-pulse">
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 font-bold text-xs sm:text-base animate-pulse">
                 <span>{t.loading}</span>
               </div>
             ) : gaps.some(g => g !== '') ? (
-              <div className={`font-mono text-2xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
+              <div className={`font-mono text-xl sm:text-3xl font-black ${isWin ? 'text-emerald-500 animate-pulse' : isNaN(currentResult) ? 'text-red-400 dark:text-red-500/80' : 'text-zinc-600 dark:text-zinc-300'}`}>
                 = {isNaN(currentResult) ? '?' : Number.isInteger(currentResult) ? currentResult : currentResult.toFixed(2)}
               </div>
             ) : (
-              <p className="text-center text-sm sm:text-base font-black text-zinc-700 dark:text-zinc-300">{t.tapGaps}</p>
+              <p className="text-center text-xs sm:text-base font-black text-zinc-700 dark:text-zinc-300">{t.tapGaps}</p>
             )}
           </div>
         </div>
 
         {/* Keypad: Вариант А (эргономичная сетка 4x2 с максимальной контрастностью и защитной клавиатурой) */}
-        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-1.5 sm:p-2.5 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-1 sm:p-2.5 rounded-2xl sm:rounded-[1.75rem] bg-white/50 dark:bg-zinc-950/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-lg">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
             {/* Ряд 1: Основные арифметические операторы (сплошной оранжевый, максимальный контраст) */}
-            <OperatorButton op="+" icon={<Plus size={24} strokeWidth={3.5} />} onClick={() => handleOp('+')} disabled={!isOpAllowed('+', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
-            <OperatorButton op="-" icon={<Minus size={24} strokeWidth={3.5} />} onClick={() => handleOp('-')} disabled={!isOpAllowed('-', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
-            <OperatorButton op="*" icon={<X size={24} strokeWidth={3.5} />} onClick={() => handleOp('*')} disabled={!isOpAllowed('*', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
-            <OperatorButton op="/" icon={<Divide size={24} strokeWidth={3.5} />} onClick={() => handleOp('/')} disabled={!isOpAllowed('/', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="+" icon={<Plus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3.5} />} onClick={() => handleOp('+')} disabled={!isOpAllowed('+', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="-" icon={<Minus className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3.5} />} onClick={() => handleOp('-')} disabled={!isOpAllowed('-', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="*" icon={<X className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3.5} />} onClick={() => handleOp('*')} disabled={!isOpAllowed('*', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
+            <OperatorButton op="/" icon={<Divide className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3.5} />} onClick={() => handleOp('/')} disabled={!isOpAllowed('/', selectedSlot, digits, gaps, won, isVisualReady)} variant="operator" />
 
             {/* Ряд 2: Скобки, запятая и Backspace */}
-            <OperatorButton op="(" icon={<span className="text-xl font-black">(</span>} onClick={() => handleOp('(')} disabled={!isOpAllowed('(', selectedSlot, digits, gaps, won, isVisualReady)} />
-            <OperatorButton op=")" icon={<span className="text-xl font-black">)</span>} onClick={() => handleOp(')')} disabled={!isOpAllowed(')', selectedSlot, digits, gaps, won, isVisualReady)} />
-            <OperatorButton op="," icon={<span className="text-xl font-black">,</span>} onClick={() => handleOp(',')} disabled={!isOpAllowed(',', selectedSlot, digits, gaps, won, isVisualReady)} />
-            <OperatorButton op="Backspace" icon={<Delete size={22} strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} disabled={!isOpAllowed('Backspace', selectedSlot, digits, gaps, won, isVisualReady)} variant="danger" />
+            <OperatorButton op="(" icon={<span className="text-lg sm:text-xl font-black">(</span>} onClick={() => handleOp('(')} disabled={!isOpAllowed('(', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op=")" icon={<span className="text-lg sm:text-xl font-black">)</span>} onClick={() => handleOp(')')} disabled={!isOpAllowed(')', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op="," icon={<span className="text-lg sm:text-xl font-black">,</span>} onClick={() => handleOp(',')} disabled={!isOpAllowed(',', selectedSlot, digits, gaps, won, isVisualReady)} />
+            <OperatorButton op="Backspace" icon={<Delete className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />} onClick={() => handleOp('Backspace')} disabled={!isOpAllowed('Backspace', selectedSlot, digits, gaps, won, isVisualReady)} variant="danger" />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-1.5 sm:mt-2 w-full max-w-md sm:max-w-lg md:max-w-xl grid grid-cols-2 gap-2 sm:gap-3 shrink-0 z-10">
+        <div className="mt-1 sm:mt-1.5 w-full max-w-md sm:max-w-lg md:max-w-xl grid grid-cols-2 gap-1.5 sm:gap-3 shrink-0 z-10">
           <button 
             onClick={showHint}
             disabled={isHinting || won || isPending || !isVisualReady}
             aria-label={t.hint || "Подсказка"}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm ${isHinting || won || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed' : ''}`}
           >
             <Lightbulb size={16} className={`shrink-0 ${isHinting ? "animate-pulse text-yellow-500" : ""}`} />
             <span className="truncate">{t.hint}</span>
@@ -2732,7 +2791,7 @@ export default function App() {
             onClick={handleSkip}
             disabled={isHinting || isPending || !isVisualReady}
             aria-label={hintUsed ? (gameMode === 'ticket' ? t.nextTicket : t.nextCar) : (gameMode === 'ticket' ? t.skipTicket : t.skipCar)}
-            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
+            className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 transition-all font-bold tracking-wide text-xs sm:text-sm md:text-base ${isHinting || isPending || !isVisualReady ? 'opacity-50 pointer-events-none cursor-not-allowed bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-400 backdrop-blur-xl' : noSolutionMessage ? 'animate-pulse ring-4 ring-red-500/30 border-red-500 text-red-500 dark:text-red-400 bg-red-500/30 dark:bg-red-900/40 hover:bg-red-500/40 backdrop-blur-xl' : 'bg-white/50 dark:bg-zinc-950/50 border-white/40 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur-xl shadow-sm'}`}
           >
             <RefreshCw size={16} className={`shrink-0 ${isHinting ? "animate-spin" : ""}`} />
             <span className="truncate">
@@ -2943,7 +3002,7 @@ export default function App() {
         onClose={() => {
           setIsWelcomeModalOpen(false);
           try {
-            if (localStorage.getItem('make100_tutorial_completed_v2') !== 'true') {
+            if (localStorage.getItem('make100_tutorial_completed_v3') !== 'true') {
               setShowTutorial(true);
             }
           } catch(e) {}
@@ -2953,7 +3012,12 @@ export default function App() {
         onAuthSuccess={(user) => {
           setWebUser(user);
           setTgUser(user);
-          window.location.reload();
+          setIsWelcomeModalOpen(false);
+          try {
+            if (localStorage.getItem('make100_tutorial_completed_v3') !== 'true') {
+              setShowTutorial(true);
+            }
+          } catch(e) {}
         }}
         onLogout={() => {
           setWebUser(null);
@@ -3017,15 +3081,15 @@ function OperatorButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={op}
-      className={`flex items-center justify-center w-full h-11 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
+      className={`flex items-center justify-center w-full h-9 sm:h-11 md:h-13 rounded-xl sm:rounded-2xl font-black transition-all border-2 select-none backdrop-blur-md ${
         disabled
           ? 'opacity-25 cursor-not-allowed pointer-events-none border-transparent bg-zinc-200/40 dark:bg-zinc-800/20 text-zinc-400 dark:text-zinc-600 shadow-none'
           : `active:scale-95 cursor-pointer shadow-md touch-manipulation ${
               variant === 'operator'
-                ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-2xl'
+                ? 'bg-orange-500/70 hover:bg-orange-500/85 text-white border-orange-400/80 dark:border-orange-400/70 shadow-orange-500/20 text-xl sm:text-2xl'
                 : variant === 'danger'
                 ? 'bg-red-500/70 hover:bg-red-500/85 text-white border-red-400/80 dark:border-red-400/70 shadow-red-500/20'
-                : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-xl'
+                : 'bg-white/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white border-white/40 dark:border-white/15 hover:bg-white/70 dark:hover:bg-zinc-700/60 shadow-sm text-lg sm:text-xl'
             }`
       }`}
     >

@@ -70,15 +70,21 @@ export function getUtmParams(): UtmParams {
 }
 
 /**
- * Формирование ссылки на Telegram-бота с сохранением источника рекламы для сквозной аналитики
+ * Формирование ссылки на Telegram-бота с сохранением источника рекламы или реферера
  */
-export function buildTelegramStartUrl(botUsername: string, actionTag: string = 'web'): string {
+export function buildTelegramStartUrl(botUsername: string, actionTagOrReferrer: string = 'web'): string {
+  // Если передан ID реферера (числовой или с префиксом ref_)
+  const cleanReferrer = actionTagOrReferrer.replace(/^ref_/, '');
+  if (/^\d+$/.test(cleanReferrer)) {
+    return `https://t.me/${botUsername}?start=${cleanReferrer}`;
+  }
+
   const utms = getUtmParams();
   const source = utms.utmSource ? utms.utmSource.replace(/[^a-zA-Z0-9_]/g, '') : 'direct';
   const campaign = utms.utmCampaign ? `_${utms.utmCampaign.replace(/[^a-zA-Z0-9_]/g, '')}` : '';
   
   // Telegram start параметр ограничен 64 символами a-zA-Z0-9_-
-  const startParam = `${actionTag}_${source}${campaign}`.slice(0, 64);
+  const startParam = `${actionTagOrReferrer}_${source}${campaign}`.slice(0, 64);
   return `https://t.me/${botUsername}?start=${startParam}`;
 }
 

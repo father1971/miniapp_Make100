@@ -63,11 +63,18 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
     onClose();
   };
 
-  // Клик "Играть в Telegram" (со сквозным пробросом рекламного источника)
+  // Клик "Играть в Telegram" (со сквозным пробросом рекламного источника или реферала)
   const handlePlayTelegram = () => {
     trackAnalyticsEvent('funnel_telegram');
     trackAnalyticsEvent('click_play_telegram');
-    const tgUrl = buildTelegramStartUrl(botUsername, 'web_modal');
+    let startParam = 'web_modal';
+    try {
+      const pendingRef = localStorage.getItem('make100_pending_referrer');
+      if (pendingRef && /^\d+$/.test(pendingRef)) {
+        startParam = pendingRef;
+      }
+    } catch (e) {}
+    const tgUrl = buildTelegramStartUrl(botUsername, startParam);
     window.open(tgUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -132,14 +139,33 @@ export const WelcomeAuthModal: React.FC<WelcomeAuthModalProps> = ({
 
     setIsVerifyingCode(true);
     try {
+      let referredBy: number | undefined = undefined;
+      try {
+        const storedRef = localStorage.getItem('make100_pending_referrer');
+        if (storedRef) {
+          const parsed = parseInt(storedRef, 10);
+          if (!isNaN(parsed)) referredBy = parsed;
+        }
+      } catch (e) {}
+
+      let visitorId: string | undefined = undefined;
+      try {
+        visitorId = localStorage.getItem('make100_visitor_id') || undefined;
+      } catch (e) {}
+
       const res = await verifyEmailOtpApi({
         email: email.trim(),
         code: otpCode.trim(),
         otpSession: otpSession || undefined,
         name: name.trim() || undefined,
+        referredBy,
+        visitorId,
       });
 
       if (res.success && res.user) {
+        try {
+          localStorage.removeItem('make100_pending_referrer');
+        } catch (e) {}
         trackAnalyticsEvent('funnel_email_success', { extraData: { email: email.trim() } });
         setStatusMsg({ type: 'success', text: 'Успешный вход! Вы останетесь в системе на этом устройстве.' });
         setTimeout(() => {
