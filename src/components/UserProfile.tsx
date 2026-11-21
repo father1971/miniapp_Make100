@@ -56,8 +56,9 @@ export function UserProfile({
   const getReferralUrl = () => {
     const userId = tgUser?.id || (stats as any)?.id;
     if (!userId) return '';
-    const siteBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
-    return `${siteBase}/?ref=${userId}`;
+    const rawBase = (import.meta.env.VITE_SITE_URL || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://father1971.github.io/miniapp_Make100')).replace(/\/$/, '');
+    const siteBase = rawBase.endsWith('/play') ? rawBase : `${rawBase}/play`;
+    return `${siteBase}?ref=${userId}`;
   };
 
   const referralUrl = getReferralUrl();
